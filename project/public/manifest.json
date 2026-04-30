@@ -1,0 +1,26 @@
+{
+  "name": "Aangan — Your Family Tree",
+  "short_name": "Aangan",
+  "description": "Connect with your family. Build your tree. Cherish your roots.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "lifestyle"],
+  "prefer_related_applications": false
+}

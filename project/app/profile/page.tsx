@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
+import { supabase, RelationshipType } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
 import ClaimProfileModal, { ClaimMatch } from '@/components/ClaimProfileModal';
 import {
@@ -43,6 +43,16 @@ export default function ProfilePage() {
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [sendingRequestId, setSendingRequestId] = useState<string | null>(null);
 
+  const [familyMembers, setFamilyMembers] = useState<Array<{
+    id: string;
+    full_name: string;
+    relationship_type: RelationshipType;
+    user_id: string | null;
+  }>>([]);
+  const [familyLoading, setFamilyLoading] = useState(false);
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
+  const [familyError, setFamilyError] = useState('');
+
   useEffect(() => {
     if (loading) return;
     if (!user || !profile?.onboarding_completed) { router.replace('/welcome'); return; }
@@ -51,6 +61,7 @@ export default function ProfilePage() {
     setDob(profile.date_of_birth || '');
     setPhone(profile.phone || '');
     fetchFamilyCount();
+    fetchFamilyMembers();
     fetchPendingRequests();
     fetchSuggestions();
   }, [user, profile, loading]);
@@ -62,6 +73,83 @@ export default function ProfilePage() {
       .select('*', { count: 'exact', head: true })
       .eq('owner_id', user.id);
     setFamilyCount(count || 0);
+  };
+
+  const fetchFamilyMembers = async () => {
+    if (!user) return;
+    setFamilyLoading(true);
+    setFamilyError('');
+    try {
+      const { data: self } = await supabase
+        .from('people')
+        .select('id')
+        .eq('owner_id', user.id)
+        .eq('is_self', true)
+        .maybeSingle();
+
+      if (!self) {
+        setFamilyMembers([]);
+        return;
+      }
+
+      const { data: rels } = await supabase
+        .from('relationships')
+        .select('related_person_id, relationship_type')
+        .eq('owner_id', user.id)
+        .eq('person_id', self.id);
+
+      const ids = rels?.map((r) => r.related_person_id) || [];
+      if (ids.length === 0) {
+        setFamilyMembers([]);
+        return;
+      }
+
+      const { data: people } = await supabase
+        .from('people')
+        .select('id, full_name, user_id')
+        .in('id', ids);
+
+      const members = (rels || []).map((rel) => {
+        const person = (people || []).find((p) => p.id === rel.related_person_id);
+        return {
+          id: rel.related_person_id,
+          full_name: person?.full_name || 'Unknown',
+          relationship_type: rel.relationship_type as RelationshipType,
+          user_id: person?.user_id || null,
+        };
+      });
+
+      setFamilyMembers(members);
+    } catch (err) {
+      console.error('Failed to load family members', err);
+      setFamilyError('Could not load family members');
+    } finally {
+      setFamilyLoading(false);
+    }
+  };
+
+  const handleDeleteMember = async (personId: string) => {
+    if (!session?.access_token) return;
+    setDeletingMemberId(personId);
+    setFamilyError('');
+    try {
+      const res = await fetch('/api/members/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ person_id: personId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete member');
+      setFamilyMembers((prev) => prev.filter((m) => m.id !== personId));
+      fetchFamilyCount();
+    } catch (err) {
+      setFamilyError(err instanceof Error ? err.message : 'Failed to delete member');
+    } finally {
+      setDeletingMemberId(null);
+    }
   };
 
   const fetchPendingRequests = async () => {
@@ -136,7 +224,7 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ receiver_id: userId })
+        body: JSON.stringify({ to_user_id: userId })
       });
       if (res.ok) {
         setSuggestions(prev => prev.filter(s => s.user_id !== userId));
@@ -448,6 +536,49 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Family Members section */}
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-5 pt-4 pb-2">
+              <h3 className="text-sm font-semibold text-gray-700">Family Members</h3>
+            </div>
+            <div className="px-5 pb-4">
+              {familyLoading ? (
+                <div className="py-6 flex justify-center">
+                  <Loader2 size={20} className="text-gray-300 animate-spin" />
+                </div>
+              ) : familyMembers.length === 0 ? (
+                <p className="text-xs text-gray-400">No members added yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {familyMembers.map((member) => (
+                    <div key={member.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
+                        <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
+                        {member.user_id && (
+                          <p className="text-[11px] text-amber-600">Linked profile</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteMember(member.id)}
+                        disabled={deletingMemberId === member.id || !!member.user_id}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-red-100 text-red-500 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {deletingMemberId === member.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {familyError && (
+                <p className="mt-3 text-xs text-red-500">{familyError}</p>
+              )}
+              <p className="mt-3 text-[11px] text-gray-400">
+                Linked profiles cannot be deleted.
+              </p>
+            </div>
+          </div>
+
           {/* Connection Requests Section */}
           {(pendingRequests.length > 0 || requestsLoading) && (
             <div className="bg-white rounded-3xl shadow-sm border border-indigo-100 overflow-hidden relative">
@@ -480,7 +611,15 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900 leading-snug">
-                            <span className="font-bold">{req.sender.full_name}</span> added you to their family tree as their <span className="font-semibold text-indigo-700">{req.relationship}</span>.
+                            <span className="font-bold">{req.sender.full_name}</span>{' '}
+                            {req.type === 'suggestion'
+                              ? 'wants to connect with you'
+                              : 'added you to their family tree'}
+                            {req.relationship && req.type !== 'suggestion' && (
+                              <>
+                                {' '}as their <span className="font-semibold text-indigo-700">{req.relationship}</span>
+                              </>
+                            )}.
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -591,7 +730,7 @@ export default function ProfilePage() {
           matches={claimMatches}
           onClaimed={() => {
             setShowClaimModal(false);
-            setClaimMessage('Profile claimed successfully! Your account is now linked.');
+            setClaimMessage('Profile linked. Connection requests were sent for confirmation.');
           }}
           onDismiss={() => {
             setShowClaimModal(false);

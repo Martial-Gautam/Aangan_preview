@@ -35,6 +35,12 @@ export async function POST(req: NextRequest) {
 
     const createdRequests: string[] = [];
 
+    const { data: claimantProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('phone')
+      .eq('id', user.id)
+      .maybeSingle();
+
     for (const id of selectedIds) {
       const { data: person, error: fetchError } = await supabaseAdmin
         .from('people')
@@ -54,18 +60,56 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'This profile has already been claimed' }, { status: 409 });
       }
 
-      const { error: updateError } = await supabaseAdmin
-        .from('people')
-        .update({ user_id: user.id })
-        .eq('id', id)
-        .in('user_id', [null, user.id]);
+      if (!person.user_id) {
+        const { data: updated, error: updateError } = await supabaseAdmin
+          .from('people')
+          .update({ user_id: user.id })
+          .eq('id', id)
+          .or('user_id.is.null,user_id.eq.' + user.id)
+          .select('id')
+          .maybeSingle();
 
-      if (updateError) {
-        console.error('Claim update error:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to claim profile. It may have already been claimed.' },
-          { status: 409 }
-        );
+        if (updateError || !updated) {
+          console.error('Claim update error:', updateError);
+          return NextResponse.json(
+            { error: 'Failed to claim profile. It may have already been claimed.' },
+            { status: 409 }
+          );
+        }
+      }
+
+      const orParts = [`to_user_id.eq.${user.id}`];
+      if (user.email) orParts.push(`receiver_email.eq.${user.email}`);
+      if (claimantProfile?.phone) orParts.push(`receiver_phone.eq.${claimantProfile.phone}`);
+
+      const { data: adderRequest } = await supabaseAdmin
+        .from('connection_requests')
+        .select('id, from_user_id, sender_id')
+        .eq('status', 'pending')
+        .eq('person_id', id)
+        .eq('from_user_id', person.owner_id)
+        .or(orParts.join(','))
+        .maybeSingle();
+
+      if (adderRequest) {
+        const fromUserId = adderRequest.from_user_id || adderRequest.sender_id;
+        await supabaseAdmin
+          .from('connection_requests')
+          .update({ status: 'accepted', to_user_id: user.id, receiver_id: user.id })
+          .eq('id', adderRequest.id);
+
+        if (fromUserId) {
+          const ordered = [fromUserId, user.id].sort();
+          await supabaseAdmin
+            .from('user_connections')
+            .upsert({
+              user_id_1: ordered[0],
+              user_id_2: ordered[1],
+              connection_type: 'relative'
+            }, { onConflict: 'user_id_1,user_id_2' });
+        }
+
+        continue;
       }
 
       const { data: rel } = await supabaseAdmin
@@ -86,7 +130,7 @@ export async function POST(req: NextRequest) {
         if (p.user_id && p.user_id !== user.id) recipientIds.add(p.user_id);
       });
 
-      for (const toUserId of recipientIds) {
+      for (const toUserId of Array.from(recipientIds)) {
         const { data: existing } = await supabaseAdmin
           .from('connection_requests')
           .select('id')

@@ -22,6 +22,10 @@ export default function HomePage() {
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(0.8);
   const treeContainerRef = useRef<HTMLDivElement>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [installHint, setInstallHint] = useState('');
 
   useEffect(() => {
     if (loading) return;
@@ -36,6 +40,24 @@ export default function HomePage() {
       setTranslate({ x: width / 2, y: 80 });
     }
   }, [dataLoading]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+      setCanInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone;
+    setIsInstalled(Boolean(standalone));
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler as EventListener);
+    };
+  }, []);
 
   const fetchFamily = async () => {
     if (!user || !session?.access_token) return;
@@ -89,6 +111,18 @@ export default function HomePage() {
       setTranslate({ x: width / 2, y: 80 });
     }
   }, []);
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      setInstallPrompt(null);
+      setCanInstall(false);
+      setInstallHint('');
+      return;
+    }
+
+    setInstallHint('Use your browser menu to add this app to your home screen.');
+  };
 
   const renderCustomNode = ({ nodeDatum }: { nodeDatum: TreeNodeData }) => {
     const { name, attributes } = nodeDatum;
@@ -176,8 +210,19 @@ export default function HomePage() {
             <span className="bg-orange-50 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-full">
               {familyCount} {familyCount === 1 ? 'member' : 'members'}
             </span>
+            <button
+              onClick={handleInstall}
+              className="bg-orange-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full hover:bg-orange-600 transition-colors"
+            >
+              Install
+            </button>
           </div>
         </div>
+        {installHint && (
+          <p className="text-[11px] text-gray-400 mt-1 max-w-lg mx-auto px-1">
+            {installHint}
+          </p>
+        )}
       </div>
 
       {/* Tree area */}

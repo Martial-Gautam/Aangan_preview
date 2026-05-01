@@ -38,3 +38,7 @@ declare module 'react-d3-tree' {
   const Tree: ComponentType<TreeProps>;
   export default Tree;
 }
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+}

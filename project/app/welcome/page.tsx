@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, TreePine } from 'lucide-react';
@@ -15,6 +15,40 @@ export default function WelcomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [installHint, setInstallHint] = useState('');
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+      setCanInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone;
+    setIsInstalled(Boolean(standalone));
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler as EventListener);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      setInstallPrompt(null);
+      setCanInstall(false);
+      setInstallHint('');
+      return;
+    }
+
+    setInstallHint('Use your browser menu to add this app to your home screen.');
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,6 +237,23 @@ export default function WelcomePage() {
               {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : 'Sign In'}
             </button>
           </form>
+
+          {mode === 'signup' && (
+            <>
+              <button
+                type="button"
+                onClick={handleInstall}
+                className="w-full mt-3 border-2 border-orange-200 text-orange-600 py-3.5 rounded-2xl font-semibold text-sm hover:bg-orange-50 active:scale-[0.98] transition-all"
+              >
+                Install App
+              </button>
+              {installHint && (
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  {installHint}
+                </p>
+              )}
+            </>
+          )}
 
           <p className="text-center text-sm text-gray-500 mt-6">
             {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { X, Check, UserCheck, Users, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -40,13 +40,25 @@ const RELATIONSHIP_EMOJI: Record<string, string> = {
 
 export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: ClaimProfileModalProps) {
   const { session } = useAuth();
-  const [claiming, setClaiming] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const handleClaim = async (personId: string) => {
+  useEffect(() => {
+    if (matches.length === 1) {
+      setSelectedIds([matches[0].id]);
+    }
+  }, [matches]);
+
+  const handleClaim = async () => {
     if (!session?.access_token) return;
-    setClaiming(personId);
+    if (selectedIds.length === 0) {
+      setError('Select at least one profile to continue');
+      return;
+    }
+
+    setClaiming(true);
     setError('');
 
     try {
@@ -56,7 +68,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ person_id: personId }),
+        body: JSON.stringify({ person_ids: selectedIds }),
       });
 
       const data = await res.json();
@@ -69,11 +81,16 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setClaiming(null);
+      setClaiming(false);
     }
   };
 
   const isSingle = matches.length === 1;
+  const toggleSelect = (personId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(personId) ? prev.filter((id) => id !== personId) : [...prev, personId]
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -119,7 +136,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
               <Check size={32} className="text-green-600" />
             </div>
             <p className="text-gray-600 text-sm text-center">
-              Your account is now linked to this profile. Family connections are being synced.
+              Your identity is linked. Connection requests have been sent to confirm relationships.
             </p>
           </div>
         )}
@@ -146,7 +163,12 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
               return (
                 <div
                   key={match.id}
-                  className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden hover:border-orange-200 transition-colors"
+                  className={`bg-gray-50 rounded-2xl border overflow-hidden transition-colors ${
+                    selectedIds.includes(match.id)
+                      ? 'border-orange-300 bg-orange-50/30'
+                      : 'border-gray-100 hover:border-orange-200'
+                  }`}
+                  onClick={() => toggleSelect(match.id)}
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
@@ -159,6 +181,13 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
                           {match.gender ? match.gender.charAt(0).toUpperCase() + match.gender.slice(1) : ''}
                           {match.email && ` · ${match.email}`}
                         </p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        selectedIds.includes(match.id)
+                          ? 'bg-orange-500 border-orange-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedIds.includes(match.id) && <Check size={14} className="text-white" />}
                       </div>
                     </div>
 
@@ -185,21 +214,6 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
                       </div>
                     )}
 
-                    <button
-                      onClick={() => handleClaim(match.id)}
-                      disabled={claiming !== null}
-                      className="w-full bg-orange-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-                    >
-                      {claiming === match.id ? (
-                        <>
-                          <Loader2 size={14} className="animate-spin" /> Claiming...
-                        </>
-                      ) : (
-                        <>
-                          This is me <ChevronRight size={14} />
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               );
@@ -209,7 +223,22 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
 
         {/* Footer */}
         {!success && (
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 space-y-2">
+            <button
+              onClick={handleClaim}
+              disabled={claiming || selectedIds.length === 0}
+              className="w-full bg-orange-500 text-white py-3 rounded-xl text-sm font-semibold hover:bg-orange-600 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {claiming ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Linking...
+                </>
+              ) : (
+                <>
+                  Confirm selection <ChevronRight size={14} />
+                </>
+              )}
+            </button>
             <button
               onClick={onDismiss}
               className="w-full py-3 text-sm text-gray-500 hover:text-gray-700 transition-colors font-medium"

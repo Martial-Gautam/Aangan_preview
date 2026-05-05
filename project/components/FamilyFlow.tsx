@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -58,12 +58,23 @@ export default function FamilyFlow({
   const [nodes, setNodes, onNodesChange] = useNodesState(positionedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
+  // CRITICAL FIX: Sync nodes/edges when data changes.
+  // useNodesState/useEdgesState only use the initial value — they don't update
+  // when the argument changes. We need useEffect to push new data.
+  useEffect(() => {
+    setNodes(positionedNodes);
+  }, [positionedNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(flowEdges);
+  }, [flowEdges, setEdges]);
+
   const handleNodeClick = useCallback((_: React.MouseEvent, node: any) => {
     onNodeClick(node.data.personId);
   }, [onNodeClick]);
 
   return (
-    <div className="w-full h-full">
+    <div style={{ width: '100%', height: '100%' }} className="absolute inset-0">
       <ReactFlow
         nodes={nodes}
         edges={edges}

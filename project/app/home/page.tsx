@@ -165,7 +165,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-200 flex justify-center">
+    <div className="h-full w-full max-w-sm bg-gray-50 flex flex-col relative overflow-hidden">
       {/* Header */}
       <div className="bg-white px-5 pt-12 pb-4 shadow-sm z-10 flex-shrink-0">
         <div className="flex items-center justify-between max-w-lg mx-auto">
@@ -212,10 +213,10 @@ export default function HomePage() {
       )}
 
       {/* Tree area */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden min-h-0">
         {/* Floating Search Bar */}
         {familyCount > 0 && (
-          <div className="absolute top-4 left-4 right-4 z-20">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-0">
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 flex items-center px-3 py-2 gap-2">
               <Search size={16} className="text-gray-400" />
               <input
@@ -333,6 +334,7 @@ export default function HomePage() {
       </Sheet>
 
       <BottomNav />
+    </div>
     </div>
   );
 }

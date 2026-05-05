@@ -153,6 +153,19 @@ export default function WelcomePage() {
               >
                 I already have an account
               </button>
+              {!isInstalled && (
+                <button
+                  onClick={handleInstall}
+                  className="w-full border-2 border-orange-200 text-orange-600 py-3.5 rounded-2xl font-semibold text-sm hover:bg-orange-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                  <TreePine size={16} /> Install App
+                </button>
+              )}
+              {installHint && (
+                <p className="text-xs text-gray-400 text-center">
+                  {installHint}
+                </p>
+              )}
             </div>
           </div>
         </div>

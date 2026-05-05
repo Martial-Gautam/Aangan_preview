@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Chrome as Home, UserPlus, User, Bell } from 'lucide-react';
+import { Chrome as Home, UserPlus, User, Bell, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/home', label: 'Family', icon: Home },
   { href: '/add-member', label: 'Add', icon: UserPlus },
+  { href: '/stats', label: 'Stats', icon: BarChart3 },
   { href: '/notifications', label: 'Alerts', icon: Bell },
   { href: '/profile', label: 'Profile', icon: User },
 ];

@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
-import { Pencil, Trash2, Users, LinkIcon } from 'lucide-react';
+import { Pencil, Trash2, Users, LinkIcon, Route } from 'lucide-react';
+import { calculateDegree } from '@/lib/degree-calculator';
 
 const LABEL_MAP: Record<string, string> = {
   self: 'You', father: 'Father', mother: 'Mother',
@@ -56,6 +57,11 @@ export default function MemberDetailSheet({
       r => r.person_id === selfPersonId && r.related_person_id === personId
     );
     return rel?.relationship_type || 'relative';
+  }, [personId, selfPersonId, relationships]);
+
+  const degreeResult = useMemo(() => {
+    if (!personId || personId === selfPersonId) return null;
+    return calculateDegree(selfPersonId, personId, relationships);
   }, [personId, selfPersonId, relationships]);
 
   if (!person) return null;
@@ -136,6 +142,18 @@ export default function MemberDetailSheet({
               </span>
             )}
           </div>
+
+          {/* Degree of relationship */}
+          {degreeResult && degreeResult.degree > 0 && (
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
+              <Route size={12} className="text-orange-400" />
+              <span>
+                You and <span className="font-semibold text-gray-700">{person.full_name.split(' ')[0]}</span> are{' '}
+                <span className="font-semibold text-orange-600">{degreeResult.label}</span>
+                <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'} apart)</span>
+              </span>
+            </div>
+          )}
 
           {/* Details */}
           <div className="w-full mt-5 space-y-2 text-left">

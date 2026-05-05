@@ -61,18 +61,23 @@ export async function POST(req: NextRequest) {
       }
 
       if (!person.user_id) {
-        const { data: updated, error: updateError } = await supabaseAdmin
-          .from('people')
-          .update({ user_id: user.id })
-          .eq('id', id)
-          .or('user_id.is.null,user_id.eq.' + user.id)
-          .select('id')
-          .maybeSingle();
+        const { data: claimed, error: rpcError } = await supabaseAdmin
+          .rpc('claim_person_node', {
+            p_person_id: id,
+            p_user_id: user.id
+          });
 
-        if (updateError || !updated) {
-          console.error('Claim update error:', updateError);
+        if (rpcError) {
+          console.error('Claim RPC error:', rpcError);
           return NextResponse.json(
-            { error: 'Failed to claim profile. It may have already been claimed.' },
+            { error: 'Failed to claim profile.' },
+            { status: 500 }
+          );
+        }
+
+        if (!claimed) {
+          return NextResponse.json(
+            { error: 'This profile has already been claimed.' },
             { status: 409 }
           );
         }

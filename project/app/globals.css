@@ -38,6 +38,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -54,35 +55,12 @@
   border-radius: 2px;
 }
 
-/* Fix react-d3-tree white overlay */
-.rd3t-tree-container {
-  width: 100%;
-  height: 100%;
-  background: transparent !important;
+/* React Flow Styles */
+.react-flow__renderer {
+  background: transparent;
 }
-
-.rd3t-tree-container svg {
-  background: transparent !important;
-  overflow: visible;
-}
-
-.rd3t-tree-container foreignObject {
-  overflow: visible;
-}
-
-.rd3t-tree-container foreignObject > * {
-  background: transparent !important;
-}
-
-.rd3t-node,
-.rd3t-leaf-node {
-  stroke: transparent !important;
-  fill: transparent !important;
-}
-
-.rd3t-label__title,
-.rd3t-label__attributes {
-  fill: transparent !important;
+.react-flow__background {
+  background-color: #f9fafb;
 }
 
 /* Claim modal animations */

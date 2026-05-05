@@ -1,27 +1,27 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Person, Relationship } from '@/lib/supabase';
-import { buildNetworkTreeData, TreeNodeData } from '@/lib/tree-utils';
+import FamilyFlow from '@/components/FamilyFlow';
+import MemberDetailSheet from '@/components/MemberDetailSheet';
+import { Person, Relationship } from '@/lib/tree-to-flow';
 import BottomNav from '@/components/BottomNav';
-import { Plus, TreePine, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Plus, TreePine } from 'lucide-react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 
-const Tree = dynamic(() => import('react-d3-tree'), { ssr: false });
 
 export default function HomePage() {
   const { user, profile, session, loading } = useAuth();
   const router = useRouter();
+
   const [selfPerson, setSelfPerson] = useState<Person | null>(null);
-  const [treeData, setTreeData] = useState<TreeNodeData | null>(null);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [familyCount, setFamilyCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(0.8);
-  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -33,13 +33,6 @@ export default function HomePage() {
     if (!profile?.onboarding_completed) { router.replace('/onboarding'); return; }
     fetchFamily();
   }, [user, profile, loading]);
-
-  useEffect(() => {
-    if (treeContainerRef.current) {
-      const { width, height } = treeContainerRef.current.getBoundingClientRect();
-      setTranslate({ x: width / 2, y: 80 });
-    }
-  }, [dataLoading]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -76,41 +69,16 @@ export default function HomePage() {
       const nodes: Person[] = data.nodes || [];
       const edges: Relationship[] = data.edges || [];
       const selfId: string | null = data.self_person_id;
-      const connectedRoots: string[] = data.connected_roots || [];
 
       const self = nodes.find((p) => p.id === selfId) || null;
       setSelfPerson(self);
-
-      if (!selfId) {
-        setTreeData(null);
-        setFamilyCount(0);
-        setDataLoading(false);
-        return;
-      }
-
-      const tree = buildNetworkTreeData(selfId, nodes, edges, connectedRoots);
-      setTreeData(tree);
+      setPeople(nodes);
+      setRelationships(edges);
       setFamilyCount(Math.max(0, nodes.length - 1));
     } finally {
       setDataLoading(false);
     }
   };
-
-  const handleZoomIn = useCallback(() => {
-    setZoom((z) => Math.min(z + 0.15, 2));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoom((z) => Math.max(z - 0.15, 0.3));
-  }, []);
-
-  const handleFit = useCallback(() => {
-    setZoom(0.8);
-    if (treeContainerRef.current) {
-      const { width, height } = treeContainerRef.current.getBoundingClientRect();
-      setTranslate({ x: width / 2, y: 80 });
-    }
-  }, []);
 
   const handleInstall = async () => {
     if (installPrompt) {
@@ -124,63 +92,13 @@ export default function HomePage() {
     setInstallHint('Use your browser menu to add this app to your home screen.');
   };
 
-  const renderCustomNode = ({ nodeDatum }: { nodeDatum: TreeNodeData }) => {
-    const { name, attributes } = nodeDatum;
-    const relType = attributes.relationshipType;
-    const isSelf = attributes.isSelf;
-    const initials = name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-
-    const colorMap: Record<string, { bg: string; text: string; border: string; badge: string }> = {
-      self: { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-400', badge: 'bg-orange-100 text-orange-700' },
-      father: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', badge: 'bg-blue-100 text-blue-700' },
-      mother: { bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-300', badge: 'bg-pink-100 text-pink-700' },
-      sibling: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', badge: 'bg-green-100 text-green-700' },
-      spouse: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', badge: 'bg-amber-100 text-amber-700' },
-      child: { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-300', badge: 'bg-teal-100 text-teal-700' },
-      connection: { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300', badge: 'bg-indigo-100 text-indigo-700' },
-    };
-
-    const labelMap: Record<string, string> = {
-      self: 'You', father: 'Father', mother: 'Mother',
-      sibling: 'Sibling', spouse: 'Spouse', child: 'Child',
-      connection: 'Connected',
-    };
-
-    const colors = colorMap[relType] || colorMap.self;
-    const label = labelMap[relType] || relType;
-
-    return (
-      <g>
-        <foreignObject width={120} height={110} x={-60} y={-15}>
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-sm ${
-                isSelf
-                  ? 'bg-orange-500 text-white border-orange-400 shadow-md shadow-orange-200'
-                  : `${colors.bg} ${colors.text} ${colors.border}`
-              }`}
-            >
-              {attributes.photoUrl ? (
-                <img src={attributes.photoUrl} alt={name} className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <span>{initials}</span>
-              )}
-            </div>
-            <p className="mt-1 text-[11px] font-semibold text-gray-800 text-center leading-tight max-w-[110px] truncate">
-              {name}
-            </p>
-            <span
-              className={`mt-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                isSelf ? 'bg-orange-100 text-orange-700' : colors.badge
-              }`}
-            >
-              {label}
-            </span>
-          </div>
-        </foreignObject>
-      </g>
-    );
-  };
+  const handleDeleteMember = useCallback((personId: string) => {
+    setPeople(prev => prev.filter(p => p.id !== personId));
+    setRelationships(prev => prev.filter(
+      r => r.person_id !== personId && r.related_person_id !== personId
+    ));
+    setFamilyCount(prev => Math.max(0, prev - 1));
+  }, []);
 
   if (loading || dataLoading) {
     return (
@@ -226,62 +144,14 @@ export default function HomePage() {
       </div>
 
       {/* Tree area */}
-      <div className="flex-1 relative" ref={treeContainerRef}>
-        {treeData && familyCount > 0 ? (
-          <>
-            <Tree
-              data={treeData}
-              renderCustomNodeElement={renderCustomNode as never}
-              orientation="vertical"
-              pathFunc="step"
-              translate={translate}
-              zoom={zoom}
-              scaleExtent={{ min: 0.3, max: 2 }}
-              draggable
-              zoomable
-              collapsible={false}
-              transitionDuration={400}
-              separation={{ siblings: 1.5, nonSiblings: 2 }}
-              nodeSize={{ x: 140, y: 110 }}
-              styles={{
-                links: {
-                  stroke: '#d1d5db',
-                  strokeWidth: 2,
-                },
-                nodes: {
-                  node: {
-                    circle: { fill: 'transparent', stroke: 'transparent' },
-                    name: { fill: 'transparent' },
-                    attributes: { fill: 'transparent' },
-                  },
-                },
-              }}
-              onTranslateChange={(t: { x: number; y: number }) => setTranslate(t)}
-              onZoomChange={(z: number) => setZoom(z)}
-            />
-
-            {/* Zoom controls */}
-            <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-20">
-              <button
-                onClick={handleZoomIn}
-                className="w-10 h-10 bg-white rounded-xl shadow-md border border-gray-100 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
-              >
-                <ZoomIn size={18} className="text-gray-600" />
-              </button>
-              <button
-                onClick={handleZoomOut}
-                className="w-10 h-10 bg-white rounded-xl shadow-md border border-gray-100 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
-              >
-                <ZoomOut size={18} className="text-gray-600" />
-              </button>
-              <button
-                onClick={handleFit}
-                className="w-10 h-10 bg-white rounded-xl shadow-md border border-gray-100 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
-              >
-                <Maximize size={18} className="text-gray-600" />
-              </button>
-            </div>
-          </>
+      <div className="flex-1 relative">
+        {selfPerson && people.length > 1 ? (
+          <FamilyFlow
+            selfPersonId={selfPerson.id}
+            people={people}
+            relationships={relationships}
+            onNodeClick={(id) => setSelectedPersonId(id)}
+          />
         ) : (
           /* Empty state */
           <div className="h-full flex items-center justify-center px-6">
@@ -315,6 +185,19 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Member detail sheet */}
+      {selfPerson && (
+        <MemberDetailSheet
+          personId={selectedPersonId}
+          people={people}
+          relationships={relationships}
+          selfPersonId={selfPerson.id}
+          onClose={() => setSelectedPersonId(null)}
+          onDelete={handleDeleteMember}
+          accessToken={session?.access_token || ''}
+        />
+      )}
 
       <BottomNav />
     </div>

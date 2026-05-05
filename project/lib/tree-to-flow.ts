@@ -26,6 +26,7 @@ export type FamilyNodeData = {
   relationshipType: string;
   isSelf: boolean;
   isLinked: boolean;  // true if user_id is not null (a real Aangan user)
+  isHighlighted?: boolean; // used by search to dim/highlight nodes
 };
 
 export function transformToFlow(

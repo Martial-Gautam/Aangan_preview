@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import FamilyFlow from '@/components/FamilyFlow';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
 import BottomNav from '@/components/BottomNav';
-import { Plus, TreePine } from 'lucide-react';
+import { Plus, TreePine, Search, Sparkles, User, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -21,6 +22,12 @@ export default function HomePage() {
   const [familyCount, setFamilyCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestionsSheet, setShowSuggestionsSheet] = useState(false);
+  const [processingSuggestionId, setProcessingSuggestionId] = useState<string | null>(null);
 
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
@@ -32,6 +39,7 @@ export default function HomePage() {
     if (!user) { router.replace('/welcome'); return; }
     if (!profile?.onboarding_completed) { router.replace('/onboarding'); return; }
     fetchFamily();
+    fetchSuggestions();
   }, [user, profile, loading]);
 
   useEffect(() => {
@@ -77,6 +85,49 @@ export default function HomePage() {
       setFamilyCount(Math.max(0, nodes.length - 1));
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await fetch('/api/inference/pending', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch suggestions', err);
+    }
+  };
+
+  const handleSuggestionResponse = async (suggestionId: string, action: 'accept' | 'reject') => {
+    if (!session?.access_token) return;
+    setProcessingSuggestionId(suggestionId);
+    try {
+      const res = await fetch('/api/inference/respond', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ suggestion_id: suggestionId, action })
+      });
+      if (res.ok) {
+        setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+        if (action === 'accept') {
+          fetchFamily(); // Refresh tree
+        }
+        if (suggestions.length === 1) {
+          setShowSuggestionsSheet(false);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to process suggestion', err);
+    } finally {
+      setProcessingSuggestionId(null);
     }
   };
 
@@ -143,14 +194,47 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* Suggestions Banner */}
+      {suggestions.length > 0 && !dataLoading && (
+        <div className="bg-orange-50 border-b border-orange-100 px-5 py-3 flex-shrink-0 cursor-pointer hover:bg-orange-100 transition-colors" onClick={() => setShowSuggestionsSheet(true)}>
+          <div className="max-w-lg mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-orange-500" />
+              <p className="text-sm font-medium text-orange-900">
+                We found {suggestions.length} possible new {suggestions.length === 1 ? 'connection' : 'connections'}.
+              </p>
+            </div>
+            <button className="text-xs font-semibold text-orange-600 bg-white px-3 py-1 rounded-full border border-orange-200">
+              Review
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tree area */}
       <div className="flex-1 relative">
+        {/* Floating Search Bar */}
+        {familyCount > 0 && (
+          <div className="absolute top-4 left-4 right-4 z-20">
+            <div className="bg-white rounded-2xl shadow-md border border-gray-100 flex items-center px-3 py-2 gap-2">
+              <Search size={16} className="text-gray-400" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search family members..."
+                className="flex-1 text-sm outline-none"
+              />
+            </div>
+          </div>
+        )}
+
         {selfPerson && people.length > 1 ? (
           <FamilyFlow
             selfPersonId={selfPerson.id}
             people={people}
             relationships={relationships}
             onNodeClick={(id) => setSelectedPersonId(id)}
+            searchQuery={searchQuery}
           />
         ) : (
           /* Empty state */
@@ -198,6 +282,55 @@ export default function HomePage() {
           accessToken={session?.access_token || ''}
         />
       )}
+
+      {/* Suggestions Bottom Sheet */}
+      <Sheet open={showSuggestionsSheet} onOpenChange={setShowSuggestionsSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Suggested Connections</SheetTitle>
+          </SheetHeader>
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles size={20} className="text-orange-500" />
+              Suggested Connections
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Based on your family tree, we inferred these relationships.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            {suggestions.map((suggestion) => (
+              <div key={suggestion.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <p className="text-sm text-gray-800 leading-relaxed mb-3">
+                  Is <span className="font-bold">{suggestion.to_person.full_name}</span> the <span className="font-semibold text-orange-600 capitalize">{suggestion.suggested_type}</span> of <span className="font-bold">{suggestion.from_person.full_name}</span>?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSuggestionResponse(suggestion.id, 'accept')}
+                    disabled={processingSuggestionId === suggestion.id}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 shadow-md shadow-orange-200"
+                  >
+                    {processingSuggestionId === suggestion.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleSuggestionResponse(suggestion.id, 'reject')}
+                    disabled={processingSuggestionId === suggestion.id}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    <XCircle size={16} className="text-gray-400" />
+                    Ignore
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <BottomNav />
     </div>

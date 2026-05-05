@@ -1,20 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#f97316',
+};
 
 export const metadata: Metadata = {
   title: 'Aangan — Your Family Tree',
   description: 'Connect with your family. Build your tree. Cherish your roots.',
   manifest: '/manifest.json',
-  themeColor: '#f97316',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Aangan',
   },
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-} as Metadata;
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

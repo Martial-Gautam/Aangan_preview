@@ -26,12 +26,15 @@ function FamilyNode({ data }: NodeProps) {
   const colors = COLOR_MAP[nodeData.relationshipType as keyof typeof COLOR_MAP] || COLOR_MAP.relative;
   const initials = nodeData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const label = LABEL_MAP[nodeData.relationshipType] || nodeData.relationshipType;
+  
+  // If isHighlighted is explicitly false, dim the node. If it's true or undefined, keep it normal.
+  const opacityClass = nodeData.isHighlighted === false ? 'opacity-20' : 'opacity-100';
 
   return (
-    <>
+    <div className={`transition-opacity duration-300 ${opacityClass}`}>
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
 
-      <div className="flex flex-col items-center w-28 cursor-pointer group">
+      <div className={`flex flex-col items-center w-28 cursor-pointer group ${nodeData.isHighlighted ? 'ring-2 ring-orange-400 ring-offset-2 rounded-xl' : ''}`}>
         {/* Avatar */}
         <div className="relative">
           <div className={`w-13 h-13 rounded-full border-2 flex items-center justify-center text-sm font-bold overflow-hidden shadow-sm ${nodeData.isSelf ? 'bg-orange-500 border-orange-400 shadow-orange-200 shadow-md' : `${colors.bg} ${colors.border}`}`}>
@@ -59,7 +62,7 @@ function FamilyNode({ data }: NodeProps) {
       </div>
 
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
-    </>
+    </div>
   );
 }
 

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { supabase, RelationshipType } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
-import { Camera, ChevronLeft, Check, User, Mail, Phone } from 'lucide-react';
+import { Camera, ChevronLeft, Check, User, Mail, Phone, Users } from 'lucide-react';
+import Link from 'next/link';
 
 const RELATIONSHIP_OPTIONS: { value: RelationshipType; label: string; desc: string; icon: string }[] = [
   { value: 'father', label: 'Father', desc: 'Your dad', icon: '👨' },
@@ -139,6 +140,21 @@ export default function AddMemberPage() {
         </div>
 
         <div className="px-4 py-5 space-y-5">
+          {/* Import Contacts Button */}
+          <Link
+            href="/import-contacts"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-orange-50 text-orange-600 rounded-2xl border border-orange-200 font-semibold text-sm hover:bg-orange-100 transition-colors"
+          >
+            <Users size={18} />
+            Import from Contacts
+          </Link>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px bg-gray-200 flex-1"></div>
+            <span className="text-xs font-semibold text-gray-400 uppercase">Or Add Manually</span>
+            <div className="h-px bg-gray-200 flex-1"></div>
+          </div>
+
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Relationship</h3>
             <div className="grid grid-cols-2 gap-2">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { runInferenceEngine } from '@/lib/inference-engine';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -111,6 +112,9 @@ export async function POST(req: NextRequest) {
         if (!reqError) requestCreated = true;
       }
     }
+
+    // Run Inference Engine asynchronously (don't await it to block the response)
+    runInferenceEngine(supabaseAdmin, user.id, selfPerson.id).catch(console.error);
 
     return NextResponse.json({ person, request_created: requestCreated });
   } catch (err) {

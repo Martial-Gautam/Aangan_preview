@@ -22,6 +22,7 @@ interface FamilyFlowProps {
   people: Person[];
   relationships: Relationship[];
   onNodeClick: (personId: string) => void;
+  searchQuery?: string;
 }
 
 export default function FamilyFlow({
@@ -29,6 +30,7 @@ export default function FamilyFlow({
   people,
   relationships,
   onNodeClick,
+  searchQuery = '',
 }: FamilyFlowProps) {
 
   const { flowNodes, flowEdges } = useMemo(() =>
@@ -36,9 +38,21 @@ export default function FamilyFlow({
     [selfPersonId, people, relationships]
   );
 
+  const searchedNodes = useMemo(() => {
+    if (!searchQuery.trim()) return flowNodes;
+    const lowerQuery = searchQuery.toLowerCase();
+    return flowNodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHighlighted: (node.data.name as string).toLowerCase().includes(lowerQuery)
+      }
+    }));
+  }, [flowNodes, searchQuery]);
+
   const positionedNodes = useMemo(() =>
-    applyFamilyLayout(flowNodes, relationships, selfPersonId),
-    [flowNodes, relationships, selfPersonId]
+    applyFamilyLayout(searchedNodes, relationships, selfPersonId),
+    [searchedNodes, relationships, selfPersonId]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(positionedNodes);

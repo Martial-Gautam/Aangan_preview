@@ -60,7 +60,20 @@
   background: transparent;
 }
 .react-flow__background {
-  background-color: #f9fafb;
+  background-color: transparent;
+}
+.react-flow__controls {
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+}
+.react-flow__controls button {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+}
+.react-flow__edge-path {
+  stroke: #d1d5db;
+  stroke-width: 1.5;
 }
 
 /* Claim modal animations */

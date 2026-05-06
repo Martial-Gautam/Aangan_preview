@@ -100,10 +100,13 @@ export async function POST(req: NextRequest) {
           .from('connection_requests')
           .insert({
             from_user_id: user.id,
+            sender_id: user.id,
             to_user_id: matchedUserId,
+            receiver_id: matchedUserId,
             receiver_email: email || null,
             receiver_phone: phone_number || null,
             person_id: person.id,
+            linked_person_id: person.id,
             relationship_type,
             status: 'pending',
             type: 'direct',

@@ -151,10 +151,13 @@ export async function POST(req: NextRequest) {
           .from('connection_requests')
           .insert({
             from_user_id: user.id,
+            sender_id: user.id,
             to_user_id: toUserId,
+            receiver_id: toUserId,
             person_id: id,
+            linked_person_id: id,
             relationship_type: rel?.relationship_type || null,
-            status: 'pending',
+            status: 'accepted',
             type: 'onboarding',
             initiated_by: 'matcher'
           })
@@ -162,6 +165,25 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (!reqError && request?.id) createdRequests.push(request.id);
+      }
+
+      // Always ensure user_connections exists between claimant and person's owner.
+      // The user confirmed "this is me" — that's sufficient consent to link trees.
+      if (person.owner_id && person.owner_id !== user.id) {
+        const ordered = [person.owner_id, user.id].sort();
+        const { error: connError } = await supabaseAdmin
+          .from('user_connections')
+          .upsert({
+            user_id_1: ordered[0],
+            user_id_2: ordered[1],
+            connection_type: 'relative'
+          }, { onConflict: 'user_id_1,user_id_2' });
+
+        if (connError) {
+          console.error('Failed to create user_connections:', connError);
+        } else {
+          console.log('user_connections created:', ordered[0], '<->', ordered[1]);
+        }
       }
     }
 

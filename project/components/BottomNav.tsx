@@ -40,7 +40,7 @@ export default function BottomNav() {
   }, [session]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-gray-100/60">
       <div className="max-w-sm mx-auto flex items-center justify-around px-2" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;

@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import ClaimProfileModal, { ClaimMatch } from '@/components/ClaimProfileModal';
 import {
   Camera, LogOut, Check, CreditCard as Edit2, ChevronRight,
-  Calendar, User, Users, Phone, Search, Loader2
+  Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -31,6 +31,12 @@ export default function ProfilePage() {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimChecking, setClaimChecking] = useState(false);
   const [claimMessage, setClaimMessage] = useState('');
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
 
 
@@ -235,6 +241,30 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     await signOut();
     router.replace('/welcome');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!session?.access_token || deleteConfirmText !== 'DELETE') return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ confirmation: 'DELETE_MY_ACCOUNT' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete account');
+      await signOut();
+      router.replace('/welcome');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -508,10 +538,18 @@ export default function ProfilePage() {
 
           <button
             onClick={handleSignOut}
-            className="w-full bg-white border-2 border-red-100 text-red-500 py-4 rounded-2xl font-semibold text-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+            className="w-full bg-white border-2 border-gray-200 text-gray-600 py-4 rounded-2xl font-semibold text-sm hover:bg-gray-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             <LogOut size={18} />
             Sign Out
+          </button>
+
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="w-full bg-white border-2 border-red-100 text-red-500 py-4 rounded-2xl font-semibold text-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <Trash2 size={18} />
+            Delete Account
           </button>
         </div>
       </div>
@@ -532,6 +570,61 @@ export default function ProfilePage() {
         />
       )}
 
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); setDeleteError(''); }} />
+          <div className="relative w-full max-w-sm mx-4 bg-white rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+            <div className="bg-gradient-to-br from-red-500 to-rose-600 px-6 pt-6 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <AlertTriangle size={20} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Delete Account</h2>
+                  <p className="text-sm text-red-100">This action cannot be undone</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                This will permanently delete your account, your family tree, all relationships, and remove you from any connected trees.
+              </p>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1.5">
+                  Type <span className="font-bold text-red-500">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-sm focus:outline-none focus:border-red-400 transition-all placeholder:text-gray-300 font-mono"
+                />
+              </div>
+              {deleteError && (
+                <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-xl">{deleteError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); setDeleteError(''); }}
+                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'DELETE' || deleting}
+                  className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                >
+                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  {deleting ? 'Deleting...' : 'Delete Forever'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

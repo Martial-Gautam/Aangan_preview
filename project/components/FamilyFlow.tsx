@@ -88,7 +88,7 @@ export default function FamilyFlow({
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e5e7eb" />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={0.8} color="#e0ddd8" />
         <Controls showInteractive={false} className="!bottom-20 !right-4" />
       </ReactFlow>
     </div>

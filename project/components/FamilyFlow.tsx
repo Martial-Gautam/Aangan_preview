@@ -41,13 +41,18 @@ export default function FamilyFlow({
   const searchedNodes = useMemo(() => {
     if (!searchQuery.trim()) return flowNodes;
     const lowerQuery = searchQuery.toLowerCase();
-    return flowNodes.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        isHighlighted: (node.data.name as string).toLowerCase().includes(lowerQuery)
-      }
-    }));
+    return flowNodes.map(node => {
+      const d = node.data;
+      const matches =
+        (d.name as string).toLowerCase().includes(lowerQuery) ||
+        ((d.email as string) || '').toLowerCase().includes(lowerQuery) ||
+        ((d.phone as string) || '').includes(lowerQuery) ||
+        ((d.relationshipType as string) || '').toLowerCase().includes(lowerQuery);
+      return {
+        ...node,
+        data: { ...d, isHighlighted: matches }
+      };
+    });
   }, [flowNodes, searchQuery]);
 
   const positionedNodes = useMemo(() =>

@@ -67,23 +67,25 @@ export async function GET(req: NextRequest) {
       .eq('user_id', user.id)
       .neq('owner_id', user.id);
 
-    (claimedNodes || []).forEach((node) => {
+    for (const node of (claimedNodes || [])) {
       if (node.owner_id) {
         connectedOwnerIds.add(node.owner_id);
 
         // Auto-heal: create the missing user_connections row
         const ordered = [node.owner_id, user.id].sort();
-        supabaseAdmin
+        const { error: healError } = await supabaseAdmin
           .from('user_connections')
           .upsert({
             user_id_1: ordered[0],
             user_id_2: ordered[1],
             connection_type: 'relative'
-          }, { onConflict: 'user_id_1,user_id_2' })
-          .then(() => {})
-          .catch((err) => console.error('Auto-heal user_connections error:', err));
+          }, { onConflict: 'user_id_1,user_id_2' });
+
+        if (healError) {
+          console.error('Auto-heal user_connections error:', healError);
+        }
       }
-    });
+    }
 
     // Also check reverse: anyone who claimed a node I own
     const { data: claimedInMyTree } = await supabaseAdmin

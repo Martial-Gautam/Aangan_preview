@@ -5,6 +5,8 @@ export type Person = {
   full_name: string;
   gender: string | null;
   photo_url: string | null;
+  email: string | null;
+  phone_number: string | null;
   is_self: boolean;
   user_id: string | null;
   owner_id: string;
@@ -23,6 +25,8 @@ export type FamilyNodeData = {
   name: string;
   photoUrl: string | null;
   gender: string | null;
+  email: string | null;
+  phone: string | null;
   relationshipType: string;
   isSelf: boolean;
   isLinked: boolean;  // true if user_id is not null (a real Aangan user)
@@ -66,6 +70,8 @@ export function transformToFlow(
         name: person.full_name,
         photoUrl: person.photo_url,
         gender: person.gender,
+        email: person.email,
+        phone: person.phone_number,
         relationshipType: relType,
         isSelf: person.is_self && person.owner_id === selfOwnerId,
         isLinked: person.user_id !== null,

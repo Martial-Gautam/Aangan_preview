@@ -219,14 +219,19 @@ export default function HomePage() {
         {/* Floating Search Bar */}
         {familyCount > 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-0">
-            <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-gray-200/40 border border-gray-100/80 flex items-center px-3.5 py-2.5 gap-2">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-gray-200/40 border border-gray-100/80 flex items-center px-3.5 py-2.5 gap-2">
               <Search size={16} className="text-gray-400" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search family members..."
+                placeholder="Search by name, email, phone..."
                 className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-300"
               />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 transition-colors p-0.5">
+                  <span className="text-xs font-bold">✕</span>
+                </button>
+              )}
             </div>
           </div>
         )}

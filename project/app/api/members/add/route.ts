@@ -78,11 +78,22 @@ export async function POST(req: NextRequest) {
     if (!is_self && (email || phone_number)) {
       let matchedUserId: string | null = null;
 
-      if (phone_number) {
+      // Look up existing user by email (email lives in auth.users, not profiles)
+      if (email && !matchedUserId) {
+        const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const matchedUser = (allUsers?.users || []).find(
+          (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && u.id !== user.id
+        );
+        matchedUserId = matchedUser?.id || null;
+      }
+
+      // Look up existing user by phone
+      if (phone_number && !matchedUserId) {
         const { data: phoneProfile } = await supabaseAdmin
           .from('profiles')
           .select('id')
           .eq('phone', phone_number)
+          .neq('id', user.id)
           .maybeSingle();
         matchedUserId = phoneProfile?.id || null;
       }

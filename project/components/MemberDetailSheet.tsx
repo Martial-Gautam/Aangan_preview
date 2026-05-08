@@ -14,14 +14,14 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  self: 'bg-orange-100 text-orange-700',
-  father: 'bg-blue-100 text-blue-700',
-  mother: 'bg-pink-100 text-pink-700',
-  sibling: 'bg-green-100 text-green-700',
-  spouse: 'bg-amber-100 text-amber-700',
-  child: 'bg-teal-100 text-teal-700',
-  connection: 'bg-indigo-100 text-indigo-700',
-  relative: 'bg-gray-100 text-gray-700',
+  self: 'bg-[#355E3B]/10 text-[#355E3B]',
+  father: 'bg-[#8B5E3C]/10 text-[#8B5E3C]',
+  mother: 'bg-[#B76E5D]/10 text-[#B76E5D]',
+  sibling: 'bg-[#6E8B74]/10 text-[#6E8B74]',
+  spouse: 'bg-[#C9A66B]/10 text-[#8B5E3C]',
+  child: 'bg-[#355E3B]/8 text-[#355E3B]',
+  connection: 'bg-[#C9A66B]/10 text-[#8B5E3C]',
+  relative: 'bg-[#EFE6D5] text-[#5E5E5E]',
 };
 
 interface MemberDetailSheetProps {
@@ -114,15 +114,15 @@ export default function MemberDetailSheet({
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
           <div className="relative mb-3">
-            <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-sm ${isSelf ? 'bg-orange-500 border-orange-400 shadow-orange-200 shadow-md' : 'bg-gray-100 border-gray-300'}`}>
+            <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-sm ${isSelf ? 'bg-gradient-to-br from-[#355E3B] to-[#6E8B74] border-[#355E3B] shadow-[#355E3B]/20 shadow-md' : 'bg-[#EFE6D5] border-[#C9A66B]/30'}`}>
               {person.photo_url ? (
                 <img src={person.photo_url} alt={person.full_name} className="w-full h-full object-cover" />
               ) : (
-                <span className={isSelf ? 'text-white' : 'text-gray-600'}>{initials}</span>
+                <span className={isSelf ? 'text-white' : 'text-[#5E5E5E]'}>{initials}</span>
               )}
             </div>
             {isLinked && !isSelf && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#C9A66B] rounded-full border-2 border-white flex items-center justify-center">
                 <LinkIcon size={10} className="text-white" />
               </div>
             )}
@@ -137,7 +137,7 @@ export default function MemberDetailSheet({
               {label}
             </span>
             {isLinked && (
-              <span className="text-xs font-medium px-3 py-1 rounded-full bg-orange-50 text-orange-600 flex items-center gap-1">
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#C9A66B]/10 text-[#8B5E3C] flex items-center gap-1">
                 <LinkIcon size={10} /> Aangan member
               </span>
             )}
@@ -146,10 +146,10 @@ export default function MemberDetailSheet({
           {/* Degree of relationship */}
           {degreeResult && degreeResult.degree > 0 && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
-              <Route size={12} className="text-orange-400" />
+              <Route size={12} className="text-[#C9A66B]" />
               <span>
                 You and <span className="font-semibold text-gray-700">{person.full_name.split(' ')[0]}</span> are{' '}
-                <span className="font-semibold text-orange-600">{degreeResult.label}</span>
+                <span className="font-semibold text-[#355E3B]">{degreeResult.label}</span>
                 <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'} apart)</span>
               </span>
             </div>
@@ -180,7 +180,7 @@ export default function MemberDetailSheet({
             {canEdit && (
               <button
                 onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
-                className="w-full py-3 px-4 rounded-2xl bg-orange-500 text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-200"
+                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20"
               >
                 <Pencil size={16} /> Edit Member
               </button>
@@ -196,7 +196,7 @@ export default function MemberDetailSheet({
             {canDelete && (
               <button
                 onClick={handleDelete}
-                className="w-full py-3 px-4 rounded-2xl bg-red-50 text-red-600 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all"
+                className="w-full py-3 px-4 rounded-2xl bg-[#6B2E2E]/8 text-[#6B2E2E] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#6B2E2E]/15 active:scale-[0.98] transition-all"
               >
                 <Trash2 size={16} /> Remove Member
               </button>

@@ -67,49 +67,49 @@ export default function WelcomePage() {
   // --- Auth form screen ---
   if (mode !== 'landing') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50/50 via-white to-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-[#EFE6D5]/50 via-[#FAF7F2] to-[#FAF7F2] flex flex-col">
         <div className="flex-1 flex flex-col justify-center px-6 py-12">
           <div className="w-full max-w-sm mx-auto">
             <button
               onClick={() => { setMode('landing'); setError(''); }}
-              className="flex items-center gap-2 text-gray-400 mb-8 text-sm hover:text-gray-600 transition-colors"
+              className="flex items-center gap-2 text-[#5E5E5E] mb-8 text-sm hover:text-[#2B2B2B] transition-colors"
             >
               <ArrowRight size={16} className="rotate-180" />
               Back
             </button>
 
             <div className="mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 border border-orange-100/60 flex items-center justify-center mb-4 shadow-sm">
-                <TreePine size={24} className="text-orange-500" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#355E3B]/15 to-[#6E8B74]/10 border border-[#355E3B]/15 flex items-center justify-center mb-4 shadow-sm">
+                <TreePine size={24} className="text-[#355E3B]" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-[#2B2B2B]">
                 {mode === 'signup' ? 'Join your Aangan' : 'Welcome back'}
               </h2>
-              <p className="text-gray-400 mt-1 text-sm">
+              <p className="text-[#5E5E5E] mt-1 text-sm">
                 {mode === 'signup' ? 'Start building your family tree today' : 'Sign in to your digital courtyard'}
               </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">Email</label>
+                <label className="text-sm font-medium text-[#2B2B2B] block mb-1.5">Email</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5E5E5E]/50" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-[#C9A66B]/20 bg-[#FAF7F2] text-sm text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-[#5E5E5E]/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">Password</label>
+                <label className="text-sm font-medium text-[#2B2B2B] block mb-1.5">Password</label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5E5E5E]/50" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -117,12 +117,12 @@ export default function WelcomePage() {
                     required
                     minLength={6}
                     placeholder="Min. 6 characters"
-                    className="w-full pl-10 pr-11 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                    className="w-full pl-10 pr-11 py-3.5 rounded-xl border border-[#C9A66B]/20 bg-[#FAF7F2] text-sm text-[#2B2B2B] focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-[#5E5E5E]/40"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5E5E5E]/50 hover:text-[#2B2B2B]"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -130,7 +130,7 @@ export default function WelcomePage() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
+                <div className="bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-xl px-4 py-3 text-sm text-[#6B2E2E]">
                   {error}
                 </div>
               )}
@@ -138,17 +138,17 @@ export default function WelcomePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-semibold text-base hover:from-orange-600 hover:to-amber-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-200/50 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white py-4 rounded-2xl font-semibold text-base hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               >
                 {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : 'Sign In'}
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center text-sm text-[#5E5E5E] mt-6">
               {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
               <button
                 onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}
-                className="text-orange-500 font-semibold hover:text-orange-600"
+                className="text-[#355E3B] font-semibold hover:text-[#2d5033]"
               >
                 {mode === 'signup' ? 'Sign in' : 'Sign up'}
               </button>
@@ -161,32 +161,31 @@ export default function WelcomePage() {
 
   // --- Landing page ---
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FAF7F2]">
       {/* Sticky header — appears on scroll */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-gray-100/60'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+            ? 'bg-[#FAF7F2]/90 backdrop-blur-xl shadow-sm border-b border-[#C9A66B]/15'
             : 'bg-transparent'
-        }`}
+          }`}
       >
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TreePine size={20} className={`transition-colors ${scrolled ? 'text-orange-500' : 'text-white'}`} />
-            <span className={`font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
+            <TreePine size={20} className={`transition-colors ${scrolled ? 'text-[#355E3B]' : 'text-white'}`} />
+            <span className={`font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-[#2B2B2B]' : 'text-white'}`}>
               Aangan
             </span>
           </div>
           <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <button
               onClick={() => setMode('signin')}
-              className="text-sm font-semibold text-gray-600 hover:text-orange-500 px-3 py-2 rounded-xl transition-colors"
+              className="text-sm font-semibold text-[#5E5E5E] hover:text-[#355E3B] px-3 py-2 rounded-xl transition-colors"
             >
               Sign In
             </button>
             <button
               onClick={() => setMode('signup')}
-              className="text-sm font-semibold bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all shadow-sm"
+              className="text-sm font-semibold bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white px-4 py-2 rounded-xl hover:from-[#2d5033] hover:to-[#5f7a64] transition-all shadow-sm"
             >
               Get Started
             </button>
@@ -196,51 +195,51 @@ export default function WelcomePage() {
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-amber-500 to-orange-400" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.1),transparent_50%)]" />
+        {/* Background gradient — deep forest */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#355E3B] via-[#2d5033] to-[#1a3320]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(201,166,107,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.15),transparent_50%)]" />
 
         {/* Floating decorative nodes */}
-        <div className="absolute top-20 left-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center animate-pulse">
-          <span className="text-white/70 text-xs font-bold">P</span>
+        <div className="absolute top-20 left-8 w-10 h-10 rounded-full bg-[#C9A66B]/15 backdrop-blur-sm border border-[#C9A66B]/25 flex items-center justify-center animate-pulse">
+          <span className="text-[#C9A66B]/70 text-xs font-bold">P</span>
         </div>
-        <div className="absolute top-32 right-12 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center" style={{ animationDelay: '1s' }}>
-          <span className="text-white/60 text-xs font-bold">M</span>
+        <div className="absolute top-32 right-12 w-8 h-8 rounded-full bg-[#C9A66B]/15 backdrop-blur-sm border border-[#C9A66B]/25 flex items-center justify-center" style={{ animationDelay: '1s' }}>
+          <span className="text-[#C9A66B]/60 text-xs font-bold">M</span>
         </div>
-        <div className="absolute bottom-40 left-16 w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center" style={{ animationDelay: '2s' }}>
-          <span className="text-white/60 text-xs font-bold">S</span>
+        <div className="absolute bottom-40 left-16 w-9 h-9 rounded-full bg-[#C9A66B]/15 backdrop-blur-sm border border-[#C9A66B]/25 flex items-center justify-center" style={{ animationDelay: '2s' }}>
+          <span className="text-[#C9A66B]/60 text-xs font-bold">S</span>
         </div>
-        <div className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-          <span className="text-white/60 text-xs font-bold">C</span>
+        <div className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-[#C9A66B]/15 backdrop-blur-sm border border-[#C9A66B]/25 flex items-center justify-center">
+          <span className="text-[#C9A66B]/60 text-xs font-bold">C</span>
         </div>
 
         <div className="relative z-10 text-center max-w-lg mx-auto">
-          <div className="w-20 h-20 rounded-3xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <TreePine size={40} className="text-white" />
+          <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-[#C9A66B]/30 flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <TreePine size={40} className="text-[#C9A66B]" />
           </div>
 
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.2em] mb-3">The Digital Courtyard</p>
+          <p className="text-[#C9A66B]/80 text-xs font-semibold uppercase tracking-[0.2em] mb-3">The Digital Courtyard</p>
 
           <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4 tracking-tight">
             Where Family Stories<br />
-            <span className="text-amber-200">Meet & Grow</span>
+            <span className="text-[#C9A66B]">Meet & Grow</span>
           </h1>
 
-          <p className="text-white/80 text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
+          <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
             A social platform centered on the Universal Family Tree — mapping connections, discovering relatives, and cherishing memories together.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <button
               onClick={() => setMode('signup')}
-              className="w-full sm:w-auto bg-white text-orange-600 px-8 py-4 rounded-2xl font-bold text-base hover:bg-orange-50 active:scale-[0.97] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#C9A66B] text-[#2B2B2B] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#b8955c] active:scale-[0.97] transition-all shadow-xl shadow-black/15 flex items-center justify-center gap-2"
             >
               Get Started Free <ArrowRight size={18} />
             </button>
             <button
               onClick={() => setMode('signin')}
-              className="w-full sm:w-auto bg-white/15 backdrop-blur-sm text-white border border-white/30 px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/25 active:scale-[0.97] transition-all"
+              className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border border-white/20 px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/20 active:scale-[0.97] transition-all"
             >
               I have an account
             </button>
@@ -248,17 +247,17 @@ export default function WelcomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <button onClick={scrollToFeatures} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 hover:text-white transition-colors animate-bounce">
+        <button onClick={scrollToFeatures} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[#C9A66B]/60 hover:text-[#C9A66B] transition-colors animate-bounce">
           <ChevronDown size={28} />
         </button>
       </section>
 
       {/* The Challenge */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-20 px-6 bg-gradient-to-b from-[#EFE6D5] to-[#FAF7F2]">
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <p className="text-orange-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Records are scattered, offline<br />and hard to access</h2>
-          <p className="text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="text-[#8B5E3C] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#2B2B2B] mb-4">Records are scattered, offline<br />and hard to access</h2>
+          <p className="text-[#5E5E5E] max-w-xl mx-auto leading-relaxed">
             Social media prioritizes friends over family. There&apos;s no platform to automatically map family trees, ancestry, and relationships in one secure, living space.
           </p>
         </div>
@@ -272,67 +271,67 @@ export default function WelcomePage() {
             { icon: MapPin, title: 'Hard to Find Relatives', desc: 'Difficulty discovering relatives in new places.' },
             { icon: Heart, title: 'Fear of Judgement', desc: 'Hesitation to share sensitive family news publicly.' },
           ].map((item) => (
-            <div key={item.title} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-3 group-hover:bg-orange-100 transition-colors">
-                <item.icon size={18} className="text-orange-500" />
+            <div key={item.title} className="bg-[#FAF7F2] rounded-2xl p-5 border border-[#C9A66B]/15 hover:border-[#C9A66B]/40 hover:shadow-lg hover:shadow-[#8B5E3C]/5 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-[#355E3B]/8 flex items-center justify-center mb-3 group-hover:bg-[#355E3B]/15 transition-colors">
+                <item.icon size={18} className="text-[#355E3B]" />
               </div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
-              <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+              <h3 className="font-bold text-[#2B2B2B] text-sm mb-1">{item.title}</h3>
+              <p className="text-[#5E5E5E] text-xs leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Core Features */}
-      <section id="features" className="py-20 px-6 bg-white">
+      <section id="features" className="py-20 px-6 bg-[#FAF7F2]">
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <p className="text-orange-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">All Challenges, One Answer</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Core Features</h2>
-          <p className="text-gray-500 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[#8B5E3C] text-xs font-semibold uppercase tracking-[0.15em] mb-2">All Challenges, One Answer</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#2B2B2B] mb-4">Core Features</h2>
+          <p className="text-[#5E5E5E] max-w-lg mx-auto leading-relaxed">
             Everything your family needs in one private, beautiful space.
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
-            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Aangan auto-maps your relatives and degrees of relations.', gradient: 'from-orange-500 to-amber-500' },
-            { icon: Shield, title: 'Privacy Controls', desc: 'Share posts, events, and announcements only up to the degree you choose.', gradient: 'from-blue-500 to-indigo-500' },
-            { icon: MapPin, title: 'Find Relatives Nearby', desc: 'Discover family in new cities or events — never feel alone.', gradient: 'from-emerald-500 to-teal-500' },
-            { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-pink-500 to-rose-500' },
-            { icon: Image, title: 'Family-First Media Sharing', desc: 'Shared gallery where everyone uploads photos and videos from events.', gradient: 'from-violet-500 to-purple-500' },
-            { icon: Sparkles, title: 'Ancestor Mapping', desc: 'Over time, trace your ancestry — see generations of your lineage mapped out.', gradient: 'from-amber-500 to-yellow-500' },
+            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Aangan auto-maps your relatives and degrees of relations.', gradient: 'from-[#355E3B] to-[#6E8B74]' },
+            { icon: Shield, title: 'Privacy Controls', desc: 'Share posts, events, and announcements only up to the degree you choose.', gradient: 'from-[#6E8B74] to-[#355E3B]' },
+            { icon: MapPin, title: 'Find Relatives Nearby', desc: 'Discover family in new cities or events — never feel alone.', gradient: 'from-[#8B5E3C] to-[#C9A66B]' },
+            { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-[#B76E5D] to-[#C9A66B]' },
+            { icon: Image, title: 'Family-First Media Sharing', desc: 'Shared gallery where everyone uploads photos and videos from events.', gradient: 'from-[#C9A66B] to-[#8B5E3C]' },
+            { icon: Sparkles, title: 'Ancestor Mapping', desc: 'Over time, trace your ancestry — see generations of your lineage mapped out.', gradient: 'from-[#6B2E2E] to-[#B76E5D]' },
           ].map((item) => (
-            <div key={item.title} className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-6 border border-gray-100 hover:shadow-xl hover:shadow-gray-100/80 transition-all group">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-gray-200/50 group-hover:scale-105 transition-transform`}>
+            <div key={item.title} className="bg-[#FAF7F2] rounded-3xl p-6 border border-[#C9A66B]/15 hover:shadow-xl hover:shadow-[#8B5E3C]/8 transition-all group">
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-[#355E3B]/15 group-hover:scale-105 transition-transform`}>
                 <item.icon size={22} className="text-white" />
               </div>
-              <h3 className="font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+              <h3 className="font-bold text-[#2B2B2B] text-lg mb-2">{item.title}</h3>
+              <p className="text-[#5E5E5E] text-sm leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Vision */}
-      <section className="py-20 px-6 bg-gradient-to-br from-orange-600 via-amber-500 to-orange-500 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+      <section className="py-20 px-6 bg-gradient-to-br from-[#355E3B] via-[#2d5033] to-[#1a3320] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(201,166,107,0.1),transparent_50%)]" />
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <Globe size={40} className="text-white/30 mx-auto mb-6" />
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.15em] mb-3">Our Vision</p>
+          <Globe size={40} className="text-[#C9A66B]/30 mx-auto mb-6" />
+          <p className="text-[#C9A66B]/70 text-xs font-semibold uppercase tracking-[0.15em] mb-3">Our Vision</p>
           <h2 className="text-2xl sm:text-3xl font-bold text-white leading-snug mb-6">
             To build the world&apos;s first universal family network — a living digital courtyard where every person can trace their roots, celebrate family bonds, and connect with relatives anywhere.
           </h2>
-          <p className="text-white/70 text-base leading-relaxed max-w-xl mx-auto">
+          <p className="text-white/60 text-base leading-relaxed max-w-xl mx-auto">
             Reviving the warmth of the traditional Indian courtyard, but on a global scale — creating a trusted, private space for generations to come.
           </p>
         </div>
       </section>
 
       {/* Opportunity / Stats */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-[#FAF7F2]">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <p className="text-orange-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Opportunity</p>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">A massive, untapped market</h2>
+          <p className="text-[#8B5E3C] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Opportunity</p>
+          <h2 className="text-3xl font-bold text-[#2B2B2B] mb-4">A massive, untapped market</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
@@ -341,37 +340,37 @@ export default function WelcomePage() {
             { stat: '$8B+', label: 'Ancestry Market', sub: 'expected by 2030' },
             { stat: '∞', label: 'Family Events', sub: 'multi-billion dollar ecosystem' },
           ].map((item) => (
-            <div key={item.label} className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 text-center border border-orange-100/60">
-              <p className="text-3xl font-bold text-orange-600 mb-1">{item.stat}</p>
-              <p className="text-sm font-semibold text-gray-800">{item.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
+            <div key={item.label} className="bg-gradient-to-br from-[#EFE6D5] to-[#FAF7F2] rounded-2xl p-5 text-center border border-[#C9A66B]/20">
+              <p className="text-3xl font-bold text-[#355E3B] mb-1">{item.stat}</p>
+              <p className="text-sm font-semibold text-[#2B2B2B]">{item.label}</p>
+              <p className="text-xs text-[#5E5E5E] mt-0.5">{item.sub}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-20 px-6 bg-gradient-to-b from-[#EFE6D5]/50 to-[#FAF7F2]">
         <div className="max-w-lg mx-auto text-center">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <TreePine size={32} className="text-orange-500" />
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#355E3B]/15 to-[#6E8B74]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <TreePine size={32} className="text-[#355E3B]" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl font-bold text-[#2B2B2B] mb-3">
             Your Aangan awaits
           </h2>
-          <p className="text-gray-500 mb-8 leading-relaxed">
+          <p className="text-[#5E5E5E] mb-8 leading-relaxed">
             A place where every relation matters. Start building your family&apos;s living tree today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => setMode('signup')}
-              className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-4 rounded-2xl font-bold text-base hover:from-orange-600 hover:to-amber-600 active:scale-[0.97] transition-all shadow-xl shadow-orange-200/50 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white px-8 py-4 rounded-2xl font-bold text-base hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.97] transition-all shadow-xl shadow-[#355E3B]/20 flex items-center justify-center gap-2"
             >
               Get Started Free <ArrowRight size={18} />
             </button>
             <button
               onClick={() => setMode('signin')}
-              className="w-full sm:w-auto border-2 border-gray-200 text-gray-600 px-8 py-4 rounded-2xl font-semibold text-base hover:border-orange-300 hover:text-orange-600 active:scale-[0.97] transition-all"
+              className="w-full sm:w-auto border-2 border-[#C9A66B]/30 text-[#5E5E5E] px-8 py-4 rounded-2xl font-semibold text-base hover:border-[#355E3B]/40 hover:text-[#355E3B] active:scale-[0.97] transition-all"
             >
               Sign In
             </button>
@@ -380,15 +379,15 @@ export default function WelcomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 bg-white border-t border-gray-100">
+      <footer className="py-8 px-6 bg-[#FAF7F2] border-t border-[#C9A66B]/15">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <TreePine size={16} className="text-orange-400" />
-            <span className="text-sm font-semibold text-gray-700">Aangan</span>
-            <span className="text-xs text-gray-400">— The Digital Courtyard</span>
+            <TreePine size={16} className="text-[#355E3B]" />
+            <span className="text-sm font-semibold text-[#2B2B2B]">Aangan</span>
+            <span className="text-xs text-[#5E5E5E]">— The Digital Courtyard</span>
           </div>
-          <p className="text-xs text-gray-400">
-            Built by Ranveer Gautam · ranveergautam2004@gmail.com
+          <p className="text-xs text-[#5E5E5E]">
+            Built by Ranveer Gautam · ranveer.aangan@gmail.com
           </p>
         </div>
       </footer>

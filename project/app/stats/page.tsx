@@ -64,12 +64,12 @@ export default function StatsPage() {
 
   if (loading || statsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center animate-pulse">
-            <TreePine size={20} className="text-orange-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[#355E3B]/10 flex items-center justify-center animate-pulse">
+            <TreePine size={20} className="text-[#355E3B]" />
           </div>
-          <p className="text-sm text-gray-400">Loading statistics...</p>
+          <p className="text-sm text-[#5E5E5E]">Loading statistics...</p>
         </div>
       </div>
     );
@@ -81,44 +81,44 @@ export default function StatsPage() {
       label: 'Direct Members',
       value: stats?.direct_count || 0,
       subtitle: 'In your tree',
-      color: 'bg-orange-500',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
+      color: 'bg-[#355E3B]',
+      iconBg: 'bg-[#355E3B]/10',
+      iconColor: 'text-[#355E3B]',
     },
     {
       icon: Globe,
       label: 'Extended Network',
       value: stats?.extended_count || 0,
       subtitle: 'Connected trees',
-      color: 'bg-blue-500',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
+      color: 'bg-[#6E8B74]',
+      iconBg: 'bg-[#6E8B74]/10',
+      iconColor: 'text-[#6E8B74]',
     },
     {
       icon: TreePine,
       label: 'Generations',
       value: stats?.generations || 1,
       subtitle: 'Depth of your tree',
-      color: 'bg-emerald-500',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
+      color: 'bg-[#8B5E3C]',
+      iconBg: 'bg-[#8B5E3C]/10',
+      iconColor: 'text-[#8B5E3C]',
     },
     {
       icon: TrendingUp,
       label: 'Growth',
       value: `${stats?.growth_percent || 0}%`,
       subtitle: `${stats?.new_this_month || 0} new this month`,
-      color: 'bg-violet-500',
-      iconBg: 'bg-violet-100',
-      iconColor: 'text-violet-600',
+      color: 'bg-[#C9A66B]',
+      iconBg: 'bg-[#C9A66B]/10',
+      iconColor: 'text-[#C9A66B]',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="bg-white px-5 pt-12 pb-5 shadow-sm">
+        <div className="bg-[#FAF7F2] px-5 pt-12 pb-5 shadow-sm border-b border-[#C9A66B]/10">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
@@ -158,8 +158,8 @@ export default function StatsPage() {
           {stats?.oldest && (
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <Crown size={20} className="text-amber-600" />
+                <div className="w-10 h-10 rounded-xl bg-[#C9A66B]/10 flex items-center justify-center flex-shrink-0">
+                  <Crown size={20} className="text-[#C9A66B]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -183,8 +183,8 @@ export default function StatsPage() {
           {stats?.youngest && stats.youngest.name !== stats.oldest?.name && (
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0">
-                  <Baby size={20} className="text-teal-600" />
+                <div className="w-10 h-10 rounded-xl bg-[#6E8B74]/10 flex items-center justify-center flex-shrink-0">
+                  <Baby size={20} className="text-[#6E8B74]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -208,8 +208,8 @@ export default function StatsPage() {
           {stats && stats.birthplace_count > 0 && (
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
-                  <Globe size={20} className="text-rose-600" />
+                <div className="w-10 h-10 rounded-xl bg-[#B76E5D]/10 flex items-center justify-center flex-shrink-0">
+                  <Globe size={20} className="text-[#B76E5D]" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -234,7 +234,7 @@ export default function StatsPage() {
           )}
 
           {/* Encouragement */}
-          <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-5 shadow-lg shadow-orange-200">
+          <div className="bg-gradient-to-br from-[#355E3B] to-[#6E8B74] rounded-2xl p-5 shadow-lg shadow-[#355E3B]/20">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <TreePine size={20} className="text-white" />

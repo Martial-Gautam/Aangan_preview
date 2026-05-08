@@ -160,7 +160,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col max-w-sm mx-auto">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col max-w-sm mx-auto">
       <div className="px-6 pt-12 pb-2">
         <div className="flex items-center gap-3 mb-6">
           {currentIndex > 0 && (
@@ -169,8 +169,7 @@ export default function OnboardingPage() {
             </button>
           )}
           <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-orange-500 rounded-full transition-all duration-500"
+            <div className="h-full bg-[#355E3B] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -186,19 +185,19 @@ export default function OnboardingPage() {
             <div className="relative mb-10">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-36 h-36 rounded-full border-4 border-dashed border-orange-200 bg-orange-50 flex flex-col items-center justify-center hover:border-orange-400 hover:bg-orange-100 transition-all active:scale-95 overflow-hidden"
+                className="w-36 h-36 rounded-full border-4 border-dashed border-[#355E3B]/25 bg-[#355E3B]/5 flex flex-col items-center justify-center hover:border-[#355E3B]/50 hover:bg-[#355E3B]/10 transition-all active:scale-95 overflow-hidden"
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <>
-                    <Camera size={32} className="text-orange-400 mb-2" />
-                    <span className="text-xs text-orange-500 font-medium">Add Photo</span>
+                    <Camera size={32} className="text-[#355E3B]/50 mb-2" />
+                    <span className="text-xs text-[#355E3B] font-medium">Add Photo</span>
                   </>
                 )}
               </button>
               {photoPreview && (
-                <div className="absolute bottom-1 right-1 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                <div className="absolute bottom-1 right-1 w-8 h-8 bg-[#355E3B] rounded-full flex items-center justify-center shadow-md">
                   <Camera size={14} className="text-white" />
                 </div>
               )}
@@ -220,7 +219,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
                 autoFocus
-                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-100 text-base focus:outline-none focus:border-orange-400 transition-all placeholder:text-gray-300 font-medium"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-[#C9A66B]/20 bg-[#FAF7F2] text-base focus:outline-none focus:border-[#355E3B]/50 transition-all placeholder:text-[#5E5E5E]/40 font-medium text-[#2B2B2B]"
               />
             </div>
           </div>
@@ -237,16 +236,16 @@ export default function OnboardingPage() {
                   onClick={() => setGender(g.value)}
                   className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all active:scale-95 ${
                     gender === g.value
-                      ? 'border-orange-500 bg-orange-50 shadow-md shadow-orange-100'
-                      : 'border-gray-100 bg-gray-50 hover:border-orange-200'
+                      ? 'border-[#355E3B] bg-[#355E3B]/5 shadow-md shadow-[#355E3B]/10'
+                      : 'border-[#C9A66B]/15 bg-[#EFE6D5]/30 hover:border-[#355E3B]/30'
                   }`}
                 >
                   <span className="text-3xl">{g.icon}</span>
-                  <span className={`text-sm font-semibold ${gender === g.value ? 'text-orange-600' : 'text-gray-600'}`}>
+                  <span className={`text-sm font-semibold ${gender === g.value ? 'text-[#355E3B]' : 'text-[#5E5E5E]'}`}>
                     {g.label}
                   </span>
                   {gender === g.value && (
-                    <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-[#355E3B] flex items-center justify-center">
                       <Check size={12} className="text-white" />
                     </div>
                   )}
@@ -265,10 +264,10 @@ export default function OnboardingPage() {
               value={dob}
               onChange={(e) => setDob(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-4 rounded-2xl border-2 border-gray-100 text-base focus:outline-none focus:border-orange-400 transition-all font-medium text-gray-700"
+              className="w-full px-4 py-4 rounded-2xl border-2 border-[#C9A66B]/20 bg-[#FAF7F2] text-base focus:outline-none focus:border-[#355E3B]/50 transition-all font-medium text-[#2B2B2B]"
             />
             {error && (
-              <div className="mt-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
+              <div className="mt-4 bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-xl px-4 py-3 text-sm text-[#6B2E2E]">
                 {error}
               </div>
             )}
@@ -281,7 +280,7 @@ export default function OnboardingPage() {
           <button
             onClick={handleFinish}
             disabled={!canProceed() || loading}
-            className="w-full bg-orange-500 text-white py-4 rounded-2xl font-semibold text-base hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white py-4 rounded-2xl font-semibold text-base hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? 'Setting up your account...' : <>Finish Setup <Check size={18} /></>}
           </button>
@@ -289,7 +288,7 @@ export default function OnboardingPage() {
           <button
             onClick={goNext}
             disabled={step !== 'photo' && !canProceed()}
-            className="w-full bg-orange-500 text-white py-4 rounded-2xl font-semibold text-base hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white py-4 rounded-2xl font-semibold text-base hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             Continue <ChevronRight size={18} />
           </button>

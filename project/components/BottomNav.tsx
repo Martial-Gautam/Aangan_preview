@@ -40,7 +40,7 @@ export default function BottomNav() {
   }, [session]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-gray-100/60">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#FAF7F2]/90 backdrop-blur-xl border-t border-[#C9A66B]/15">
       <div className="max-w-sm mx-auto flex items-center justify-around px-2" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
@@ -49,16 +49,16 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center gap-1 py-3 px-5 rounded-2xl transition-all relative ${
-                active ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'
+                active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
               }`}
             >
-              <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-orange-50' : ''}`}>
+              <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#355E3B]/8' : ''}`}>
                 <Icon size={22} strokeWidth={active ? 2.5 : 2} />
                 {href === '/notifications' && pendingCount > 0 && (
-                  <span className="absolute top-3 right-5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                  <span className="absolute top-3 right-5 w-2.5 h-2.5 bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2]"></span>
                 )}
               </div>
-              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-orange-500' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60'}`}>
                 {label}
               </span>
             </Link>

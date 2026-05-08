@@ -153,43 +153,43 @@ export default function HomePage() {
 
   if (loading || dataLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50/60 via-white to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#EFE6D5]/60 via-[#FAF7F2] to-[#EFE6D5]/30 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center animate-pulse shadow-sm">
-            <TreePine size={22} className="text-orange-400" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#355E3B]/15 to-[#6E8B74]/10 flex items-center justify-center animate-pulse shadow-sm">
+            <TreePine size={22} className="text-[#355E3B]" />
           </div>
-          <p className="text-sm text-gray-400 font-medium">Loading your family...</p>
+          <p className="text-sm text-[#5E5E5E] font-medium">Loading your family...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gradient-to-b from-orange-50/40 via-gray-50/50 to-gray-100/30 flex justify-center">
-    <div className="h-full w-full max-w-sm bg-gradient-to-b from-white via-gray-50/80 to-gray-50 flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-b from-[#EFE6D5]/40 via-[#FAF7F2] to-[#EFE6D5]/30 flex justify-center">
+    <div className="h-full w-full max-w-sm bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/90 to-[#EFE6D5]/40 flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-xl px-5 pt-12 pb-4 z-10 flex-shrink-0 border-b border-gray-100/60">
+      <div className="bg-[#FAF7F2]/90 backdrop-blur-xl px-5 pt-12 pb-4 z-10 flex-shrink-0 border-b border-[#C9A66B]/15">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="text-[10px] text-orange-400/80 font-semibold uppercase tracking-[0.15em]">Aangan</p>
-            <h1 className="text-lg font-bold text-gray-900 mt-0.5">
+            <p className="text-[10px] text-[#355E3B]/60 font-semibold uppercase tracking-[0.15em]">Aangan</p>
+            <h1 className="text-lg font-bold text-[#2B2B2B] mt-0.5">
               {profile?.full_name?.split(' ')[0]}&apos;s Family
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 text-xs font-semibold px-3 py-1.5 rounded-full border border-orange-100/60">
+            <span className="bg-[#355E3B]/8 text-[#355E3B] text-xs font-semibold px-3 py-1.5 rounded-full border border-[#355E3B]/15">
               {familyCount} {familyCount === 1 ? 'member' : 'members'}
             </span>
             <button
               onClick={handleInstall}
-              className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:from-orange-600 hover:to-amber-600 transition-all shadow-sm shadow-orange-200/50 active:scale-95"
+              className="bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:from-[#2d5033] hover:to-[#5f7a64] transition-all shadow-sm shadow-[#355E3B]/20 active:scale-95"
             >
               Install
             </button>
           </div>
         </div>
         {installHint && (
-          <p className="text-[11px] text-gray-400 mt-1.5 max-w-lg mx-auto px-1">
+          <p className="text-[11px] text-[#5E5E5E] mt-1.5 max-w-lg mx-auto px-1">
             {installHint}
           </p>
         )}
@@ -197,17 +197,17 @@ export default function HomePage() {
 
       {/* Suggestions Banner */}
       {suggestions.length > 0 && !dataLoading && (
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50/80 border-b border-orange-100/50 px-5 py-3 flex-shrink-0 cursor-pointer hover:from-orange-100/80 hover:to-amber-50 transition-all" onClick={() => setShowSuggestionsSheet(true)}>
+        <div className="bg-gradient-to-r from-[#C9A66B]/10 to-[#EFE6D5]/50 border-b border-[#C9A66B]/15 px-5 py-3 flex-shrink-0 cursor-pointer hover:from-[#C9A66B]/15 hover:to-[#EFE6D5] transition-all" onClick={() => setShowSuggestionsSheet(true)}>
           <div className="max-w-lg mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
-                <Sparkles size={14} className="text-orange-500" />
+              <div className="w-7 h-7 rounded-lg bg-[#C9A66B]/15 flex items-center justify-center">
+                <Sparkles size={14} className="text-[#C9A66B]" />
               </div>
-              <p className="text-sm font-medium text-orange-900">
+              <p className="text-sm font-medium text-[#2B2B2B]">
                 {suggestions.length} possible {suggestions.length === 1 ? 'connection' : 'connections'}
               </p>
             </div>
-            <button className="text-xs font-semibold text-orange-600 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-orange-200/60 shadow-sm hover:bg-white transition-colors">
+            <button className="text-xs font-semibold text-[#355E3B] bg-[#FAF7F2]/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[#C9A66B]/25 shadow-sm hover:bg-[#FAF7F2] transition-colors">
               Review
             </button>
           </div>
@@ -219,13 +219,13 @@ export default function HomePage() {
         {/* Floating Search Bar */}
         {familyCount > 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-0">
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-gray-200/40 border border-gray-100/80 flex items-center px-3.5 py-2.5 gap-2">
+          <div className="bg-[#FAF7F2]/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-[#8B5E3C]/8 border border-[#C9A66B]/15 flex items-center px-3.5 py-2.5 gap-2">
               <Search size={16} className="text-gray-400" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, phone..."
-                className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-300"
+                className="flex-1 text-sm outline-none bg-transparent placeholder:text-[#5E5E5E]/40 text-[#2B2B2B]"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 transition-colors p-0.5">
@@ -247,17 +247,17 @@ export default function HomePage() {
         ) : (
           /* Empty state */
           <div className="h-full flex items-center justify-center px-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 flex flex-col items-center text-center shadow-lg shadow-gray-100/50 border border-gray-100/60 max-w-xs w-full">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center mb-5 shadow-sm">
-                <TreePine size={36} className="text-orange-300" />
+            <div className="bg-[#FAF7F2]/80 backdrop-blur-sm rounded-3xl p-8 flex flex-col items-center text-center shadow-lg shadow-[#8B5E3C]/8 border border-[#C9A66B]/15 max-w-xs w-full">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#355E3B]/10 to-[#6E8B74]/10 flex items-center justify-center mb-5 shadow-sm">
+                <TreePine size={36} className="text-[#6E8B74]" />
               </div>
-              <h3 className="font-bold text-gray-800 text-lg mb-2">Your tree is empty</h3>
-              <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              <h3 className="font-bold text-[#2B2B2B] text-lg mb-2">Your tree is empty</h3>
+              <p className="text-[#5E5E5E] text-sm mb-6 leading-relaxed">
                 Start by adding your parents or siblings to build your family tree
               </p>
               <Link
                 href="/add-member"
-                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-2xl text-sm font-semibold hover:from-orange-600 hover:to-amber-600 transition-all flex items-center gap-2 shadow-lg shadow-orange-200/50 active:scale-95"
+                className="bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white px-6 py-3 rounded-2xl text-sm font-semibold hover:from-[#2d5033] hover:to-[#5f7a64] transition-all flex items-center gap-2 shadow-lg shadow-[#355E3B]/20 active:scale-95"
               >
                 <Plus size={16} /> Add First Member
               </Link>
@@ -270,7 +270,7 @@ export default function HomePage() {
           <div className="absolute bottom-4 right-4 z-20">
             <Link
               href="/add-member"
-              className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center shadow-xl shadow-orange-300/40 hover:from-orange-600 hover:to-amber-600 active:scale-90 transition-all"
+              className="w-14 h-14 bg-gradient-to-br from-[#355E3B] to-[#6E8B74] rounded-full flex items-center justify-center shadow-xl shadow-[#355E3B]/30 hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-90 transition-all"
             >
               <Plus size={24} className="text-white" />
             </Link>
@@ -302,7 +302,7 @@ export default function HomePage() {
           </div>
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Sparkles size={20} className="text-orange-500" />
+              <Sparkles size={20} className="text-[#C9A66B]" />
               Suggested Connections
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -312,15 +312,15 @@ export default function HomePage() {
           
           <div className="space-y-4">
             {suggestions.map((suggestion) => (
-              <div key={suggestion.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <div key={suggestion.id} className="bg-[#EFE6D5]/40 rounded-2xl p-4 border border-[#C9A66B]/15">
                 <p className="text-sm text-gray-800 leading-relaxed mb-3">
-                  Is <span className="font-bold">{suggestion.to_person.full_name}</span> the <span className="font-semibold text-orange-600 capitalize">{suggestion.suggested_type}</span> of <span className="font-bold">{suggestion.from_person.full_name}</span>?
+                  Is <span className="font-bold">{suggestion.to_person.full_name}</span> the <span className="font-semibold text-[#355E3B] capitalize">{suggestion.suggested_type}</span> of <span className="font-bold">{suggestion.from_person.full_name}</span>?
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSuggestionResponse(suggestion.id, 'accept')}
                     disabled={processingSuggestionId === suggestion.id}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 shadow-md shadow-orange-200"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#355E3B] hover:bg-[#2d5033] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 shadow-md shadow-[#355E3B]/20"
                   >
                     {processingSuggestionId === suggestion.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                     Accept

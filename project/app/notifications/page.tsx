@@ -106,8 +106,8 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 size={24} className="text-orange-400 animate-spin" />
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+        <Loader2 size={24} className="text-[#355E3B] animate-spin" />
       </div>
     );
   }
@@ -115,17 +115,17 @@ export default function NotificationsPage() {
   const isEmpty = !requestsLoading && !suggestionsLoading && pendingRequests.length === 0 && suggestions.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
       <div className="max-w-sm mx-auto">
-        <div className="bg-white px-6 pt-12 pb-6 shadow-sm mb-4">
-          <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+        <div className="bg-[#FAF7F2] px-6 pt-12 pb-6 shadow-sm mb-4 border-b border-[#C9A66B]/10">
+          <h1 className="text-xl font-bold text-[#2B2B2B]">Notifications</h1>
         </div>
 
         <div className="px-4 space-y-4">
           {isEmpty && (
-            <div className="bg-white rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-gray-100">
-              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-                <Bell size={28} className="text-gray-300" />
+            <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15">
+              <div className="w-16 h-16 rounded-full bg-[#EFE6D5] flex items-center justify-center mb-4">
+                <Bell size={28} className="text-[#C9A66B]/50" />
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
                 No notifications yet. When someone adds you to their tree, you'll see it here.
@@ -135,13 +135,13 @@ export default function NotificationsPage() {
 
           {/* Connection Requests Section */}
           {(pendingRequests.length > 0 || requestsLoading) && (
-            <div className="bg-white rounded-3xl shadow-sm border border-indigo-100 overflow-hidden relative">
-              <div className="px-5 pt-4 pb-2 border-b border-indigo-50 bg-indigo-50/30">
-                <h3 className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
-                  <Bell size={16} className="text-indigo-500" />
+            <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden relative">
+              <div className="px-5 pt-4 pb-2 border-b border-[#C9A66B]/10 bg-[#355E3B]/5">
+                <h3 className="text-sm font-semibold text-[#355E3B] flex items-center gap-2">
+                  <Bell size={16} className="text-[#355E3B]" />
                   Connection Requests
                   {!requestsLoading && pendingRequests.length > 0 && (
-                    <span className="bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
+                    <span className="bg-[#355E3B] text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
                       {pendingRequests.length}
                     </span>
                   )}
@@ -150,17 +150,17 @@ export default function NotificationsPage() {
               <div className="divide-y divide-gray-50">
                 {requestsLoading ? (
                   <div className="py-8 flex justify-center">
-                    <Loader2 size={24} className="text-indigo-400 animate-spin" />
+                    <Loader2 size={24} className="text-[#355E3B]/40 animate-spin" />
                   </div>
                 ) : (
                   pendingRequests.map(req => (
-                    <div key={req.id} className="p-4 bg-white hover:bg-indigo-50/30 transition-colors">
+                    <div key={req.id} className="p-4 bg-[#FAF7F2] hover:bg-[#355E3B]/5 transition-colors">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#355E3B]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {req.sender.photo_url ? (
                             <img src={req.sender.photo_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <User size={18} className="text-indigo-500" />
+                            <User size={18} className="text-[#355E3B]" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
                               : 'added you to their family tree'}
                             {req.relationship && req.type !== 'suggestion' && (
                               <>
-                                {' '}as their <span className="font-semibold text-indigo-700">{req.relationship}</span>
+                                {' '}as their <span className="font-semibold text-[#355E3B]">{req.relationship}</span>
                               </>
                             )}.
                           </p>
@@ -183,7 +183,7 @@ export default function NotificationsPage() {
                             <button
                               onClick={() => handleConnectionResponse(req.id, 'accept')}
                               disabled={processingRequestId === req.id}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#355E3B] hover:bg-[#2d5033] text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50"
                             >
                               {processingRequestId === req.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                               Connect Trees

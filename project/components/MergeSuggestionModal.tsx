@@ -96,8 +96,8 @@ export default function MergeSuggestionModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center">
-              <GitMerge size={16} className="text-orange-600" />
+            <div className="w-8 h-8 rounded-xl bg-[#C9A66B]/15 flex items-center justify-center">
+              <GitMerge size={16} className="text-[#C9A66B]" />
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900">Merge Suggestion</h2>
@@ -118,7 +118,7 @@ export default function MergeSuggestionModal({
             confidencePercent >= 80
               ? 'bg-green-100 text-green-700'
               : confidencePercent >= 60
-                ? 'bg-amber-100 text-amber-700'
+                ? 'bg-[#C9A66B]/15 text-[#8B5E3C]'
                 : 'bg-gray-100 text-gray-600'
           }`}>
             {confidencePercent}% match
@@ -158,7 +158,7 @@ export default function MergeSuggestionModal({
                   {person?.gender || '—'}
                 </p>
                 {person?.user_id && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#355E3B] bg-[#355E3B]/8 px-2 py-0.5 rounded-full">
                     <Users size={9} /> Aangan user
                   </span>
                 )}
@@ -172,7 +172,7 @@ export default function MergeSuggestionModal({
           <button
             onClick={() => handleAction('accept')}
             disabled={processing}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-2xl text-sm font-bold hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white rounded-2xl text-sm font-bold hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {processing ? <Loader2 size={16} className="animate-spin" /> : <GitMerge size={16} />}
             Yes, same person — Merge

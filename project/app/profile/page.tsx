@@ -269,8 +269,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#355E3B] border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -279,15 +279,15 @@ export default function ProfilePage() {
   const initials = (profile?.full_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
       <div className="max-w-sm mx-auto">
-        <div className="bg-white px-6 pt-12 pb-6 shadow-sm">
+        <div className="bg-[#FAF7F2] px-6 pt-12 pb-6 shadow-sm border-b border-[#C9A66B]/10">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-xl font-bold text-gray-900">Profile</h1>
             <button
               onClick={() => setEditing(!editing)}
               className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl transition-all ${
-                editing ? 'bg-gray-100 text-gray-600' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                editing ? 'bg-[#EFE6D5] text-[#5E5E5E]' : 'bg-[#355E3B]/8 text-[#355E3B] hover:bg-[#355E3B]/15'
               }`}
             >
               <Edit2 size={14} />
@@ -297,17 +297,17 @@ export default function ProfilePage() {
 
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-orange-100 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#355E3B]/10 flex items-center justify-center">
                 {displayPhoto ? (
                   <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-orange-500">{initials}</span>
+                  <span className="text-3xl font-bold text-[#355E3B]">{initials}</span>
                 )}
               </div>
               {editing && (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-md hover:bg-orange-600 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#355E3B] rounded-full flex items-center justify-center shadow-md hover:bg-[#2d5033] transition-colors"
                 >
                   <Camera size={14} className="text-white" />
                 </button>
@@ -325,14 +325,14 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
               <div className="flex justify-center mb-1">
-                <Users size={20} className="text-orange-400" />
+                <Users size={20} className="text-[#C9A66B]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{familyCount}</p>
               <p className="text-xs text-gray-500">Family Members</p>
             </div>
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
               <div className="flex justify-center mb-1">
-                <Calendar size={20} className="text-orange-400" />
+                <Calendar size={20} className="text-[#C9A66B]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.date_of_birth
@@ -343,7 +343,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Personal Details</h3>
             </div>
@@ -358,7 +358,7 @@ export default function ProfilePage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -371,8 +371,8 @@ export default function ProfilePage() {
                         onClick={() => setGender(gender === g ? '' : g)}
                         className={`py-2.5 rounded-xl border-2 text-xs font-medium capitalize transition-all ${
                           gender === g
-                            ? 'border-orange-500 bg-orange-50 text-orange-600'
-                            : 'border-gray-100 text-gray-600 hover:border-orange-200'
+                            ? 'border-[#355E3B] bg-[#355E3B]/5 text-[#355E3B]'
+                            : 'border-[#C9A66B]/15 text-[#5E5E5E] hover:border-[#355E3B]/30'
                         }`}
                       >
                         {g}
@@ -387,7 +387,7 @@ export default function ProfilePage() {
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all text-gray-700"
+                    className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all text-[#2B2B2B]"
                   />
                 </div>
                 <div>
@@ -399,7 +399,7 @@ export default function ProfilePage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Your phone number"
-                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-[#5E5E5E]/40"
                     />
                   </div>
                 </div>
@@ -408,8 +408,8 @@ export default function ProfilePage() {
                   disabled={saving}
                   className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                     saved
-                      ? 'bg-green-500 text-white'
-                      : 'bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] shadow-md shadow-orange-200'
+                      ? 'bg-[#355E3B] text-white'
+                      : 'bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] shadow-md shadow-[#355E3B]/20'
                   } disabled:opacity-60`}
                 >
                   {saved ? <><Check size={16} /> Saved!</> : saving ? 'Saving...' : 'Save Changes'}
@@ -442,7 +442,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Claim Profile section */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Claim Profile</h3>
             </div>
@@ -453,7 +453,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleClaimCheck}
                 disabled={claimChecking}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-orange-200 bg-orange-50 text-orange-600 text-sm font-semibold hover:bg-orange-100 hover:border-orange-300 active:scale-[0.98] transition-all disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-[#355E3B]/20 bg-[#355E3B]/5 text-[#355E3B] text-sm font-semibold hover:bg-[#355E3B]/10 hover:border-[#355E3B]/30 active:scale-[0.98] transition-all disabled:opacity-60"
               >
                 {claimChecking ? (
                   <>
@@ -474,7 +474,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Family Members section */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Family Members</h3>
             </div>
@@ -493,13 +493,13 @@ export default function ProfilePage() {
                         <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
                         <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
                         {member.user_id && (
-                          <p className="text-[11px] text-amber-600">Linked profile</p>
+                          <p className="text-[11px] text-[#C9A66B]">Linked profile</p>
                         )}
                       </div>
                       <button
                         onClick={() => handleDeleteMember(member.id)}
                         disabled={deletingMemberId === member.id || !!member.user_id}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-red-100 text-red-500 hover:bg-red-50 disabled:opacity-50"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#6B2E2E]/15 text-[#6B2E2E] hover:bg-[#6B2E2E]/5 disabled:opacity-50"
                       >
                         {deletingMemberId === member.id ? 'Deleting...' : 'Delete'}
                       </button>
@@ -518,7 +518,7 @@ export default function ProfilePage() {
 
 
 
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Account</h3>
             </div>
@@ -546,7 +546,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="w-full bg-white border-2 border-red-100 text-red-500 py-4 rounded-2xl font-semibold text-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-[#FAF7F2] border-2 border-[#6B2E2E]/15 text-[#6B2E2E] py-4 rounded-2xl font-semibold text-sm hover:bg-[#6B2E2E]/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <Trash2 size={18} />
             Delete Account

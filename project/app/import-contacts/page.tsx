@@ -158,8 +158,8 @@ export default function ImportContactsPage() {
   const newUsers = contacts.filter(c => !c.isExistingAanganUser);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white px-5 py-4 shadow-sm z-10 flex-shrink-0 flex items-center gap-4">
+    <div className="min-h-screen bg-[#EFE6D5]/40 flex flex-col">
+      <div className="bg-[#FAF7F2] px-5 py-4 shadow-sm z-10 flex-shrink-0 flex items-center gap-4 border-b border-[#C9A66B]/10">
         <Link href="/add-member" className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors">
           <ArrowLeft size={20} className="text-gray-600" />
         </Link>
@@ -171,17 +171,17 @@ export default function ImportContactsPage() {
 
       <div className="flex-1 p-5 max-w-lg mx-auto w-full">
         {!isSupported && contacts.length === 0 ? (
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 text-center">
-            <AlertCircle size={32} className="text-orange-400 mx-auto mb-3" />
-            <h2 className="text-sm font-bold text-orange-900 mb-1">Not Supported</h2>
-            <p className="text-xs text-orange-700 leading-relaxed">
+          <div className="bg-[#C9A66B]/10 border border-[#C9A66B]/20 rounded-2xl p-6 text-center">
+            <AlertCircle size={32} className="text-[#C9A66B] mx-auto mb-3" />
+            <h2 className="text-sm font-bold text-[#2B2B2B] mb-1">Not Supported</h2>
+            <p className="text-xs text-[#5E5E5E] leading-relaxed">
               Your browser doesn't support the native Contact Picker. Please use Chrome on Android or Safari on iOS 16+.
             </p>
           </div>
         ) : contacts.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center pt-10">
-            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
-              <Users size={36} className="text-orange-500" />
+            <div className="w-20 h-20 bg-[#355E3B]/10 rounded-full flex items-center justify-center mb-6">
+              <Users size={36} className="text-[#355E3B]" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Sync Address Book</h2>
             <p className="text-sm text-gray-500 text-center mb-8 max-w-xs leading-relaxed">
@@ -190,7 +190,7 @@ export default function ImportContactsPage() {
             <button
               onClick={handleImport}
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 shadow-md flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white font-semibold text-sm hover:from-[#2d5033] hover:to-[#5f7a64] shadow-md flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               {loading ? 'Reading Contacts...' : 'Select Contacts'}
@@ -245,7 +245,7 @@ export default function ImportContactsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || contacts.length === 0}
-                className="w-full max-w-lg mx-auto py-4 rounded-2xl bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full max-w-lg mx-auto py-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white font-semibold text-sm hover:from-[#2d5033] hover:to-[#5f7a64] shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                 {saving ? 'Saving to Tree...' : `Add ${contacts.length} Members`}
@@ -299,7 +299,7 @@ function ContactCard({ contact, onRelChange, onRemove }: {
               onClick={() => onRelChange(rel)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
                 contact.relationshipType === rel 
-                  ? 'bg-orange-500 text-white' 
+                  ? 'bg-[#355E3B] text-white' 
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >

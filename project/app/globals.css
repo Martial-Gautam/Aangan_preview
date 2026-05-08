@@ -4,31 +4,31 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 13% 13%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 13% 13%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 13%;
-    --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 30 40% 96%;
-    --secondary-foreground: 220 13% 13%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 24 40% 95%;
-    --accent-foreground: 24 95% 40%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 24 95% 53%;
+    --background: 40 30% 97%;
+    --foreground: 0 0% 17%;
+    --card: 40 30% 97%;
+    --card-foreground: 0 0% 17%;
+    --popover: 40 30% 97%;
+    --popover-foreground: 0 0% 17%;
+    --primary: 147 30% 29%;
+    --primary-foreground: 40 30% 97%;
+    --secondary: 135 12% 49%;
+    --secondary-foreground: 0 0% 17%;
+    --muted: 36 25% 90%;
+    --muted-foreground: 0 0% 37%;
+    --accent: 37 40% 60%;
+    --accent-foreground: 0 0% 17%;
+    --destructive: 0 40% 30%;
+    --destructive-foreground: 40 30% 97%;
+    --border: 36 20% 85%;
+    --input: 36 20% 85%;
+    --ring: 147 30% 29%;
     --radius: 0.75rem;
-    --chart-1: 24 95% 53%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 147 30% 29%;
+    --chart-2: 135 12% 49%;
+    --chart-3: 25 41% 40%;
+    --chart-4: 37 40% 60%;
+    --chart-5: 13 35% 54%;
   }
 }
 
@@ -68,9 +68,9 @@
 .react-flow__controls {
   border-radius: 14px !important;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 4px 20px rgba(53, 94, 59, 0.10) !important;
+  border: 1px solid rgba(110, 139, 116, 0.15) !important;
+  background: rgba(250, 247, 242, 0.95) !important;
   backdrop-filter: blur(12px);
   width: 40px !important;
 }
@@ -82,14 +82,14 @@
   align-items: center !important;
   justify-content: center !important;
   border: none !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-bottom: 1px solid rgba(110, 139, 116, 0.08) !important;
   background: transparent !important;
-  color: #6b7280 !important;
+  color: #5E5E5E !important;
   transition: all 0.15s ease;
 }
 .react-flow__controls button:hover {
-  background: rgba(249, 115, 22, 0.08) !important;
-  color: #f97316 !important;
+  background: rgba(53, 94, 59, 0.08) !important;
+  color: #355E3B !important;
 }
 .react-flow__controls button:last-child {
   border-bottom: none !important;
@@ -102,7 +102,7 @@
   fill: currentColor !important;
 }
 .react-flow__edge-path {
-  stroke: #d1d5db;
+  stroke: #C9A66B;
   stroke-width: 1.5;
 }
 

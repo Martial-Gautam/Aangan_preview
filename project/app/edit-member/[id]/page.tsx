@@ -172,19 +172,19 @@ export default function EditMemberPage() {
 
   if (authLoading || fetchLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={24} className="text-orange-400 animate-spin" />
-          <p className="text-sm text-gray-400">Loading member...</p>
+          <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+          <p className="text-sm text-[#5E5E5E]">Loading member...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
       <div className="max-w-sm mx-auto">
-        <div className="bg-white px-6 pt-12 pb-5 shadow-sm">
+        <div className="bg-[#FAF7F2] px-6 pt-12 pb-5 shadow-sm border-b border-[#C9A66B]/10">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-gray-100 transition-colors -ml-2">
               <ChevronLeft size={20} className="text-gray-600" />
@@ -198,7 +198,7 @@ export default function EditMemberPage() {
           {relationshipType && (
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Relationship</h3>
-              <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-orange-500 bg-orange-50">
+              <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-[#355E3B] bg-[#355E3B]/5">
                 <span className="text-2xl">
                   {relationshipType === 'father' ? '👨' :
                    relationshipType === 'mother' ? '👩' :
@@ -206,7 +206,7 @@ export default function EditMemberPage() {
                    relationshipType === 'spouse' ? '💑' : '👶'}
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-orange-600">
+                  <p className="text-sm font-semibold text-[#355E3B]">
                     {RELATIONSHIP_LABELS[relationshipType] || relationshipType}
                   </p>
                   <p className="text-xs text-gray-400">Cannot be changed</p>
@@ -221,14 +221,14 @@ export default function EditMemberPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-20 h-20 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50 flex flex-col items-center justify-center hover:border-orange-400 hover:bg-orange-100 transition-all active:scale-95 overflow-hidden flex-shrink-0"
+                className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#355E3B]/25 bg-[#355E3B]/5 flex flex-col items-center justify-center hover:border-[#355E3B]/50 hover:bg-[#355E3B]/10 transition-all active:scale-95 overflow-hidden flex-shrink-0"
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <>
-                    <Camera size={20} className="text-orange-400 mb-1" />
-                    <span className="text-xs text-orange-500">Add</span>
+                    <Camera size={20} className="text-[#355E3B]/50 mb-1" />
+                    <span className="text-xs text-[#355E3B]">Add</span>
                   </>
                 )}
               </button>
@@ -250,7 +250,7 @@ export default function EditMemberPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter their name"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
               />
             </div>
           </div>
@@ -265,8 +265,8 @@ export default function EditMemberPage() {
                   onClick={() => setGender(gender === g.value ? '' : g.value)}
                   className={`py-2.5 rounded-xl border-2 text-sm font-medium transition-all active:scale-95 ${
                     gender === g.value
-                      ? 'border-orange-500 bg-orange-50 text-orange-600'
-                      : 'border-gray-100 text-gray-600 hover:border-orange-200'
+                      ? 'border-[#355E3B] bg-[#355E3B]/5 text-[#355E3B]'
+                      : 'border-[#C9A66B]/15 text-[#5E5E5E] hover:border-[#355E3B]/30'
                   }`}
                 >
                   {g.label}
@@ -283,7 +283,7 @@ export default function EditMemberPage() {
               value={dob}
               onChange={(e) => setDob(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all text-gray-700"
+              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all text-gray-700"
             />
           </div>
 
@@ -301,7 +301,7 @@ export default function EditMemberPage() {
                   value={memberEmail}
                   onChange={(e) => setMemberEmail(e.target.value)}
                   placeholder="Their email address"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
               <div className="relative">
@@ -311,14 +311,14 @@ export default function EditMemberPage() {
                   value={memberPhone}
                   onChange={(e) => setMemberPhone(e.target.value)}
                   placeholder="Their phone number"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3 text-sm text-red-600">
+            <div className="bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-2xl px-4 py-3 text-sm text-[#6B2E2E]">
               {error}
             </div>
           )}
@@ -328,8 +328,8 @@ export default function EditMemberPage() {
             disabled={!isValid || saving || success}
             className={`w-full py-4 rounded-2xl font-semibold text-base transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               success
-                ? 'bg-green-500 shadow-green-200 text-white'
-                : 'bg-orange-500 shadow-orange-200 text-white hover:bg-orange-600 active:scale-[0.98]'
+                ? 'bg-[#355E3B] shadow-[#355E3B]/20 text-white'
+                : 'bg-gradient-to-r from-[#355E3B] to-[#6E8B74] shadow-[#355E3B]/20 text-white hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98]'
             }`}
           >
             {success ? <><Check size={18} /> Updated successfully!</> : saving ? 'Saving...' : 'Save Changes'}

@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
-import { Pencil, Trash2, Users, LinkIcon, Route } from 'lucide-react';
+import { Pencil, Trash2, Users, LinkIcon, Route, MessageCircle } from 'lucide-react';
 import { calculateDegree } from '@/lib/degree-calculator';
 
 const LABEL_MAP: Record<string, string> = {
@@ -44,6 +44,8 @@ export default function MemberDetailSheet({
   accessToken,
 }: MemberDetailSheetProps) {
   const router = useRouter();
+  const [messageTargetId, setMessageTargetId] = useState<string | null>(null);
+  const [resolvingTarget, setResolvingTarget] = useState(false);
 
   const person = useMemo(
     () => people.find(p => p.id === personId) || null,
@@ -64,15 +66,59 @@ export default function MemberDetailSheet({
     return calculateDegree(selfPersonId, personId, relationships);
   }, [personId, selfPersonId, relationships]);
 
+  const isSelf = person ? person.is_self && person.id === selfPersonId : false;
+
+  useEffect(() => {
+    const resolveTarget = async () => {
+      if (!person || isSelf) {
+        setMessageTargetId(null);
+        setResolvingTarget(false);
+        return;
+      }
+
+      // Fast path when directly linked.
+      if (person.user_id) {
+        setMessageTargetId(person.user_id);
+        return;
+      }
+
+      // Resolve indirect matches (connection request/email/phone).
+      if (!accessToken) {
+        setMessageTargetId(null);
+        return;
+      }
+
+      setResolvingTarget(true);
+      try {
+        const res = await fetch(`/api/messages/resolve-target?person_id=${person.id}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!res.ok) {
+          setMessageTargetId(null);
+          return;
+        }
+        const data = await res.json();
+        setMessageTargetId(data.target_user_id || null);
+      } catch (err) {
+        console.error('Failed to resolve message target:', err);
+        setMessageTargetId(null);
+      } finally {
+        setResolvingTarget(false);
+      }
+    };
+
+    resolveTarget();
+  }, [person, isSelf, accessToken]);
+
   if (!person) return null;
 
   const initials = person.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const label = LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
-  const isSelf = person.is_self && person.id === selfPersonId;
   const isLinked = person.user_id !== null;
   const canEdit = !isSelf; // Self profile is edited via profile page
   const canDelete = !isSelf && !isLinked;
+  const canMessage = !!messageTargetId;
 
   const handleDelete = async () => {
     if (!personId || !confirm('Are you sure you want to remove this family member?')) return;
@@ -192,6 +238,36 @@ export default function MemberDetailSheet({
             >
               <Users size={16} /> View Connections
             </button>
+
+            {!isSelf && (
+              <>
+                <button
+                  onClick={() => {
+                    if (!messageTargetId) return;
+                    onClose();
+                    router.push(`/messages?to=${messageTargetId}`);
+                  }}
+                  disabled={!canMessage || resolvingTarget}
+                  className={`w-full py-3 px-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all border ${
+                    canMessage
+                      ? 'bg-[#C9A66B]/10 text-[#8B5E3C] hover:bg-[#C9A66B]/20 active:scale-[0.98] border-[#C9A66B]/15'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <MessageCircle size={16} /> Send Message
+                </button>
+                {!canMessage && !resolvingTarget && (
+                  <p className="text-[11px] text-gray-500 text-center px-2">
+                    We couldn&apos;t find a linked Aangan account for this member yet.
+                  </p>
+                )}
+                {resolvingTarget && (
+                  <p className="text-[11px] text-gray-500 text-center px-2">
+                    Checking linked Aangan account...
+                  </p>
+                )}
+              </>
+            )}
 
             {canDelete && (
               <button

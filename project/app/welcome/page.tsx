@@ -48,6 +48,9 @@ export default function WelcomePage() {
           .eq('id', data.user.id)
           .maybeSingle();
         if (profile?.onboarding_completed) {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('aangan_post_login_bootstrap', '1');
+          }
           router.replace('/home');
         } else {
           router.replace('/onboarding');

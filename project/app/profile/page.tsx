@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { supabase, RelationshipType } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
 import ClaimProfileModal, { ClaimMatch } from '@/components/ClaimProfileModal';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Camera, LogOut, Check, CreditCard as Edit2, ChevronRight,
   Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle
@@ -24,6 +25,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [familyCount, setFamilyCount] = useState(0);
+  const [showFamilyMembersSheet, setShowFamilyMembersSheet] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Claim state
@@ -323,13 +325,17 @@ export default function ProfilePage() {
 
         <div className="px-4 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+            <button
+              type="button"
+              onClick={() => setShowFamilyMembersSheet(true)}
+              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center hover:border-[#355E3B]/25 hover:bg-[#355E3B]/5 transition-all active:scale-[0.98]"
+            >
               <div className="flex justify-center mb-1">
                 <Users size={20} className="text-[#C9A66B]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{familyCount}</p>
               <p className="text-xs text-gray-500">Family Members</p>
-            </div>
+            </button>
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
               <div className="flex justify-center mb-1">
                 <Calendar size={20} className="text-[#C9A66B]" />
@@ -473,56 +479,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Family Members section */}
-          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
-            <div className="px-5 pt-4 pb-2">
-              <h3 className="text-sm font-semibold text-gray-700">Family Members</h3>
-            </div>
-            <div className="px-5 pb-4">
-              {familyLoading ? (
-                <div className="py-6 flex justify-center">
-                  <Loader2 size={20} className="text-gray-300 animate-spin" />
-                </div>
-              ) : familyMembers.length === 0 ? (
-                <p className="text-xs text-gray-400">No members added yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {familyMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
-                        <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
-                        {member.user_id && (
-                          <p className="text-[11px] text-[#C9A66B]">Linked profile</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteMember(member.id)}
-                        disabled={deletingMemberId === member.id || !!member.user_id}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#6B2E2E]/15 text-[#6B2E2E] hover:bg-[#6B2E2E]/5 disabled:opacity-50"
-                      >
-                        {deletingMemberId === member.id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {familyError && (
-                <p className="mt-3 text-xs text-red-500">{familyError}</p>
-              )}
-              <p className="mt-3 text-[11px] text-gray-400">
-                Linked profiles cannot be deleted.
-              </p>
-            </div>
-          </div>
-
-
-
           <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Account</h3>
             </div>
-            <div className="px-5 pb-4">
+            <div className="px-5 pb-4 space-y-1">
               <div className="flex items-center py-2.5 gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-semibold text-gray-600">@</span>
@@ -533,6 +494,32 @@ export default function ProfilePage() {
                 </div>
                 <ChevronRight size={16} className="text-gray-300" />
               </div>
+              <button
+                onClick={() => router.push('/stats')}
+                className="w-full flex items-center py-2.5 gap-3 hover:bg-[#355E3B]/5 rounded-xl transition-colors px-1"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs">📊</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-800">Tree Statistics</p>
+                  <p className="text-xs text-gray-400">View your family tree insights</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-300" />
+              </button>
+              <button
+                onClick={() => router.push('/notifications')}
+                className="w-full flex items-center py-2.5 gap-3 hover:bg-[#355E3B]/5 rounded-xl transition-colors px-1"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#C9A66B]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs">🔔</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-800">Notifications</p>
+                  <p className="text-xs text-gray-400">Connection requests & alerts</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-300" />
+              </button>
             </div>
           </div>
 
@@ -569,6 +556,59 @@ export default function ProfilePage() {
           }}
         />
       )}
+
+      {/* Family Members sheet (Instagram followers-style list) */}
+      <Sheet open={showFamilyMembersSheet} onOpenChange={setShowFamilyMembersSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh] overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Family Members</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="mb-4">
+            <h3 className="text-lg font-bold text-gray-900">Family Members</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{familyCount} people in your tree</p>
+          </div>
+
+          {familyLoading ? (
+            <div className="py-10 flex justify-center">
+              <Loader2 size={22} className="text-gray-300 animate-spin" />
+            </div>
+          ) : familyMembers.length === 0 ? (
+            <p className="text-sm text-gray-400">No members added yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {familyMembers.map((member) => (
+                <div key={member.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-2.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
+                    <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
+                    {member.user_id && (
+                      <p className="text-[11px] text-[#C9A66B]">Linked profile</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteMember(member.id)}
+                    disabled={deletingMemberId === member.id || !!member.user_id}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#6B2E2E]/15 text-[#6B2E2E] hover:bg-[#6B2E2E]/5 disabled:opacity-50"
+                  >
+                    {deletingMemberId === member.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {familyError && (
+            <p className="mt-3 text-xs text-red-500">{familyError}</p>
+          )}
+          <p className="mt-3 text-[11px] text-gray-400">
+            Linked profiles cannot be deleted.
+          </p>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && (

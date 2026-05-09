@@ -3,40 +3,44 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Chrome as Home, UserPlus, User, Bell, BarChart3 } from 'lucide-react';
+import { Chrome as Home, User, MessageCircle, Newspaper, Images } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/home', label: 'Family', icon: Home },
-  { href: '/add-member', label: 'Add', icon: UserPlus },
-  { href: '/stats', label: 'Stats', icon: BarChart3 },
-  { href: '/notifications', label: 'Alerts', icon: Bell },
+  { href: '/feed', label: 'Feed', icon: Newspaper },
+  { href: '/memories', label: 'Memory', icon: Images },
+  { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { session } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!session?.access_token) return;
 
-    const fetchPendingCount = async () => {
+    const fetchUnread = async () => {
       try {
-        const res = await fetch('/api/connections/pending', {
+        const res = await fetch('/api/messages/conversations', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (res.ok) {
           const data = await res.json();
-          setPendingCount(data.requests?.length || 0);
+          const total = (data.conversations || []).reduce(
+            (sum: number, c: any) => sum + (c.unread_count || 0),
+            0
+          );
+          setUnreadCount(total);
         }
       } catch (error) {
-        console.error('Failed to fetch pending requests count:', error);
+        console.error('Failed to fetch unread count:', error);
       }
     };
 
-    fetchPendingCount();
+    fetchUnread();
   }, [session]);
 
   return (
@@ -48,14 +52,16 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-1 py-3 px-5 rounded-2xl transition-all relative ${
+              className={`flex flex-col items-center gap-1 py-3 px-2.5 rounded-2xl transition-all relative ${
                 active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
               }`}
             >
               <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#355E3B]/8' : ''}`}>
                 <Icon size={22} strokeWidth={active ? 2.5 : 2} />
-                {href === '/notifications' && pendingCount > 0 && (
-                  <span className="absolute top-3 right-5 w-2.5 h-2.5 bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2]"></span>
+                {href === '/messages' && unreadCount > 0 && (
+                  <span className="absolute top-2.5 right-3 min-w-[18px] h-[18px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  </span>
                 )}
               </div>
               <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60'}`}>

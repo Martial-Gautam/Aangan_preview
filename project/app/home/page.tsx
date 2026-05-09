@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import FamilyFlow from '@/components/FamilyFlow';
@@ -8,7 +8,8 @@ import MemberDetailSheet from '@/components/MemberDetailSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
 import BottomNav from '@/components/BottomNav';
-import { Plus, TreePine, Search, Sparkles, User, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -29,18 +30,25 @@ export default function HomePage() {
   const [showSuggestionsSheet, setShowSuggestionsSheet] = useState(false);
   const [processingSuggestionId, setProcessingSuggestionId] = useState<string | null>(null);
 
+  const [pendingAlertCount, setPendingAlertCount] = useState(0);
+
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installHint, setInstallHint] = useState('');
+  const [showInstallSheet, setShowInstallSheet] = useState(false);
+  const seedInFlightRef = useRef(false);
+  const bootstrapUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!user) { router.replace('/welcome'); return; }
     if (!profile?.onboarding_completed) { router.replace('/onboarding'); return; }
+    if (!session?.access_token) return;
     fetchFamily();
     fetchSuggestions();
-  }, [user, profile, loading]);
+    fetchPendingAlerts();
+  }, [user, profile, loading, session?.access_token]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -60,16 +68,83 @@ export default function HomePage() {
     };
   }, []);
 
+  const seedDemoSocial = useCallback(async (force: boolean) => {
+    if (!user?.id || !session?.access_token) return;
+    if (seedInFlightRef.current) return;
+
+    const storageKey = `aangan_demo_social_seeded_${user.id}`;
+    const alreadySeeded = typeof window !== 'undefined' && localStorage.getItem(storageKey) === '1';
+    if (!force && alreadySeeded) return;
+
+    seedInFlightRef.current = true;
+    try {
+      await fetch('/api/demo/seed-social', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      localStorage.setItem(storageKey, '1');
+    } catch (err) {
+      console.error('Failed to seed demo social data:', err);
+    } finally {
+      seedInFlightRef.current = false;
+    }
+  }, [session?.access_token, user?.id]);
+
+  useEffect(() => {
+    if (loading || !user || !profile?.onboarding_completed || !session?.access_token) return;
+    if (bootstrapUserRef.current === user.id) return;
+    bootstrapUserRef.current = user.id;
+
+    const postLoginBootstrap =
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem('aangan_post_login_bootstrap') === '1';
+
+    if (postLoginBootstrap && typeof window !== 'undefined') {
+      sessionStorage.removeItem('aangan_post_login_bootstrap');
+    }
+
+    seedDemoSocial(postLoginBootstrap);
+
+    if (postLoginBootstrap && !isInstalled) {
+      setShowInstallSheet(true);
+    }
+  }, [loading, user, profile, session?.access_token, isInstalled, seedDemoSocial]);
+
   const fetchFamily = async () => {
-    if (!user || !session?.access_token) return;
+    if (!user) return;
     setDataLoading(true);
     try {
-      const res = await fetch('/api/tree/full', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      const tokenFromContext = session?.access_token || null;
+      const {
+        data: { session: freshSession },
+      } = await supabase.auth.getSession();
+      let accessToken = freshSession?.access_token || tokenFromContext;
+
+      if (!accessToken) {
+        await fetchFamilyFallback();
+        return;
+      }
+
+      let res = await fetch('/api/tree/full', {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
+      // Handle token timing/refresh races once before falling back.
+      if (res.status === 401) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed.session?.access_token) {
+          accessToken = refreshed.session.access_token;
+          res = await fetch('/api/tree/full', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+        }
+      }
+
       if (!res.ok) {
-        setDataLoading(false);
+        await fetchFamilyFallback();
         return;
       }
 
@@ -79,12 +154,63 @@ export default function HomePage() {
       const selfId: string | null = data.self_person_id;
 
       const self = nodes.find((p) => p.id === selfId) || null;
+
+      // Guard against partial/empty tree payloads that can happen during API issues.
+      if (!self || nodes.length <= 1) {
+        await fetchFamilyFallback();
+        return;
+      }
+
       setSelfPerson(self);
       setPeople(nodes);
       setRelationships(edges);
       setFamilyCount(Math.max(0, nodes.length - 1));
+    } catch (err) {
+      console.warn('Family tree API unavailable. Using fallback data source.', err);
+      await fetchFamilyFallback();
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const fetchFamilyFallback = async () => {
+    if (!user) return;
+    try {
+      const [{ data: self }, { data: nodes }, { data: edges }] = await Promise.all([
+        supabase
+          .from('people')
+          .select('*')
+          .eq('owner_id', user.id)
+          .eq('is_self', true)
+          .maybeSingle(),
+        supabase
+          .from('people')
+          .select('*')
+          .eq('owner_id', user.id),
+        supabase
+          .from('relationships')
+          .select('*')
+          .eq('owner_id', user.id),
+      ]);
+
+      const peopleRows = (nodes || []) as Person[];
+      const relationshipRows = (edges || []) as Relationship[];
+      const selfRow = (self as Person | null) || peopleRows.find((p) => p.is_self) || null;
+
+      setSelfPerson(selfRow);
+      setPeople(peopleRows);
+      setRelationships(relationshipRows);
+
+      const directFamilyCount = selfRow
+        ? relationshipRows.filter((r) => r.person_id === selfRow.id).length
+        : Math.max(0, peopleRows.length - 1);
+      setFamilyCount(Math.max(0, directFamilyCount));
+    } catch (fallbackErr) {
+      console.error('Fallback family query failed:', fallbackErr);
+      setSelfPerson(null);
+      setPeople([]);
+      setRelationships([]);
+      setFamilyCount(0);
     }
   };
 
@@ -100,6 +226,21 @@ export default function HomePage() {
       }
     } catch (err) {
       console.error('Failed to fetch suggestions', err);
+    }
+  };
+
+  const fetchPendingAlerts = async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await fetch('/api/connections/pending', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingAlertCount(data.requests?.length || 0);
+      }
+    } catch (err) {
+      console.error('Failed to fetch alerts:', err);
     }
   };
 
@@ -132,15 +273,22 @@ export default function HomePage() {
   };
 
   const handleInstall = async () => {
+    if (isInstalled) {
+      setInstallHint('App is already installed on this device.');
+      setShowInstallSheet(false);
+      return;
+    }
+
     if (installPrompt) {
       await installPrompt.prompt();
       setInstallPrompt(null);
       setCanInstall(false);
       setInstallHint('');
+      setShowInstallSheet(false);
       return;
     }
 
-    setInstallHint('Use your browser menu to add this app to your home screen.');
+    setInstallHint('Use your browser menu and tap "Add to Home Screen" for the best app experience.');
   };
 
   const handleDeleteMember = useCallback((personId: string) => {
@@ -181,11 +329,29 @@ export default function HomePage() {
               {familyCount} {familyCount === 1 ? 'member' : 'members'}
             </span>
             <button
-              onClick={handleInstall}
-              className="bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:from-[#2d5033] hover:to-[#5f7a64] transition-all shadow-sm shadow-[#355E3B]/20 active:scale-95"
+              onClick={() => setShowInstallSheet(true)}
+              className="h-9 px-3 rounded-xl bg-[#355E3B]/8 hover:bg-[#355E3B]/15 transition-colors text-[#355E3B] text-xs font-semibold border border-[#355E3B]/10 flex items-center gap-1.5"
             >
+              <Download size={14} />
               Install
             </button>
+            <Link
+              href="/add-member"
+              className="w-9 h-9 rounded-xl bg-[#355E3B]/8 flex items-center justify-center hover:bg-[#355E3B]/15 transition-colors"
+            >
+              <UserPlus size={18} className="text-[#355E3B]" />
+            </Link>
+            <Link
+              href="/notifications"
+              className="w-9 h-9 rounded-xl bg-[#355E3B]/8 flex items-center justify-center hover:bg-[#355E3B]/15 transition-colors relative"
+            >
+              <Bell size={18} className="text-[#355E3B]" />
+              {pendingAlertCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-white leading-none">{pendingAlertCount > 9 ? '9+' : pendingAlertCount}</span>
+                </span>
+              )}
+            </Link>
           </div>
         </div>
         {installHint && (
@@ -265,7 +431,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Floating add button */}
         {familyCount > 0 && (
           <div className="absolute bottom-4 right-4 z-20">
             <Link
@@ -290,6 +455,44 @@ export default function HomePage() {
           accessToken={session?.access_token || ''}
         />
       )}
+
+      <Sheet open={showInstallSheet} onOpenChange={setShowInstallSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh]">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Install Aangan</SheetTitle>
+          </SheetHeader>
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-[#2B2B2B]">Install Aangan for the best experience</h2>
+            <p className="text-sm text-[#5E5E5E] mt-2 leading-relaxed">
+              Aangan works better when downloaded. Install the app for a smoother, faster family and messaging experience.
+            </p>
+            {!canInstall && !isInstalled && (
+              <p className="text-xs text-[#8B5E3C] mt-2">
+                If the install prompt does not open, use your browser menu and tap &quot;Add to Home Screen&quot;.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={handleInstall}
+              className="w-full py-3.5 rounded-2xl bg-[#355E3B] hover:bg-[#2d5033] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-md shadow-[#355E3B]/20"
+            >
+              <Download size={16} />
+              {isInstalled ? 'Installed' : canInstall ? 'Install Now' : 'Show Install Steps'}
+            </button>
+            <button
+              onClick={() => setShowInstallSheet(false)}
+              className="w-full py-3 text-sm text-[#5E5E5E] font-medium"
+            >
+              Maybe later
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Suggestions Bottom Sheet */}
       <Sheet open={showSuggestionsSheet} onOpenChange={setShowSuggestionsSheet}>

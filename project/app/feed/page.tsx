@@ -7,7 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Heart, MessageCircle, Send, Plus, Loader2, ArrowUp,
-  Newspaper, MessagesSquare, Tag, Trash2
+  Newspaper, MessagesSquare, Tag, Trash2, Image, Film, Mail, Users
 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
@@ -15,6 +15,14 @@ import type { Channel as StreamChannel } from 'stream-chat';
 // ─── Constants ───────────────────────────────────────────────
 
 type PostType = 'post' | 'discussion';
+type ContentType = 'post' | 'image' | 'reel' | 'invitation';
+
+const CONTENT_TYPES: { key: ContentType; label: string; icon: typeof Newspaper }[] = [
+  { key: 'post', label: 'Posts', icon: Newspaper },
+  { key: 'image', label: 'Images', icon: Image },
+  { key: 'reel', label: 'Reels', icon: Film },
+  { key: 'invitation', label: 'Invites', icon: Mail },
+];
 
 interface Post {
   id: string;
@@ -69,10 +77,16 @@ function FeedContent() {
   // Create form
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [createType, setCreateType] = useState<PostType>('post');
+  const [createContentType, setCreateContentType] = useState<ContentType>('post');
   const [createTitle, setCreateTitle] = useState('');
   const [createContent, setCreateContent] = useState('');
   const [createCategory, setCreateCategory] = useState('general');
   const [creating, setCreating] = useState(false);
+  const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
+  const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
+
+  // Content type filter
+  const [activeContentType, setActiveContentType] = useState<ContentType>('post');
 
   // Comments
   const [showCommentsSheet, setShowCommentsSheet] = useState(false);
@@ -333,28 +347,34 @@ function FeedContent() {
           <h1 className="text-xl font-bold text-[#2B2B2B]">Family Feed</h1>
           <p className="text-xs text-[#5E5E5E] mt-0.5">Share stories, memories & discussions</p>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mt-4">
+          {/* Content Type Tabs */}
+          <div className="flex gap-1.5 mt-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+            {CONTENT_TYPES.map(ct => {
+              const Icon = ct.icon;
+              return (
+                <button
+                  key={ct.key}
+                  onClick={() => { setActiveContentType(ct.key); setActiveTab('post'); }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
+                    activeContentType === ct.key
+                      ? 'bg-[#355E3B] text-white shadow-md shadow-[#355E3B]/20'
+                      : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
+                  }`}
+                >
+                  <Icon size={14} />
+                  {ct.label}
+                </button>
+              );
+            })}
             <button
-              onClick={() => setActiveTab('post')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'post'
-                  ? 'bg-[#355E3B] text-white shadow-md shadow-[#355E3B]/20'
-                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
-              }`}
-            >
-              <Newspaper size={16} />
-              Posts
-            </button>
-            <button
-              onClick={() => setActiveTab('discussion')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              onClick={() => setActiveTab(activeTab === 'discussion' ? 'post' : 'discussion')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'discussion'
-                  ? 'bg-[#355E3B] text-white shadow-md shadow-[#355E3B]/20'
+                  ? 'bg-[#C9A66B] text-white shadow-md shadow-[#C9A66B]/20'
                   : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
               }`}
             >
-              <MessagesSquare size={16} />
+              <MessagesSquare size={14} />
               Discussions
             </button>
           </div>
@@ -479,36 +499,49 @@ function FeedContent() {
 
       {/* Create Sheet */}
       <Sheet open={showCreateSheet} onOpenChange={setShowCreateSheet}>
-        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[85vh] overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[90vh] overflow-y-auto">
           <SheetHeader className="sr-only">
-            <SheetTitle>Create {createType === 'post' ? 'Post' : 'Discussion'}</SheetTitle>
+            <SheetTitle>Create Content</SheetTitle>
           </SheetHeader>
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-3">
             <div className="w-10 h-1 bg-gray-200 rounded-full" />
           </div>
 
-          <h2 className="text-lg font-bold text-[#2B2B2B] mb-4">
-            {createType === 'post' ? '✍️ New Post' : '💬 New Discussion'}
-          </h2>
+          <h2 className="text-lg font-bold text-[#2B2B2B] mb-3">✨ Create</h2>
 
-          {/* Type toggle */}
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setCreateType('post')}
-              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                createType === 'post' ? 'bg-[#355E3B] text-white' : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
-              }`}
-            >
-              Post
-            </button>
-            <button
-              onClick={() => setCreateType('discussion')}
-              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                createType === 'discussion' ? 'bg-[#355E3B] text-white' : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
-              }`}
-            >
-              Discussion
-            </button>
+          {/* Content Type Selector */}
+          <div className="mb-3">
+            <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide mb-1.5">Type</p>
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {CONTENT_TYPES.map(ct => {
+                const Icon = ct.icon;
+                return (
+                  <button
+                    key={ct.key}
+                    onClick={() => setCreateContentType(ct.key)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                      createContentType === ct.key
+                        ? 'bg-[#355E3B] text-white'
+                        : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
+                    }`}
+                  >
+                    <Icon size={13} />
+                    {ct.label}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setCreateType(createType === 'discussion' ? 'post' : 'discussion')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  createType === 'discussion'
+                    ? 'bg-[#C9A66B] text-white'
+                    : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
+                }`}
+              >
+                <MessagesSquare size={13} />
+                Discussion
+              </button>
+            </div>
           </div>
 
           {createType === 'discussion' && (
@@ -520,16 +553,31 @@ function FeedContent() {
             />
           )}
 
+          {createContentType === 'invitation' && (
+            <input
+              value={createTitle}
+              onChange={e => setCreateTitle(e.target.value)}
+              placeholder="Event name..."
+              className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40"
+            />
+          )}
+
           <textarea
             value={createContent}
             onChange={e => setCreateContent(e.target.value)}
-            placeholder={createType === 'post' ? "What's on your mind?" : 'Share your thoughts...'}
-            rows={4}
+            placeholder={
+              createContentType === 'invitation' ? 'Add invitation details...'
+              : createContentType === 'reel' ? 'Add a caption for your reel...'
+              : createContentType === 'image' ? 'Describe your photo...'
+              : createType === 'discussion' ? 'Share your thoughts...'
+              : "What's on your mind?"
+            }
+            rows={3}
             className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40 resize-none"
           />
 
           {createType === 'discussion' && (
-            <div className="mb-4">
+            <div className="mb-3">
               <p className="text-xs font-semibold text-[#5E5E5E] mb-2 flex items-center gap-1">
                 <Tag size={12} /> Category
               </p>
@@ -550,6 +598,55 @@ function FeedContent() {
               </div>
             </div>
           )}
+
+          {/* Audience Picker */}
+          <div className="mb-4">
+            <p className="text-xs font-bold text-[#2B2B2B] mb-2 flex items-center gap-1.5">
+              <Users size={13} className="text-[#355E3B]" /> Share With
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Column 1: Degree */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Degree</p>
+                {['1st Degree', '2nd Degree', '3rd+ Degree', 'All'].map(deg => (
+                  <button
+                    key={deg}
+                    type="button"
+                    onClick={() => setAudienceDegree(prev =>
+                      prev.includes(deg) ? prev.filter(d => d !== deg) : [...prev, deg]
+                    )}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                      audienceDegree.includes(deg)
+                        ? 'bg-[#355E3B] text-white shadow-sm'
+                        : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                    }`}
+                  >
+                    {deg}
+                  </button>
+                ))}
+              </div>
+              {/* Column 2: Side */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Side</p>
+                {['Maternal', 'Paternal', 'In-Laws', 'Spouse', 'All'].map(side => (
+                  <button
+                    key={side}
+                    type="button"
+                    onClick={() => setAudienceSide(prev =>
+                      prev.includes(side) ? prev.filter(s => s !== side) : [...prev, side]
+                    )}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                      audienceSide.includes(side)
+                        ? 'bg-[#C9A66B] text-white shadow-sm'
+                        : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                    }`}
+                  >
+                    {side}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <button
             onClick={handleCreate}

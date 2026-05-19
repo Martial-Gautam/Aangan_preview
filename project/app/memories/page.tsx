@@ -93,7 +93,12 @@ function parseMemoryContent(content: string): ParsedMemory | null {
   if (!content.startsWith(MEMORY_PREFIX)) return null;
   const payload = content.slice(MEMORY_PREFIX.length).trimStart();
   const firstNewLine = payload.indexOf('\n');
-  if (firstNewLine === -1) return null;
+  if (firstNewLine === -1) {
+    // No caption — entire payload is the image URL
+    const imageUrl = payload.trim();
+    if (!imageUrl) return null;
+    return { imageUrl, caption: '' };
+  }
   const imageUrl = payload.slice(0, firstNewLine).trim();
   const caption = payload.slice(firstNewLine + 1).trim();
   if (!imageUrl) return null;
@@ -143,6 +148,8 @@ export default function MemoriesPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
+  const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
 
   useEffect(() => {
     if (authLoading) return;
@@ -251,6 +258,8 @@ export default function MemoriesPage() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl('');
     setError('');
+    setAudienceDegree(['All']);
+    setAudienceSide(['All']);
   };
 
   const handleCreateMemory = async () => {
@@ -276,7 +285,9 @@ export default function MemoriesPage() {
 
       const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
       const imageUrl = urlData.publicUrl;
-      const packedContent = `${MEMORY_PREFIX}${imageUrl}\n${caption.trim()}`;
+      const packedContent = caption.trim()
+        ? `${MEMORY_PREFIX}${imageUrl}\n${caption.trim()}`
+        : `${MEMORY_PREFIX}${imageUrl}`;
 
       const createRes = await fetch('/api/posts/create', {
         method: 'POST',
@@ -625,57 +636,114 @@ export default function MemoriesPage() {
         </div>
 
         {showCreate && (
-          <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px] flex items-end sm:items-center justify-center px-4">
-            <div className="w-full max-w-sm bg-[#FAF7F2] rounded-3xl border border-[#C9A66B]/15 p-5 mb-4 sm:mb-0">
-              <h3 className="text-lg font-bold text-[#2B2B2B]">Add Memory</h3>
-              <p className="text-xs text-[#5E5E5E] mt-0.5">Album: {activeCategoryMeta.label}</p>
-
-              <div className="space-y-3 mt-3">
-                <input
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  placeholder="Memory title"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#C9A66B]/20 bg-white/80 text-sm outline-none focus:border-[#355E3B]/35"
-                />
-                <textarea
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Caption (optional)"
-                  rows={3}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#C9A66B]/20 bg-white/80 text-sm outline-none resize-none focus:border-[#355E3B]/35"
-                />
-                <label className="w-full rounded-xl border border-dashed border-[#C9A66B]/35 px-3.5 py-3 text-sm text-[#5E5E5E] flex items-center gap-2 cursor-pointer hover:bg-[#EFE6D5]/45">
-                  <UploadCloud size={16} className="text-[#355E3B]" />
-                  {photo ? photo.name : 'Upload memory photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
-                  />
-                </label>
-                {previewUrl && <img src={previewUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl border border-[#C9A66B]/15" />}
-                {error && (
-                  <p className="text-xs text-[#6B2E2E] bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-lg px-2.5 py-2">
-                    {error}
-                  </p>
-                )}
+          <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px] flex items-end sm:items-center justify-center">
+            <div className="w-full max-w-sm bg-[#FAF7F2] rounded-t-3xl sm:rounded-3xl border border-[#C9A66B]/15 max-h-[90vh] flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              {/* Fixed header */}
+              <div className="px-5 pt-5 pb-2 flex-shrink-0">
+                <h3 className="text-lg font-bold text-[#2B2B2B]">Add Memory</h3>
+                <p className="text-xs text-[#5E5E5E] mt-0.5">Album: {activeCategoryMeta.label}</p>
               </div>
 
-              <div className="mt-4 flex gap-2">
+              {/* Scrollable body */}
+              <div className="flex-1 overflow-y-auto px-5 pb-2">
+                <div className="space-y-3">
+                  <input
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                    placeholder="Memory title"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#C9A66B]/20 bg-white/80 text-sm outline-none focus:border-[#355E3B]/35"
+                  />
+                  <textarea
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Caption (optional)"
+                    rows={2}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#C9A66B]/20 bg-white/80 text-sm outline-none resize-none focus:border-[#355E3B]/35"
+                  />
+                  <label className="w-full rounded-xl border border-dashed border-[#C9A66B]/35 px-3.5 py-3 text-sm text-[#5E5E5E] flex items-center gap-2 cursor-pointer hover:bg-[#EFE6D5]/45">
+                    <UploadCloud size={16} className="text-[#355E3B]" />
+                    {photo ? photo.name : 'Upload memory photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {previewUrl && <img src={previewUrl} alt="Preview" className="w-full h-28 object-cover rounded-xl border border-[#C9A66B]/15" />}
+
+                  {/* Audience Picker */}
+                  <div className="pt-1">
+                    <p className="text-xs font-bold text-[#2B2B2B] mb-2 flex items-center gap-1.5">
+                      <Users size={13} className="text-[#355E3B]" /> Share With
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Column 1: Degree */}
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Degree</p>
+                        {['1st Degree', '2nd Degree', '3rd+ Degree', 'All'].map(deg => (
+                          <button
+                            key={deg}
+                            type="button"
+                            onClick={() => setAudienceDegree(prev =>
+                              prev.includes(deg) ? prev.filter(d => d !== deg) : [...prev, deg]
+                            )}
+                            className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                              audienceDegree.includes(deg)
+                                ? 'bg-[#355E3B] text-white shadow-sm'
+                                : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                            }`}
+                          >
+                            {deg}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Column 2: Side */}
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Side</p>
+                        {['Maternal', 'Paternal', 'In-Laws', 'Spouse', 'All'].map(side => (
+                          <button
+                            key={side}
+                            type="button"
+                            onClick={() => setAudienceSide(prev =>
+                              prev.includes(side) ? prev.filter(s => s !== side) : [...prev, side]
+                            )}
+                            className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                              audienceSide.includes(side)
+                                ? 'bg-[#C9A66B] text-white shadow-sm'
+                                : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                            }`}
+                          >
+                            {side}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <p className="text-xs text-[#6B2E2E] bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-lg px-2.5 py-2">
+                      {error}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Fixed footer buttons */}
+              <div className="px-5 pt-2 pb-4 flex gap-2 flex-shrink-0 border-t border-[#C9A66B]/10">
                 <button
                   onClick={handleCreateMemory}
                   disabled={uploading}
-                  className="flex-1 py-2.5 rounded-xl bg-[#355E3B] text-white text-sm font-semibold hover:bg-[#2d5033] disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-[#355E3B] text-white text-sm font-semibold hover:bg-[#2d5033] disabled:opacity-50 active:scale-[0.98] transition-all"
                 >
-                  {uploading ? 'Saving...' : 'Share Memory'}
+                  {uploading ? 'Saving...' : '📸 Share Memory'}
                 </button>
                 <button
                   onClick={() => {
                     setShowCreate(false);
                     resetForm();
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#EFE6D5]/70 text-[#5E5E5E] text-sm font-semibold"
+                  className="px-4 py-2.5 rounded-xl bg-[#EFE6D5]/70 text-[#5E5E5E] text-sm font-semibold hover:bg-[#EFE6D5] active:scale-[0.98] transition-all"
                 >
                   Cancel
                 </button>

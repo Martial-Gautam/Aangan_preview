@@ -3,19 +3,41 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { useStream } from '@/lib/stream-provider';
-import { StreamProvider } from '@/lib/stream-provider';
 import BottomNav from '@/components/BottomNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Heart, MessageCircle, Send, Plus, Loader2, ArrowUp,
   Newspaper, MessagesSquare, Tag, Trash2
 } from 'lucide-react';
+import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
 
 // ─── Constants ───────────────────────────────────────────────
 
 type PostType = 'post' | 'discussion';
+
+interface Post {
+  id: string;
+  author_id: string;
+  type: PostType;
+  title: string | null;
+  content: string;
+  category: string;
+  likes_count: number;
+  comments_count: number;
+  liked_by_me: boolean;
+  created_at: string;
+  author: { id?: string; full_name: string; photo_url: string | null };
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  author: { full_name: string; photo_url: string | null };
+}
 
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
@@ -29,19 +51,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 // ─── Main Export ─────────────────────────────────────────────
 
 export default function FeedPage() {
-  return (
-    <StreamProvider>
-      <FeedContent />
-    </StreamProvider>
-  );
+  return <FeedContent />;
 }
 
 // ─── Feed Content ────────────────────────────────────────────
 
 function FeedContent() {
   const { user, session, loading: authLoading } = useAuth();
-  const { chatClient, connecting: streamConnecting, error: streamError } = useStream();
   const router = useRouter();
+  const [useStreamBackend, setUseStreamBackend] = useState(true);
 
   const [feedChannel, setFeedChannel] = useState<StreamChannel | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
@@ -69,156 +87,205 @@ function FeedContent() {
     if (!authLoading && !user) router.replace('/welcome');
   }, [authLoading, user]);
 
-  // Initialize feed channel
+  // Init: try Stream, fallback to Supabase
   useEffect(() => {
-    if (!chatClient || !user) return;
-    initFeedChannel();
-  }, [chatClient, user]);
+    if (!user?.id || !session?.access_token) return;
+    initBackend();
+  }, [user?.id, session?.access_token]);
 
   // Reload on tab change
   useEffect(() => {
-    if (feedChannel) loadPosts();
-  }, [activeTab, feedChannel]);
+    if (!user?.id || !session?.access_token) return;
+    if (useStreamBackend && feedChannel) loadStreamPosts();
+    else if (!useStreamBackend) fetchSupabasePosts(activeTab);
+  }, [activeTab, feedChannel, useStreamBackend]);
 
-  const initFeedChannel = async () => {
-    if (!chatClient || !user) return;
+  const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
+
+  const initBackend = async () => {
     try {
-      // Use a shared family feed channel
-      const channel = chatClient.channel('messaging', 'family-feed', {
-        name: 'Family Feed',
-        members: [user.id],
+      const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+      if (!apiKey) throw new Error('No key');
+
+      const res = await fetch('/api/stream/token', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session!.access_token}` },
+      });
+      if (!res.ok) throw new Error('Token failed');
+
+      const { token, userId, userName, userImage } = await res.json();
+      const client = StreamChat.getInstance(apiKey);
+      await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
+      setStreamClient(client);
+
+      const channel = client.channel('messaging', 'family-feed', {
+        name: 'Family Feed', members: [userId],
       } as any);
       await channel.watch();
       setFeedChannel(channel);
+      setUseStreamBackend(true);
 
-      // Listen for new messages
       channel.on('message.new', () => loadPostsFromChannel(channel));
       channel.on('reaction.new', () => loadPostsFromChannel(channel));
       channel.on('reaction.deleted', () => loadPostsFromChannel(channel));
     } catch (err) {
-      console.error('Failed to init feed channel:', err);
+      console.warn('⚠️ Stream unavailable for feed, using Supabase:', err);
+      setUseStreamBackend(false);
+      fetchSupabasePosts(activeTab);
     }
   };
 
-  const loadPosts = () => {
-    if (feedChannel) loadPostsFromChannel(feedChannel);
-  };
+  // ─── Stream Methods ─────────────────────────────────
+
+  const loadStreamPosts = () => { if (feedChannel) loadPostsFromChannel(feedChannel); };
 
   const loadPostsFromChannel = async (channel: StreamChannel) => {
     setLoadingPosts(true);
     try {
-      const allMessages = channel.state.messages || [];
-
-      // Filter by type (stored in message extraData)
-      const filtered = allMessages.filter((msg: any) => {
-        const msgType = msg.post_type || 'post';
-        return msgType === activeTab && !msg.parent_id; // Exclude replies
-      });
-
-      // Sort by newest first
-      const sorted = [...filtered].reverse();
-      setPosts(sorted);
-    } catch (err) {
-      console.error('Failed to load posts:', err);
-    } finally {
-      setLoadingPosts(false);
-    }
+      const all = channel.state.messages || [];
+      const filtered = all.filter((m: any) => (m.post_type || 'post') === activeTab && !m.parent_id);
+      setPosts([...filtered].reverse());
+    } catch { setPosts([]); }
+    finally { setLoadingPosts(false); }
   };
 
-  // ─── Create Post ────────────────────────────────────
+  // ─── Supabase Fallback Methods ──────────────────────
+
+  const fetchSupabasePosts = async (type: PostType) => {
+    if (!session?.access_token) return;
+    setLoadingPosts(true);
+    try {
+      const res = await fetch(`/api/posts/list?type=${type}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data.posts || []);
+      } else { setPosts([]); }
+    } catch { setPosts([]); }
+    finally { setLoadingPosts(false); }
+  };
+
+  // ─── Create Post (both backends) ────────────────────
 
   const handleCreate = async () => {
-    if (!feedChannel || !createContent.trim()) return;
+    if (!createContent.trim()) return;
     if (createType === 'discussion' && !createTitle.trim()) return;
     setCreating(true);
     try {
-      await feedChannel.sendMessage({
-        text: createContent.trim(),
-        // Custom fields
-        post_type: createType,
-        post_title: createType === 'discussion' ? createTitle.trim() : undefined,
-        post_category: createCategory,
-      } as any);
-
+      if (useStreamBackend && feedChannel) {
+        await feedChannel.sendMessage({
+          text: createContent.trim(),
+          post_type: createType,
+          post_title: createType === 'discussion' ? createTitle.trim() : undefined,
+          post_category: createCategory,
+        } as any);
+      } else {
+        await fetch('/api/posts/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+          body: JSON.stringify({
+            type: createType,
+            title: createType === 'discussion' ? createTitle.trim() : null,
+            content: createContent.trim(),
+            category: createCategory,
+          }),
+        });
+      }
       setShowCreateSheet(false);
       setCreateTitle('');
       setCreateContent('');
       setCreateCategory('general');
       setActiveTab(createType);
-    } catch (err) {
-      console.error('Failed to create post:', err);
-    } finally {
-      setCreating(false);
+      if (!useStreamBackend) fetchSupabasePosts(createType);
+    } catch (err) { console.error('Create failed:', err); }
+    finally { setCreating(false); }
+  };
+
+  // ─── Like (both backends) ──────────────────────────
+
+  const handleLike = async (post: any) => {
+    if (useStreamBackend && feedChannel) {
+      try {
+        const rt = activeTab === 'discussion' ? 'upvote' : 'love';
+        const has = post.own_reactions?.some((r: any) => r.type === rt);
+        if (has) await feedChannel.deleteReaction(post.id, rt);
+        else await feedChannel.sendReaction(post.id, { type: rt });
+      } catch {}
+    } else {
+      // Optimistic update
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.liked_by_me ? p.likes_count - 1 : p.likes_count + 1 } : p));
+      try {
+        await fetch('/api/posts/like', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+          body: JSON.stringify({ post_id: post.id }),
+        });
+      } catch { fetchSupabasePosts(activeTab); }
     }
   };
 
-  // ─── Like / Unlike ─────────────────────────────────
+  // ─── Comments (both backends) ──────────────────────
 
-  const handleLike = async (msg: any) => {
-    if (!feedChannel) return;
-    try {
-      const reactionType = activeTab === 'discussion' ? 'upvote' : 'love';
-      const hasMyReaction = msg.own_reactions?.some((r: any) => r.type === reactionType);
-
-      if (hasMyReaction) {
-        await feedChannel.deleteReaction(msg.id, reactionType);
-      } else {
-        await feedChannel.sendReaction(msg.id, { type: reactionType });
-      }
-    } catch (err) {
-      console.error('Failed to react:', err);
-    }
-  };
-
-  // ─── Comments (Thread Replies) ──────────────────────
-
-  const openComments = async (msg: any) => {
-    setSelectedMessage(msg);
+  const openComments = async (post: any) => {
+    setSelectedMessage(post);
     setShowCommentsSheet(true);
     setLoadingReplies(true);
     try {
-      if (feedChannel) {
-        const response = await feedChannel.getReplies(msg.id, { limit: 50 });
+      if (useStreamBackend && feedChannel) {
+        const response = await feedChannel.getReplies(post.id, { limit: 50 });
         setReplies(response.messages || []);
+      } else {
+        const res = await fetch(`/api/posts/comments?post_id=${post.id}`, {
+          headers: { Authorization: `Bearer ${session!.access_token}` },
+        });
+        if (res.ok) { const d = await res.json(); setReplies(d.comments || []); }
+        else setReplies([]);
       }
-    } catch (err) {
-      console.error('Failed to load replies:', err);
-      setReplies([]);
-    } finally {
-      setLoadingReplies(false);
-    }
+    } catch { setReplies([]); }
+    finally { setLoadingReplies(false); }
   };
 
   const handleAddComment = async () => {
-    if (!feedChannel || !newComment.trim() || !selectedMessage) return;
+    if (!newComment.trim() || !selectedMessage) return;
     setSendingComment(true);
     try {
-      const response = await feedChannel.sendMessage({
-        text: newComment.trim(),
-        parent_id: selectedMessage.id,
-      });
-      if (response.message) {
-        setReplies(prev => [...prev, response.message]);
+      if (useStreamBackend && feedChannel) {
+        const response = await feedChannel.sendMessage({ text: newComment.trim(), parent_id: selectedMessage.id });
+        if (response.message) setReplies(prev => [...prev, response.message]);
+      } else {
+        const res = await fetch('/api/posts/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+          body: JSON.stringify({ post_id: selectedMessage.id, content: newComment.trim() }),
+        });
+        if (res.ok) {
+          const d = await res.json();
+          setReplies(prev => [...prev, { ...d.comment, author: { full_name: 'You', photo_url: null } }]);
+          setPosts(prev => prev.map(p => p.id === selectedMessage.id ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
+        }
       }
       setNewComment('');
-    } catch (err) {
-      console.error('Failed to add comment:', err);
-    } finally {
-      setSendingComment(false);
-    }
+    } catch (err) { console.error('Comment failed:', err); }
+    finally { setSendingComment(false); }
   };
 
-  // ─── Delete Post ────────────────────────────────────
+  // ─── Delete (both backends) ─────────────────────────
 
-  const handleDelete = async (msgId: string) => {
-    if (!chatClient) return;
+  const handleDelete = async (postId: string) => {
     if (!confirm('Delete this post?')) return;
     try {
-      await chatClient.deleteMessage(msgId);
-      setPosts(prev => prev.filter(p => p.id !== msgId));
-    } catch (err) {
-      console.error('Failed to delete:', err);
-    }
+      if (useStreamBackend && streamClient) {
+        await streamClient.deleteMessage(postId);
+      } else {
+        await fetch('/api/posts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+          body: JSON.stringify({ post_id: postId }),
+        });
+      }
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (err) { console.error('Delete failed:', err); }
   };
 
   // ─── Helpers ────────────────────────────────────────
@@ -248,7 +315,7 @@ function FeedContent() {
 
   // ─── Loading ────────────────────────────────────────
 
-  if (authLoading || streamConnecting) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
         <Loader2 size={24} className="text-[#355E3B] animate-spin" />
@@ -315,14 +382,17 @@ function FeedContent() {
             </div>
           ) : (
             posts.map((msg: any) => {
-              const authorName = msg.user?.name || 'Family Member';
-              const authorImage = msg.user?.image || null;
-              const postTitle = msg.post_title;
-              const postCategory = msg.post_category || 'general';
+              // Normalize across both backends
+              const authorName = useStreamBackend ? (msg.user?.name || 'Family Member') : (msg.author?.full_name || 'Family Member');
+              const authorImage = useStreamBackend ? (msg.user?.image || null) : (msg.author?.photo_url || null);
+              const authorId = useStreamBackend ? msg.user?.id : msg.author_id;
+              const postTitle = useStreamBackend ? msg.post_title : msg.title;
+              const postText = useStreamBackend ? msg.text : msg.content;
+              const postCategory = useStreamBackend ? (msg.post_category || 'general') : (msg.category || 'general');
               const reactionType = activeTab === 'discussion' ? 'upvote' : 'love';
-              const likeCount = getReactionCount(msg, reactionType);
-              const liked = hasMyReaction(msg, reactionType);
-              const replyCount = msg.reply_count || 0;
+              const likeCount = useStreamBackend ? getReactionCount(msg, reactionType) : (msg.likes_count || 0);
+              const liked = useStreamBackend ? hasMyReaction(msg, reactionType) : (msg.liked_by_me || false);
+              const replyCount = useStreamBackend ? (msg.reply_count || 0) : (msg.comments_count || 0);
 
               return (
                 <div key={msg.id} className="bg-[#FAF7F2] rounded-2xl shadow-sm border border-[#C9A66B]/10 overflow-hidden">
@@ -344,7 +414,7 @@ function FeedContent() {
                         {postCategory.replace('-', ' ')}
                       </span>
                     )}
-                    {msg.user?.id === user?.id && (
+                    {authorId === user?.id && (
                       <button onClick={() => handleDelete(msg.id)} className="p-1.5 rounded-lg hover:bg-[#6B2E2E]/8 transition-colors">
                         <Trash2 size={14} className="text-[#5E5E5E]/40" />
                       </button>
@@ -356,7 +426,7 @@ function FeedContent() {
                     {postTitle && (
                       <h3 className="text-base font-bold text-[#2B2B2B] mb-1.5">{postTitle}</h3>
                     )}
-                    <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{postText}</p>
                   </div>
 
                   {/* Actions */}
@@ -511,24 +581,29 @@ function FeedContent() {
             ) : replies.length === 0 ? (
               <p className="text-sm text-[#5E5E5E] text-center py-6">No comments yet. Be the first!</p>
             ) : (
-              replies.map((reply: any) => (
+              replies.map((reply: any) => {
+                const rName = useStreamBackend ? (reply.user?.name || 'User') : (reply.author?.full_name || 'User');
+                const rImage = useStreamBackend ? (reply.user?.image || null) : (reply.author?.photo_url || null);
+                const rText = useStreamBackend ? reply.text : reply.content;
+                return (
                 <div key={reply.id} className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {reply.user?.image ? (
-                      <img src={reply.user.image} alt="" className="w-full h-full rounded-full object-cover" />
+                    {rImage ? (
+                      <img src={rImage} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-[9px] font-bold text-[#355E3B]">{getInitials(reply.user?.name || 'U')}</span>
+                      <span className="text-[9px] font-bold text-[#355E3B]">{getInitials(rName)}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-bold text-[#2B2B2B]">{reply.user?.name || 'User'}</span>
+                      <span className="text-xs font-bold text-[#2B2B2B]">{rName}</span>
                       <span className="text-[9px] text-[#5E5E5E]/50">{reply.created_at ? formatTime(reply.created_at) : ''}</span>
                     </div>
-                    <p className="text-sm text-[#2B2B2B] mt-0.5 leading-relaxed">{reply.text}</p>
+                    <p className="text-sm text-[#2B2B2B] mt-0.5 leading-relaxed">{rText}</p>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 

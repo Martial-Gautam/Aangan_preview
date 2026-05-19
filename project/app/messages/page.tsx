@@ -3,15 +3,32 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { useStream } from '@/lib/stream-provider';
-import { StreamProvider } from '@/lib/stream-provider';
 import BottomNav from '@/components/BottomNav';
-import {
-  ArrowLeft, Send, Search, MessageCircle, Loader2,
-} from 'lucide-react';
+import { ArrowLeft, Send, Search, MessageCircle, Loader2 } from 'lucide-react';
+import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
 
-// ─── Main Export (wraps with StreamProvider) ─────────────────
+// ─── Types ───────────────────────────────────────────────────
+
+interface Conversation {
+  partner_id: string;
+  partner_name: string;
+  partner_photo: string | null;
+  last_message: string;
+  last_message_time: string;
+  unread_count: number;
+}
+
+interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+}
+
+// ─── Main Export ─────────────────────────────────────────────
 
 export default function MessagesPage() {
   return (
@@ -22,43 +39,33 @@ export default function MessagesPage() {
         </div>
       }
     >
-      <StreamProvider>
-        <MessagesContent />
-      </StreamProvider>
+      <MessagesContent />
     </Suspense>
   );
-}
-
-// ─── Types ───────────────────────────────────────────────────
-
-interface ChannelPreview {
-  channel: StreamChannel;
-  name: string;
-  image: string | null;
-  lastMessage: string;
-  lastMessageTime: string;
-  unreadCount: number;
-  memberId: string;
 }
 
 // ─── Messages Content ────────────────────────────────────────
 
 function MessagesContent() {
   const { user, session, loading: authLoading } = useAuth();
-  const { chatClient, connecting: streamConnecting, error: streamError } = useStream();
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatPartnerId = searchParams.get('to');
 
-  const [channels, setChannels] = useState<ChannelPreview[]>([]);
-  const [activeChannel, setActiveChannel] = useState<StreamChannel | null>(null);
+  // Stream state
+  const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
+  const [streamReady, setStreamReady] = useState(false);
+  const [useStream, setUseStream] = useState(true); // true = try Stream, false = Supabase fallback
+
+  // Shared state
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [activeChannel, setActiveChannel] = useState<StreamChannel | null>(null);
+  const [chatPartner, setChatPartner] = useState<{ name: string; photo: string | null } | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chatPartnerName, setChatPartnerName] = useState('');
-  const [chatPartnerImage, setChatPartnerImage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,112 +75,215 @@ function MessagesContent() {
     if (!authLoading && !user) router.replace('/welcome');
   }, [authLoading, user]);
 
-  // Load channels or open direct chat
+  // ─── Try Stream, fallback to Supabase ───────────────
+
   useEffect(() => {
-    if (!chatClient || !user) return;
+    if (!user?.id || !session?.access_token) return;
+    initStream();
+  }, [user?.id, session?.access_token]);
+
+  // Load data once we know which backend to use
+  useEffect(() => {
+    if (!user?.id || !session?.access_token) return;
+    // Wait until stream attempt finishes
+    if (useStream && !streamReady) return;
 
     if (chatPartnerId) {
-      openDirectChat(chatPartnerId);
+      if (useStream && streamClient) {
+        openStreamChat(chatPartnerId);
+      } else {
+        fetchSupabaseThread(chatPartnerId);
+      }
     } else {
-      loadChannels();
+      if (useStream && streamClient) {
+        loadStreamChannels();
+      } else {
+        fetchSupabaseConversations();
+      }
     }
-  }, [chatClient, user, chatPartnerId]);
+  }, [user?.id, streamReady, useStream, chatPartnerId]);
 
-  // Auto-scroll messages
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ─── Load Channel List ──────────────────────────────
+  // Poll for Supabase messages
+  useEffect(() => {
+    if (useStream || !chatPartnerId || !session?.access_token) return;
+    const interval = setInterval(() => fetchSupabaseThread(chatPartnerId, true), 5000);
+    return () => clearInterval(interval);
+  }, [useStream, chatPartnerId, session]);
 
-  const loadChannels = async () => {
-    if (!chatClient || !user) return;
-    setLoading(true);
+  // ─── Stream Init ────────────────────────────────────
+
+  const initStream = async () => {
     try {
-      const filter = { type: 'messaging', members: { $in: [user.id] } };
-      const sort = [{ last_message_at: -1 as const }];
-      const result = await chatClient.queryChannels(filter, sort, { limit: 30 });
+      const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+      if (!apiKey) throw new Error('No Stream API key');
 
-      const previews: ChannelPreview[] = result.map(ch => {
-        const members = Object.values(ch.state.members);
-        const otherMember = members.find(m => m.user_id !== user.id);
-        const name = otherMember?.user?.name || 'Unknown';
-        const image = (otherMember?.user?.image as string) || null;
-        const lastMsg = ch.state.messages[ch.state.messages.length - 1];
-
-        return {
-          channel: ch,
-          name,
-          image,
-          lastMessage: lastMsg?.text || 'No messages yet',
-          lastMessageTime: lastMsg?.created_at?.toString() || ch.data?.created_at?.toString() || new Date().toISOString(),
-          unreadCount: ch.countUnread(),
-          memberId: otherMember?.user_id || '',
-        };
+      const res = await fetch('/api/stream/token', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session!.access_token}` },
       });
 
-      setChannels(previews);
+      if (!res.ok) throw new Error(`Token failed: ${res.status}`);
+
+      const { token, userId, userName, userImage } = await res.json();
+      const client = StreamChat.getInstance(apiKey);
+
+      await client.connectUser(
+        { id: userId, name: userName, image: userImage || undefined },
+        token
+      );
+
+      setStreamClient(client);
+      setStreamReady(true);
+      setUseStream(true);
+      console.log('✅ Stream connected');
     } catch (err) {
-      console.error('Failed to load channels:', err);
-    } finally {
-      setLoading(false);
+      console.warn('⚠️ Stream unavailable, using Supabase fallback:', err);
+      setUseStream(false);
+      setStreamReady(true); // mark as "done trying"
     }
   };
 
-  // ─── Open/Create Direct Chat ────────────────────────
+  // ─── Stream Methods ─────────────────────────────────
 
-  const openDirectChat = async (partnerId: string) => {
-    if (!chatClient || !user) return;
+  const loadStreamChannels = async () => {
+    if (!streamClient || !user) return;
     setLoading(true);
     try {
-      // Create or get 1:1 channel
+      const filter = { type: 'messaging' as const, members: { $in: [user.id] } };
+      const sort = [{ last_message_at: -1 as const }];
+      const result = await streamClient.queryChannels(filter, sort, { limit: 30 });
+
+      const convos: Conversation[] = result.map(ch => {
+        const members = Object.values(ch.state.members);
+        const other = members.find(m => m.user_id !== user.id);
+        const lastMsg = ch.state.messages[ch.state.messages.length - 1];
+        return {
+          partner_id: other?.user_id || '',
+          partner_name: other?.user?.name || 'Unknown',
+          partner_photo: (other?.user?.image as string) || null,
+          last_message: lastMsg?.text || 'No messages yet',
+          last_message_time: lastMsg?.created_at?.toString() || new Date().toISOString(),
+          unread_count: ch.countUnread(),
+        };
+      });
+      setConversations(convos);
+    } catch { setConversations([]); }
+    finally { setLoading(false); }
+  };
+
+  const openStreamChat = async (partnerId: string) => {
+    if (!streamClient || !user) return;
+    setLoading(true);
+    try {
       const channelId = [user.id, partnerId].sort().join('--');
-      const channel = chatClient.channel('messaging', channelId, {
+      const channel = streamClient.channel('messaging', channelId, {
         members: [user.id, partnerId],
       } as any);
       await channel.watch();
-
       setActiveChannel(channel);
 
-      // Get partner info
       const members = Object.values(channel.state.members);
       const partner = members.find(m => m.user_id !== user.id);
-      setChatPartnerName(partner?.user?.name || 'Family Member');
-      setChatPartnerImage((partner?.user?.image as string) || null);
-
-      // Load messages
+      setChatPartner({
+        name: partner?.user?.name || 'Family Member',
+        photo: (partner?.user?.image as string) || null,
+      });
       setMessages(channel.state.messages || []);
-
-      // Mark as read
       await channel.markRead();
 
-      // Listen for new messages
       channel.on('message.new', (event) => {
-        if (event.message) {
-          setMessages(prev => [...prev, event.message!]);
-        }
+        if (event.message) setMessages(prev => [...prev, event.message!]);
       });
     } catch (err) {
-      console.error('Failed to open chat:', err);
-    } finally {
-      setLoading(false);
-    }
+      console.error('Stream chat failed:', err);
+    } finally { setLoading(false); }
   };
 
-  // ─── Send Message ───────────────────────────────────
-
-  const handleSend = async () => {
-    if (!newMessage.trim() || !activeChannel || sending) return;
+  const sendStreamMessage = async () => {
+    if (!activeChannel || !newMessage.trim()) return;
     setSending(true);
     try {
       await activeChannel.sendMessage({ text: newMessage.trim() });
       setNewMessage('');
       inputRef.current?.focus();
-    } catch (err) {
-      console.error('Failed to send:', err);
-    } finally {
-      setSending(false);
-    }
+    } catch (err) { console.error('Send failed:', err); }
+    finally { setSending(false); }
+  };
+
+  // ─── Supabase Fallback Methods ──────────────────────
+
+  const fetchSupabaseConversations = async () => {
+    if (!session?.access_token || !user?.id) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/messages/conversations', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      } else { setConversations([]); }
+    } catch { setConversations([]); }
+    finally { setLoading(false); }
+  };
+
+  const fetchSupabaseThread = async (partnerId: string, silent = false) => {
+    if (!session?.access_token || !user?.id) return;
+    if (!silent) setLoading(true);
+    try {
+      const res = await fetch(`/api/messages/thread?partner_id=${partnerId}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+      }
+      if (!chatPartner) {
+        const convRes = await fetch('/api/messages/conversations', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          const match = (convData.conversations || []).find((c: Conversation) => c.partner_id === partnerId);
+          setChatPartner(match ? { name: match.partner_name, photo: match.partner_photo } : { name: 'Family Member', photo: null });
+        }
+      }
+    } catch (err) { console.error('Fetch thread failed:', err); }
+    finally { if (!silent) setLoading(false); }
+  };
+
+  const sendSupabaseMessage = async () => {
+    if (!newMessage.trim() || !chatPartnerId || !session?.access_token) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ receiver_id: chatPartnerId, content: newMessage.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(prev => [...prev, data.message]);
+        setNewMessage('');
+        inputRef.current?.focus();
+      }
+    } catch (err) { console.error('Send failed:', err); }
+    finally { setSending(false); }
+  };
+
+  // ─── Unified Send ───────────────────────────────────
+
+  const handleSend = () => {
+    if (useStream && streamClient) sendStreamMessage();
+    else sendSupabaseMessage();
   };
 
   // ─── Helpers ────────────────────────────────────────
@@ -192,8 +302,7 @@ function MessagesContent() {
 
   const getDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = Date.now() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
@@ -203,9 +312,9 @@ function MessagesContent() {
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
-  // ─── Loading / Connecting State ─────────────────────
+  // ─── Loading State ──────────────────────────────────
 
-  if (authLoading || streamConnecting) {
+  if (authLoading || (!streamReady && useStream)) {
     return (
       <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -216,41 +325,16 @@ function MessagesContent() {
     );
   }
 
-  // ─── Stream Error Fallback ──────────────────────────
-
-  if (streamError || !chatClient) {
-    return (
-      <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
-        <div className="max-w-sm mx-auto">
-          <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">
-            <h1 className="text-xl font-bold text-[#2B2B2B]">Messages</h1>
-            <p className="text-xs text-[#5E5E5E] mt-0.5">Chat with your family members</p>
-          </div>
-          <div className="px-4 mt-8">
-            <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15">
-              <div className="w-16 h-16 rounded-full bg-[#B76E5D]/10 flex items-center justify-center mb-4">
-                <MessageCircle size={28} className="text-[#B76E5D]" />
-              </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">Connection Issue</h3>
-              <p className="text-sm text-[#5E5E5E] leading-relaxed">
-                Unable to connect to messaging service. Please check your internet and try again.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-5 py-2 rounded-xl bg-[#355E3B] text-white text-sm font-semibold"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
-
   // ═══════════ CHAT VIEW ═══════════
-  if (chatPartnerId && activeChannel) {
+  if (chatPartnerId) {
+    // Normalize messages for both backends
+    const normalizedMessages = messages.map((msg: any) => ({
+      id: msg.id,
+      isMine: useStream ? msg.user?.id === user?.id : msg.sender_id === user?.id,
+      text: useStream ? msg.text : msg.content,
+      created_at: msg.created_at,
+    }));
+
     return (
       <div className="h-screen bg-[#EFE6D5]/30 flex justify-center">
         <div className="h-full w-full max-w-sm flex flex-col bg-[#EFE6D5]/20">
@@ -263,16 +347,16 @@ function MessagesContent() {
               <ArrowLeft size={18} className="text-[#355E3B]" />
             </button>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
-              {chatPartnerImage ? (
-                <img src={chatPartnerImage} alt="" className="w-full h-full object-cover" />
+              {chatPartner?.photo ? (
+                <img src={chatPartner.photo} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-white text-xs font-bold">{getInitials(chatPartnerName)}</span>
+                <span className="text-white text-xs font-bold">{chatPartner ? getInitials(chatPartner.name) : '?'}</span>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#2B2B2B] truncate">{chatPartnerName}</p>
+              <p className="text-sm font-bold text-[#2B2B2B] truncate">{chatPartner?.name || 'Loading...'}</p>
               <p className="text-[10px] text-[#6E8B74] font-medium">
-                {activeChannel.state.watcher_count && activeChannel.state.watcher_count > 1 ? '🟢 Online' : 'Family member'}
+                {useStream ? '🟢 Real-time' : 'Family member'}
               </p>
             </div>
           </div>
@@ -283,7 +367,7 @@ function MessagesContent() {
               <div className="flex items-center justify-center h-full">
                 <Loader2 size={24} className="text-[#355E3B] animate-spin" />
               </div>
-            ) : messages.length === 0 ? (
+            ) : normalizedMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mx-auto mb-3">
@@ -294,10 +378,9 @@ function MessagesContent() {
               </div>
             ) : (
               <>
-                {messages.map((msg, i) => {
-                  const isMine = msg.user?.id === user?.id;
+                {normalizedMessages.map((msg, i) => {
                   const msgDate = msg.created_at ? new Date(msg.created_at).toDateString() : '';
-                  const prevDate = i > 0 && messages[i-1].created_at ? new Date(messages[i-1].created_at).toDateString() : '';
+                  const prevDate = i > 0 && normalizedMessages[i - 1].created_at ? new Date(normalizedMessages[i - 1].created_at).toDateString() : '';
                   const showDate = i === 0 || msgDate !== prevDate;
 
                   return (
@@ -309,17 +392,15 @@ function MessagesContent() {
                           </span>
                         </div>
                       )}
-                      <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1.5`}>
-                        <div
-                          className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                            isMine
-                              ? 'bg-[#355E3B] text-white rounded-br-md'
-                              : 'bg-[#FAF7F2] text-[#2B2B2B] border border-[#C9A66B]/10 rounded-bl-md'
-                          }`}
-                        >
+                      <div className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} mb-1.5`}>
+                        <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          msg.isMine
+                            ? 'bg-[#355E3B] text-white rounded-br-md'
+                            : 'bg-[#FAF7F2] text-[#2B2B2B] border border-[#C9A66B]/10 rounded-bl-md'
+                        }`}>
                           <p>{msg.text}</p>
                           {msg.created_at && (
-                            <p className={`text-[9px] mt-1 ${isMine ? 'text-white/50' : 'text-[#5E5E5E]/50'} text-right`}>
+                            <p className={`text-[9px] mt-1 ${msg.isMine ? 'text-white/50' : 'text-[#5E5E5E]/50'} text-right`}>
                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
@@ -348,11 +429,7 @@ function MessagesContent() {
               disabled={!newMessage.trim() || sending}
               className="w-10 h-10 rounded-xl bg-[#355E3B] flex items-center justify-center hover:bg-[#2d5033] transition-colors disabled:opacity-40 active:scale-95 shadow-sm shadow-[#355E3B]/20"
             >
-              {sending ? (
-                <Loader2 size={16} className="text-white animate-spin" />
-              ) : (
-                <Send size={16} className="text-white" />
-              )}
+              {sending ? <Loader2 size={16} className="text-white animate-spin" /> : <Send size={16} className="text-white" />}
             </button>
           </div>
         </div>
@@ -361,8 +438,8 @@ function MessagesContent() {
   }
 
   // ═══════════ INBOX VIEW ═══════════
-  const filteredChannels = channels.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConvos = conversations.filter(c =>
+    c.partner_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -371,7 +448,9 @@ function MessagesContent() {
         {/* Header */}
         <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">
           <h1 className="text-xl font-bold text-[#2B2B2B]">Messages</h1>
-          <p className="text-xs text-[#5E5E5E] mt-0.5">Real-time chat with your family</p>
+          <p className="text-xs text-[#5E5E5E] mt-0.5">
+            {useStream ? '🟢 Real-time chat' : 'Chat with your family members'}
+          </p>
         </div>
 
         {/* Search */}
@@ -387,54 +466,54 @@ function MessagesContent() {
           </div>
         </div>
 
-        {/* Channel List */}
+        {/* Conversations */}
         <div className="px-4 space-y-2 mt-2">
           {loading ? (
             <div className="flex justify-center py-16">
               <Loader2 size={24} className="text-[#355E3B] animate-spin" />
             </div>
-          ) : filteredChannels.length === 0 ? (
+          ) : filteredConvos.length === 0 ? (
             <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15 mt-4">
               <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mb-4">
                 <MessageCircle size={28} className="text-[#6E8B74]" />
               </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">No conversations yet</h3>
+              <h3 className="font-bold text-[#2B2B2B] mb-1">No messages yet</h3>
               <p className="text-sm text-[#5E5E5E] leading-relaxed">
                 Tap on a family member in your tree and select &quot;Send Message&quot; to start chatting.
               </p>
             </div>
           ) : (
-            filteredChannels.map(ch => (
+            filteredConvos.map(conv => (
               <button
-                key={ch.memberId || ch.channel.id}
-                onClick={() => router.push(`/messages?to=${ch.memberId}`)}
+                key={conv.partner_id}
+                onClick={() => router.push(`/messages?to=${conv.partner_id}`)}
                 className="w-full bg-[#FAF7F2] rounded-2xl p-4 flex items-center gap-3 border border-[#C9A66B]/10 hover:bg-[#355E3B]/3 transition-colors text-left active:scale-[0.99]"
               >
                 <div className="relative flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden">
-                    {ch.image ? (
-                      <img src={ch.image} alt="" className="w-full h-full object-cover" />
+                    {conv.partner_photo ? (
+                      <img src={conv.partner_photo} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-sm font-bold">{getInitials(ch.name)}</span>
+                      <span className="text-white text-sm font-bold">{getInitials(conv.partner_name)}</span>
                     )}
                   </div>
-                  {ch.unreadCount > 0 && (
+                  {conv.unread_count > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
-                      <span className="text-[9px] font-bold text-white">{ch.unreadCount > 9 ? '9+' : ch.unreadCount}</span>
+                      <span className="text-[9px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className={`text-sm truncate ${ch.unreadCount > 0 ? 'font-bold text-[#2B2B2B]' : 'font-semibold text-[#2B2B2B]'}`}>
-                      {ch.name}
+                    <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold' : 'font-semibold'} text-[#2B2B2B]`}>
+                      {conv.partner_name}
                     </p>
-                    <span className={`text-[10px] flex-shrink-0 ml-2 ${ch.unreadCount > 0 ? 'text-[#355E3B] font-semibold' : 'text-[#5E5E5E]/50'}`}>
-                      {formatTime(ch.lastMessageTime)}
+                    <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#355E3B] font-semibold' : 'text-[#5E5E5E]/50'}`}>
+                      {formatTime(conv.last_message_time)}
                     </span>
                   </div>
-                  <p className={`text-xs truncate mt-0.5 ${ch.unreadCount > 0 ? 'text-[#2B2B2B] font-medium' : 'text-[#5E5E5E]'}`}>
-                    {ch.lastMessage}
+                  <p className={`text-xs truncate mt-0.5 ${conv.unread_count > 0 ? 'text-[#2B2B2B] font-medium' : 'text-[#5E5E5E]'}`}>
+                    {conv.last_message}
                   </p>
                 </div>
               </button>

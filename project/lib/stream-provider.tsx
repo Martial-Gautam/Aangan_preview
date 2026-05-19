@@ -45,7 +45,9 @@ export function StreamProvider({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to get Stream token');
+        const errData = await res.json().catch(() => ({}));
+        console.error('Stream token error:', res.status, errData);
+        throw new Error(errData.error || `Stream token failed (${res.status})`);
       }
 
       const { token, userId, userName, userImage } = await res.json();

@@ -50,6 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setLoading(false);
       }
+    }).catch(() => {
+      // Network error during session restoration — treat as logged out
+      console.warn('Failed to restore session (network error).');
+      setLoading(false);
     });
 
     supabase.auth.onAuthStateChange((_event, session) => {

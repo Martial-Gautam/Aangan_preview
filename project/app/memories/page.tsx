@@ -7,12 +7,9 @@ import BottomNav from '@/components/BottomNav';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft,
-  Baby,
-  Briefcase,
   CalendarDays,
   Camera,
-  Dog,
-  Dumbbell,
+  Cake,
   Heart,
   ImagePlus,
   Loader2,
@@ -21,9 +18,13 @@ import {
   ScanLine,
   Sparkles,
   UploadCloud,
-  User,
   Users,
-  Palette,
+  MapPin,
+  Home,
+  Sun,
+  Trophy,
+  Gift,
+  Flame,
   GraduationCap,
 } from 'lucide-react';
 
@@ -43,24 +44,27 @@ type ParsedMemory = {
 type AlbumMode = 'choose' | 'join' | 'albums';
 
 type AlbumCategoryKey =
-  | 'children'
-  | 'couple'
-  | 'pet'
-  | 'friends'
-  | 'individual'
-  | 'work'
-  | 'family'
-  | 'class'
-  | 'team'
-  | 'hobby'
-  | 'others';
+  | 'family_trip'
+  | 'family_visit'
+  | 'festivals'
+  | 'daily_life'
+  | 'milestones'
+  | 'custom'
+  | 'birthday'
+  | 'wedding'
+  | 'anniversary'
+  | 'puja'
+  | 'reunion'
+  | 'graduation'
+  | 'custom_event';
 
 type AlbumCategory = {
   key: AlbumCategoryKey;
   label: string;
   subtitle: string;
-  icon: typeof Baby;
+  icon: typeof Camera;
   cardClass: string;
+  albumType: 'memory' | 'event';
 };
 
 const MEMORY_PREFIX = '[[memory-image]]';
@@ -68,17 +72,21 @@ const TITLE_SEPARATOR = '::';
 const QR_PLACEHOLDER = 'Camera QR scan will be added in the next update.';
 
 const ALBUM_CATEGORIES: AlbumCategory[] = [
-  { key: 'children', label: 'Children', subtitle: 'Kids milestones', icon: Baby, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20' },
-  { key: 'couple', label: 'Couple', subtitle: 'Together moments', icon: Heart, cardClass: 'bg-[#FAF7F2] border-[#B76E5D]/20' },
-  { key: 'pet', label: 'Pet', subtitle: 'Pet stories', icon: Dog, cardClass: 'bg-[#FAF7F2] border-[#6E8B74]/20' },
-  { key: 'friends', label: 'Friends', subtitle: 'Hangout memories', icon: Users, cardClass: 'bg-[#FAF7F2] border-[#8B5E3C]/20' },
-  { key: 'individual', label: 'Individual', subtitle: 'Personal moments', icon: User, cardClass: 'bg-[#FAF7F2] border-[#6E8B74]/20' },
-  { key: 'work', label: 'Work', subtitle: 'Project highlights', icon: Briefcase, cardClass: 'bg-[#FAF7F2] border-[#355E3B]/20' },
-  { key: 'family', label: 'Family', subtitle: 'Family events', icon: Users, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20' },
-  { key: 'class', label: 'Class', subtitle: 'School memories', icon: GraduationCap, cardClass: 'bg-[#FAF7F2] border-[#6E8B74]/20' },
-  { key: 'team', label: 'Team', subtitle: 'Sports moments', icon: Dumbbell, cardClass: 'bg-[#FAF7F2] border-[#355E3B]/20' },
-  { key: 'hobby', label: 'Hobby', subtitle: 'Creative time', icon: Palette, cardClass: 'bg-[#FAF7F2] border-[#8B5E3C]/20' },
-  { key: 'others', label: 'Others', subtitle: 'More memories', icon: Plus, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20' },
+  // Memory Albums
+  { key: 'family_trip', label: 'Family Trip', subtitle: 'Travel together', icon: MapPin, cardClass: 'bg-[#FAF7F2] border-[#355E3B]/20', albumType: 'memory' },
+  { key: 'family_visit', label: 'Family Visit', subtitle: 'Visiting relatives', icon: Home, cardClass: 'bg-[#FAF7F2] border-[#8B5E3C]/20', albumType: 'memory' },
+  { key: 'festivals', label: 'Festivals', subtitle: 'Diwali, Holi, Eid...', icon: Sparkles, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20', albumType: 'memory' },
+  { key: 'daily_life', label: 'Daily Life', subtitle: 'Everyday moments', icon: Sun, cardClass: 'bg-[#FAF7F2] border-[#6E8B74]/20', albumType: 'memory' },
+  { key: 'milestones', label: 'Milestones', subtitle: 'First steps, achievements', icon: Trophy, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20', albumType: 'memory' },
+  { key: 'custom', label: 'Custom', subtitle: 'Your own category', icon: Plus, cardClass: 'bg-[#FAF7F2] border-[#5E5E5E]/15', albumType: 'memory' },
+  // Event Albums
+  { key: 'birthday', label: 'Birthday', subtitle: 'Birthday celebrations', icon: Cake, cardClass: 'bg-[#FAF7F2] border-[#B76E5D]/20', albumType: 'event' },
+  { key: 'wedding', label: 'Wedding', subtitle: 'Weddings & engagements', icon: Heart, cardClass: 'bg-[#FAF7F2] border-[#B76E5D]/20', albumType: 'event' },
+  { key: 'anniversary', label: 'Anniversary', subtitle: 'Love milestones', icon: Gift, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20', albumType: 'event' },
+  { key: 'puja', label: 'Puja / Ceremony', subtitle: 'Religious & spiritual', icon: Flame, cardClass: 'bg-[#FAF7F2] border-[#C9A66B]/20', albumType: 'event' },
+  { key: 'reunion', label: 'Family Reunion', subtitle: 'Getting together', icon: Users, cardClass: 'bg-[#FAF7F2] border-[#355E3B]/20', albumType: 'event' },
+  { key: 'graduation', label: 'Graduation', subtitle: 'Academic achievements', icon: GraduationCap, cardClass: 'bg-[#FAF7F2] border-[#6E8B74]/20', albumType: 'event' },
+  { key: 'custom_event', label: 'Custom Event', subtitle: 'Your own event type', icon: Plus, cardClass: 'bg-[#FAF7F2] border-[#5E5E5E]/15', albumType: 'event' },
 ];
 
 function parseMemoryContent(content: string): ParsedMemory | null {
@@ -93,17 +101,17 @@ function parseMemoryContent(content: string): ParsedMemory | null {
 }
 
 function parseMemoryTitle(rawTitle: string | null): { category: AlbumCategoryKey; title: string } {
-  if (!rawTitle) return { category: 'others', title: 'Untitled Memory' };
+  if (!rawTitle) return { category: 'custom', title: 'Untitled Memory' };
 
   const splitIndex = rawTitle.indexOf(TITLE_SEPARATOR);
   if (splitIndex === -1) {
-    return { category: 'others', title: rawTitle.trim() || 'Untitled Memory' };
+    return { category: 'custom', title: rawTitle.trim() || 'Untitled Memory' };
   }
 
   const rawCategory = rawTitle.slice(0, splitIndex).trim().toLowerCase();
   const contentTitle = rawTitle.slice(splitIndex + TITLE_SEPARATOR.length).trim();
   const exists = ALBUM_CATEGORIES.some((c) => c.key === rawCategory);
-  const category = exists ? (rawCategory as AlbumCategoryKey) : 'others';
+  const category = exists ? (rawCategory as AlbumCategoryKey) : 'custom';
 
   return {
     category,
@@ -123,7 +131,8 @@ export default function MemoriesPage() {
   const [loadingMemories, setLoadingMemories] = useState(true);
 
   const [mode, setMode] = useState<AlbumMode>('choose');
-  const [activeCategory, setActiveCategory] = useState<AlbumCategoryKey>('family');
+  const [albumTypeFilter, setAlbumTypeFilter] = useState<'memory' | 'event'>('memory');
+  const [activeCategory, setActiveCategory] = useState<AlbumCategoryKey>('family_trip');
   const [showCreate, setShowCreate] = useState(false);
 
   const [eventTitle, setEventTitle] = useState('');
@@ -217,6 +226,11 @@ export default function MemoriesPage() {
     return counts;
   }, [memoryCards]);
 
+  const filteredAlbumCategories = useMemo(
+    () => ALBUM_CATEGORIES.filter(c => c.albumType === albumTypeFilter),
+    [albumTypeFilter]
+  );
+
   const activeCategoryMeta = useMemo(
     () => ALBUM_CATEGORIES.find((c) => c.key === activeCategory) || ALBUM_CATEGORIES[0],
     [activeCategory]
@@ -257,10 +271,10 @@ export default function MemoriesPage() {
       const safeExt = ext.toLowerCase();
       const filePath = `${user.id}/memories/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
 
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, photo, { upsert: false });
+      const { error: uploadError } = await supabase.storage.from('media').upload(filePath, photo, { upsert: false });
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
       const imageUrl = urlData.publicUrl;
       const packedContent = `${MEMORY_PREFIX}${imageUrl}\n${caption.trim()}`;
 
@@ -302,7 +316,7 @@ export default function MemoriesPage() {
     }
     setJoinError('');
     setMode('albums');
-    setActiveCategory('family');
+    setActiveCategory('family_trip');
   };
 
   return (
@@ -336,11 +350,93 @@ export default function MemoriesPage() {
         <div className="px-4 py-4">
           {mode === 'choose' && (
             <div className="space-y-3">
+              {/* ── Mini Calendar ── */}
+              {(() => {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth();
+                const today = now.getDate();
+                const monthName = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                // Days with memories (from memoryCards)
+                const memoryDays = new Set<number>();
+                memoryCards.forEach(m => {
+                  const d = new Date(m.created_at);
+                  if (d.getMonth() === month && d.getFullYear() === year) {
+                    memoryDays.add(d.getDate());
+                  }
+                });
+
+                const blanks = Array.from({ length: firstDay }, (_, i) => i);
+                const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+                return (
+                  <div className="bg-[#FAF7F2] rounded-2xl border border-[#C9A66B]/16 p-4 shadow-sm">
+                    <h3 className="text-sm font-bold text-[#2B2B2B] mb-3 flex items-center gap-2">
+                      <CalendarDays size={16} className="text-[#C9A66B]" />
+                      {monthName}
+                    </h3>
+                    <div className="grid grid-cols-7 gap-0.5 text-center">
+                      {['S','M','T','W','T','F','S'].map((d, i) => (
+                        <span key={`h-${i}`} className="text-[9px] font-bold text-[#5E5E5E]/50 py-1">{d}</span>
+                      ))}
+                      {blanks.map(i => <span key={`b-${i}`} />)}
+                      {days.map(day => {
+                        const isToday = day === today;
+                        const hasMemory = memoryDays.has(day);
+                        return (
+                          <div
+                            key={day}
+                            className={`relative w-8 h-8 mx-auto flex items-center justify-center rounded-full text-xs font-medium transition-all ${
+                              isToday
+                                ? 'bg-[#355E3B] text-white font-bold shadow-md'
+                                : hasMemory
+                                ? 'bg-[#C9A66B]/15 text-[#8B5E3C] font-semibold'
+                                : 'text-[#2B2B2B]/70'
+                            }`}
+                          >
+                            {day}
+                            {hasMemory && !isToday && (
+                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#C9A66B]" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Upcoming Moments Bar ── */}
+              <div className="bg-gradient-to-r from-[#C9A66B]/10 to-[#EFE6D5]/60 rounded-2xl border border-[#C9A66B]/16 p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-[#2B2B2B] mb-2 flex items-center gap-2">
+                  <Sparkles size={14} className="text-[#C9A66B]" />
+                  Upcoming Moments
+                </h3>
+                <div className="space-y-2">
+                  {memoryCards.length > 0 ? (
+                    <p className="text-xs text-[#5E5E5E]">
+                      📸 <span className="font-semibold text-[#355E3B]">{memoryCards.length}</span> {memoryCards.length === 1 ? 'memory' : 'memories'} captured so far
+                    </p>
+                  ) : null}
+                  <p className="text-xs text-[#5E5E5E]">
+                    🎂 Add family birthdays in member profiles to see them here
+                  </p>
+                  <p className="text-xs text-[#5E5E5E]">
+                    🔔 Event invitations will appear here when shared via the app
+                  </p>
+                </div>
+              </div>
+
+              {/* ── Album Buttons ── */}
               <button
                 type="button"
                 onClick={() => {
+                  setAlbumTypeFilter('memory');
+                  setActiveCategory('family_trip');
                   setMode('albums');
-                  setActiveCategory('family');
                 }}
                 className="w-full text-left bg-[#FAF7F2] rounded-2xl border border-[#C9A66B]/16 p-4 shadow-sm"
               >
@@ -349,8 +445,8 @@ export default function MemoriesPage() {
                     <Camera size={20} />
                   </div>
                   <div>
-                    <p className="text-base font-bold text-[#2B2B2B]">Create Memory Album</p>
-                    <p className="text-xs text-[#5E5E5E] mt-1">Save family photos into categories like Family, Kids, Friends and more.</p>
+                    <p className="text-base font-bold text-[#2B2B2B]">Memory Albums</p>
+                    <p className="text-xs text-[#5E5E5E] mt-1">Family trips, visits, festivals, daily moments & milestones.</p>
                   </div>
                 </div>
               </button>
@@ -358,8 +454,9 @@ export default function MemoriesPage() {
               <button
                 type="button"
                 onClick={() => {
+                  setAlbumTypeFilter('event');
+                  setActiveCategory('birthday');
                   setMode('albums');
-                  setActiveCategory('others');
                 }}
                 className="w-full text-left bg-[#FAF7F2] rounded-2xl border border-[#C9A66B]/16 p-4 shadow-sm"
               >
@@ -368,8 +465,8 @@ export default function MemoriesPage() {
                     <Sparkles size={20} />
                   </div>
                   <div>
-                    <p className="text-base font-bold text-[#2B2B2B]">Create Event Album</p>
-                    <p className="text-xs text-[#5E5E5E] mt-1">Wedding, birthday, puja, trip and celebration galleries in one place.</p>
+                    <p className="text-base font-bold text-[#2B2B2B]">Event Albums</p>
+                    <p className="text-xs text-[#5E5E5E] mt-1">Birthdays, pujas, weddings, anniversaries & celebrations.</p>
                   </div>
                 </div>
               </button>
@@ -440,8 +537,25 @@ export default function MemoriesPage() {
 
           {mode === 'albums' && (
             <div>
+              {/* Album type header */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-[#2B2B2B]">
+                  {albumTypeFilter === 'memory' ? '📸 Memory Albums' : '🎉 Event Albums'}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newType = albumTypeFilter === 'memory' ? 'event' : 'memory';
+                    setAlbumTypeFilter(newType);
+                    setActiveCategory(newType === 'memory' ? 'family_trip' : 'birthday');
+                  }}
+                  className="text-xs font-semibold text-[#355E3B] bg-[#355E3B]/8 px-3 py-1.5 rounded-full"
+                >
+                  Switch to {albumTypeFilter === 'memory' ? 'Events' : 'Memories'}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                {ALBUM_CATEGORIES.map((category) => {
+                {filteredAlbumCategories.map((category) => {
                   const Icon = category.icon;
                   const active = activeCategory === category.key;
                   return (

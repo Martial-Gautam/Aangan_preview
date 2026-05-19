@@ -4,8 +4,9 @@ import { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
-import { Pencil, Trash2, Users, LinkIcon, Route, MessageCircle } from 'lucide-react';
+import { Pencil, Trash2, LinkIcon, Route, MessageCircle, UserPlus, Calendar, Cake } from 'lucide-react';
 import { calculateDegree } from '@/lib/degree-calculator';
+import { useFamilyStore } from '@/lib/family-store';
 
 const LABEL_MAP: Record<string, string> = {
   self: 'You', father: 'Father', mother: 'Mother',
@@ -14,15 +15,60 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  self: 'bg-[#355E3B]/10 text-[#355E3B]',
-  father: 'bg-[#8B5E3C]/10 text-[#8B5E3C]',
-  mother: 'bg-[#B76E5D]/10 text-[#B76E5D]',
-  sibling: 'bg-[#6E8B74]/10 text-[#6E8B74]',
-  spouse: 'bg-[#C9A66B]/10 text-[#8B5E3C]',
-  child: 'bg-[#355E3B]/8 text-[#355E3B]',
+  self: 'bg-[#355E3B] text-white',
+  father: 'bg-[#8B5E3C]/12 text-[#8B5E3C]',
+  mother: 'bg-[#B76E5D]/12 text-[#B76E5D]',
+  sibling: 'bg-[#6E8B74]/12 text-[#4a7a52]',
+  spouse: 'bg-[#C9A66B]/12 text-[#8B5E3C]',
+  child: 'bg-[#355E3B]/10 text-[#355E3B]',
   connection: 'bg-[#C9A66B]/10 text-[#8B5E3C]',
   relative: 'bg-[#EFE6D5] text-[#5E5E5E]',
 };
+
+// ─── Helpers ─────────────────────────────────────────────────
+
+function calculateAge(dob: string | null | undefined): number | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+  return age >= 0 ? age : null;
+}
+
+function getBirthdayCountdown(dob: string | null | undefined): string | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let nextBday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+  if (nextBday < today) {
+    nextBday = new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
+  }
+  const diff = Math.ceil((nextBday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return '🎂 Birthday today!';
+  if (diff === 1) return '🎂 Birthday tomorrow!';
+  if (diff <= 30) return `🎂 Birthday in ${diff} days`;
+  return null;
+}
+
+function getImmediateFamily(
+  personId: string,
+  relationships: Relationship[],
+  people: Person[]
+): Array<{ person: Person; relType: string }> {
+  const rels = relationships.filter(r => r.person_id === personId);
+  const result: Array<{ person: Person; relType: string }> = [];
+  for (const rel of rels) {
+    const person = people.find(p => p.id === rel.related_person_id);
+    if (person) result.push({ person, relType: rel.relationship_type });
+  }
+  return result;
+}
+
+// ─── Component ───────────────────────────────────────────────
 
 interface MemberDetailSheetProps {
   personId: string | null;
@@ -44,6 +90,7 @@ export default function MemberDetailSheet({
   accessToken,
 }: MemberDetailSheetProps) {
   const router = useRouter();
+  const setQuickAddTarget = useFamilyStore(s => s.setQuickAddTarget);
   const [messageTargetId, setMessageTargetId] = useState<string | null>(null);
   const [resolvingTarget, setResolvingTarget] = useState(false);
 
@@ -66,7 +113,15 @@ export default function MemberDetailSheet({
     return calculateDegree(selfPersonId, personId, relationships);
   }, [personId, selfPersonId, relationships]);
 
+  const immediateFamily = useMemo(() => {
+    if (!personId) return [];
+    return getImmediateFamily(personId, relationships, people);
+  }, [personId, relationships, people]);
+
   const isSelf = person ? person.is_self && person.id === selfPersonId : false;
+  const personDob = (person as any)?.date_of_birth || null;
+  const age = useMemo(() => calculateAge(personDob), [personDob]);
+  const birthdayNote = useMemo(() => getBirthdayCountdown(personDob), [personDob]);
 
   useEffect(() => {
     const resolveTarget = async () => {
@@ -76,13 +131,11 @@ export default function MemberDetailSheet({
         return;
       }
 
-      // Fast path when directly linked.
       if (person.user_id) {
         setMessageTargetId(person.user_id);
         return;
       }
 
-      // Resolve indirect matches (connection request/email/phone).
       if (!accessToken) {
         setMessageTargetId(null);
         return;
@@ -116,7 +169,7 @@ export default function MemberDetailSheet({
   const label = LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
   const isLinked = person.user_id !== null;
-  const canEdit = !isSelf; // Self profile is edited via profile page
+  const canEdit = !isSelf;
   const canDelete = !isSelf && !isLinked;
   const canMessage = !!messageTargetId;
 
@@ -147,7 +200,7 @@ export default function MemberDetailSheet({
 
   return (
     <Sheet open={!!personId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[70vh]">
+      <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh] overflow-y-auto">
         <SheetHeader className="sr-only">
           <SheetTitle>{person.full_name}</SheetTitle>
         </SheetHeader>
@@ -160,7 +213,11 @@ export default function MemberDetailSheet({
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
           <div className="relative mb-3">
-            <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-sm ${isSelf ? 'bg-gradient-to-br from-[#355E3B] to-[#6E8B74] border-[#355E3B] shadow-[#355E3B]/20 shadow-md' : 'bg-[#EFE6D5] border-[#C9A66B]/30'}`}>
+            <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-lg ${
+              isSelf
+                ? 'bg-gradient-to-br from-[#355E3B] to-[#4a7a52] border-[#355E3B] shadow-[#355E3B]/25'
+                : 'bg-gradient-to-br from-[#FAF7F2] to-[#EFE6D5] border-[#C9A66B]/30 shadow-black/8'
+            }`}>
               {person.photo_url ? (
                 <img src={person.photo_url} alt={person.full_name} className="w-full h-full object-cover" />
               ) : (
@@ -168,52 +225,102 @@ export default function MemberDetailSheet({
               )}
             </div>
             {isLinked && !isSelf && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#C9A66B] rounded-full border-2 border-white flex items-center justify-center">
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
                 <LinkIcon size={10} className="text-white" />
               </div>
             )}
           </div>
 
-          {/* Name */}
+          {/* Name & age */}
           <h2 className="text-lg font-bold text-gray-900">{person.full_name}</h2>
+          {age !== null && (
+            <p className="text-xs text-[#5E5E5E] mt-0.5">{age} years old</p>
+          )}
 
           {/* Badges */}
-          <div className="flex items-center gap-2 mt-2">
-            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${badgeColor}`}>
+          <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+            <span className={`text-xs font-bold px-3 py-1 rounded-full ${badgeColor}`}>
               {label}
             </span>
             {isLinked && (
-              <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#C9A66B]/10 text-[#8B5E3C] flex items-center gap-1">
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
                 <LinkIcon size={10} /> Aangan member
               </span>
             )}
           </div>
 
-          {/* Degree of relationship */}
+          {/* Birthday countdown */}
+          {birthdayNote && (
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#C9A66B] font-medium bg-[#C9A66B]/8 px-3 py-1.5 rounded-full">
+              <Cake size={12} />
+              {birthdayNote}
+            </div>
+          )}
+
+          {/* Degree of relationship path */}
           {degreeResult && degreeResult.degree > 0 && (
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
-              <Route size={12} className="text-[#C9A66B]" />
+            <div className="flex items-center gap-1.5 mt-2.5 text-xs text-[#5E5E5E] bg-[#EFE6D5]/60 px-3 py-2 rounded-xl">
+              <Route size={12} className="text-[#C9A66B] flex-shrink-0" />
               <span>
-                You and <span className="font-semibold text-gray-700">{person.full_name.split(' ')[0]}</span> are{' '}
                 <span className="font-semibold text-[#355E3B]">{degreeResult.label}</span>
-                <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'} apart)</span>
+                <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'})</span>
               </span>
             </div>
           )}
 
+          {/* Immediate Family */}
+          {immediateFamily.length > 0 && (
+            <div className="w-full mt-5">
+              <h3 className="text-xs font-bold text-[#5E5E5E] uppercase tracking-wider mb-2 text-left">
+                {isSelf ? 'Your Family' : `${person.full_name.split(' ')[0]}'s Family`}
+              </h3>
+              <div className="space-y-1.5">
+                {immediateFamily.slice(0, 6).map(({ person: familyMember, relType }) => (
+                  <button
+                    key={familyMember.id}
+                    onClick={() => {
+                      onClose();
+                      setTimeout(() => useFamilyStore.getState().setSelectedPerson(familyMember.id), 300);
+                    }}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#EFE6D5]/40 transition-colors text-left"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#EFE6D5] flex items-center justify-center text-xs font-bold text-[#5E5E5E] overflow-hidden flex-shrink-0">
+                      {familyMember.photo_url ? (
+                        <img src={familyMember.photo_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        familyMember.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#2B2B2B] truncate">{familyMember.full_name}</p>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#5E5E5E] bg-[#EFE6D5]/60 px-2 py-0.5 rounded-full capitalize">
+                      {relType}
+                    </span>
+                  </button>
+                ))}
+                {immediateFamily.length > 6 && (
+                  <p className="text-xs text-gray-400 text-center py-1">
+                    +{immediateFamily.length - 6} more
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Details */}
-          <div className="w-full mt-5 space-y-2 text-left">
+          <div className="w-full mt-4 space-y-1.5 text-left">
             {person.gender && (
               <div className="flex justify-between py-2 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Gender</span>
                 <span className="text-sm font-medium text-gray-800 capitalize">{person.gender}</span>
               </div>
             )}
-            {(person as any).date_of_birth && (
+            {personDob && (
               <div className="flex justify-between py-2 border-b border-gray-50">
-                <span className="text-sm text-gray-500">Date of Birth</span>
+                <span className="text-sm text-gray-500 flex items-center gap-1"><Calendar size={12} /> Birthday</span>
                 <span className="text-sm font-medium text-gray-800">
-                  {new Date((person as any).date_of_birth).toLocaleDateString('en-IN', {
+                  {new Date(personDob).toLocaleDateString('en-IN', {
                     day: 'numeric', month: 'short', year: 'numeric'
                   })}
                 </span>
@@ -222,21 +329,25 @@ export default function MemberDetailSheet({
           </div>
 
           {/* Actions */}
-          <div className="w-full mt-6 space-y-2">
+          <div className="w-full mt-5 space-y-2">
             {canEdit && (
               <button
                 onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20"
+                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#4a7a52] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:from-[#2d5033] hover:to-[#3f6946] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20"
               >
                 <Pencil size={16} /> Edit Member
               </button>
             )}
 
+            {/* Quick Add */}
             <button
-              onClick={() => alert('Coming soon!')}
-              className="w-full py-3 px-4 rounded-2xl bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-[0.98] transition-all"
+              onClick={() => {
+                onClose();
+                setTimeout(() => setQuickAddTarget(personId!), 300);
+              }}
+              className="w-full py-3 px-4 rounded-2xl bg-[#355E3B]/8 text-[#355E3B] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#355E3B]/15 active:scale-[0.98] transition-all border border-[#355E3B]/10"
             >
-              <Users size={16} /> View Connections
+              <UserPlus size={16} /> Add Their Relative
             </button>
 
             {!isSelf && (
@@ -250,20 +361,15 @@ export default function MemberDetailSheet({
                   disabled={!canMessage || resolvingTarget}
                   className={`w-full py-3 px-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all border ${
                     canMessage
-                      ? 'bg-[#C9A66B]/10 text-[#8B5E3C] hover:bg-[#C9A66B]/20 active:scale-[0.98] border-[#C9A66B]/15'
+                      ? 'bg-[#C9A66B]/8 text-[#8B5E3C] hover:bg-[#C9A66B]/15 active:scale-[0.98] border-[#C9A66B]/15'
                       : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   }`}
                 >
                   <MessageCircle size={16} /> Send Message
                 </button>
                 {!canMessage && !resolvingTarget && (
-                  <p className="text-[11px] text-gray-500 text-center px-2">
-                    We couldn&apos;t find a linked Aangan account for this member yet.
-                  </p>
-                )}
-                {resolvingTarget && (
-                  <p className="text-[11px] text-gray-500 text-center px-2">
-                    Checking linked Aangan account...
+                  <p className="text-[11px] text-gray-400 text-center px-2">
+                    No linked Aangan account found yet
                   </p>
                 )}
               </>
@@ -272,7 +378,7 @@ export default function MemberDetailSheet({
             {canDelete && (
               <button
                 onClick={handleDelete}
-                className="w-full py-3 px-4 rounded-2xl bg-[#6B2E2E]/8 text-[#6B2E2E] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#6B2E2E]/15 active:scale-[0.98] transition-all"
+                className="w-full py-3 px-4 rounded-2xl bg-[#6B2E2E]/6 text-[#6B2E2E] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#6B2E2E]/12 active:scale-[0.98] transition-all"
               >
                 <Trash2 size={16} /> Remove Member
               </button>

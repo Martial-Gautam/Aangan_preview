@@ -148,44 +148,37 @@ function degreeToLabel(degree: number, relPath: string[]): string {
   // 2 hops
   if (degree === 2) {
     const [first, second] = relPath;
+    const isParent = (r: string) => ['father', 'mother', 'parent'].includes(r);
 
     // Parent's parent = grandparent
-    if ((first === 'father' || first === 'mother' || first === 'parent') &&
-        (second === 'father' || second === 'mother' || second === 'parent')) {
-      return 'Grandparent';
-    }
+    if (isParent(first) && isParent(second)) return 'Grandparent';
 
     // Child's child = grandchild
-    if (first === 'child' && second === 'child') {
-      return 'Grandchild';
-    }
+    if (first === 'child' && second === 'child') return 'Grandchild';
 
     // Parent's sibling = aunt/uncle
-    if ((first === 'father' || first === 'mother' || first === 'parent') &&
-        second === 'sibling') {
-      return 'Aunt/Uncle';
-    }
+    if (isParent(first) && second === 'sibling') return 'Aunt/Uncle';
 
     // Sibling's child = nephew/niece
-    if (first === 'sibling' && second === 'child') {
-      return 'Nephew/Niece';
-    }
+    if (first === 'sibling' && second === 'child') return 'Nephew/Niece';
 
-    // Parent's spouse (not the other parent) = Step-parent
-    if ((first === 'father' || first === 'mother' || first === 'parent') &&
-        second === 'spouse') {
-      return 'Step-parent';
-    }
+    // Sibling's spouse = sibling-in-law
+    if (first === 'sibling' && second === 'spouse') return 'Sibling-in-law';
 
-    // Spouse's child = Step-child
-    if (first === 'spouse' && second === 'child') {
-      return 'Step-child';
-    }
+    // Parent's spouse = step-parent
+    if (isParent(first) && second === 'spouse') return 'Step-parent';
 
-    // Spouse's sibling = In-law
-    if (first === 'spouse' && second === 'sibling') {
-      return 'Sibling-in-law';
-    }
+    // Spouse's child = step-child
+    if (first === 'spouse' && second === 'child') return 'Step-child';
+
+    // Spouse's sibling = sibling-in-law
+    if (first === 'spouse' && second === 'sibling') return 'Sibling-in-law';
+
+    // Spouse's parent = parent-in-law
+    if (first === 'spouse' && isParent(second)) return 'Parent-in-law';
+
+    // Child's spouse = child-in-law
+    if (first === 'child' && second === 'spouse') return 'Child-in-law';
 
     return '2nd degree relative';
   }
@@ -223,7 +216,23 @@ function degreeToLabel(degree: number, relPath: string[]): string {
 
   // 4 hops
   if (degree === 4) {
-    // Parent → parent → sibling → child = first cousin once removed (or second cousin path)
+    const isParent = (r: string) => ['father', 'mother', 'parent'].includes(r);
+
+    // Parent → parent → sibling → child = first cousin once removed
+    if (isParent(relPath[0]) && isParent(relPath[1]) && relPath[2] === 'sibling' && relPath[3] === 'child') {
+      return 'First Cousin Once Removed';
+    }
+
+    // Parent → sibling → child → child = first cousin's child
+    if (isParent(relPath[0]) && relPath[1] === 'sibling' && relPath[2] === 'child' && relPath[3] === 'child') {
+      return 'First Cousin Once Removed';
+    }
+
+    // Spouse → sibling → spouse = co-sibling-in-law
+    if (relPath[0] === 'spouse' && relPath[1] === 'sibling' && relPath[2] === 'spouse') {
+      return 'Co-sibling-in-law';
+    }
+
     return '4th degree relative';
   }
 

@@ -2,50 +2,74 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
-import FamilyFlow from '@/components/FamilyFlow';
+import { useFamilyStore } from '@/lib/family-store';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
+import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Person, Relationship } from '@/lib/tree-to-flow';
 import BottomNav from '@/components/BottomNav';
-import { supabase } from '@/lib/supabase';
-import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download } from 'lucide-react';
+import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, Compass, ZoomIn, ZoomOut, Home } from 'lucide-react';
 import Link from 'next/link';
 
+// Dynamic import — Three.js must not run on server
+const FamilyCosmos = dynamic(() => import('@/components/FamilyCosmos'), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 bg-[#0a0e17] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 size={24} className="animate-spin text-[#C9A66B]" />
+        <span className="text-[#FAF7F2]/60 text-xs font-medium">Loading cosmos...</span>
+      </div>
+    </div>
+  ),
+});
+
+// ─── Types ───────────────────────────────────────────────────
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+}
+
+// ─── Component ───────────────────────────────────────────────
 
 export default function HomePage() {
   const { user, profile, session, loading } = useAuth();
   const router = useRouter();
 
-  const [selfPerson, setSelfPerson] = useState<Person | null>(null);
-  const [people, setPeople] = useState<Person[]>([]);
-  const [relationships, setRelationships] = useState<Relationship[]>([]);
-  const [familyCount, setFamilyCount] = useState(0);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Zustand store
+  const {
+    people, relationships, selfPerson, familyCount, dataLoading,
+    selectedPersonId, searchQuery, centerPersonId, focusHops,
+    setSelectedPerson, setSearchQuery, setCenterPerson, setFocusHops,
+    fetchFamily, removeMember,
+  } = useFamilyStore();
 
-  // Suggestions state
+  // Local UI state (not shared)
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestionsSheet, setShowSuggestionsSheet] = useState(false);
   const [processingSuggestionId, setProcessingSuggestionId] = useState<string | null>(null);
-
   const [pendingAlertCount, setPendingAlertCount] = useState(0);
 
+  // Install prompt
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installHint, setInstallHint] = useState('');
   const [showInstallSheet, setShowInstallSheet] = useState(false);
+
   const seedInFlightRef = useRef(false);
   const bootstrapUserRef = useRef<string | null>(null);
+
+  // ─── Effects ─────────────────────────────────────────────
 
   useEffect(() => {
     if (loading) return;
     if (!user) { router.replace('/welcome'); return; }
     if (!profile?.onboarding_completed) { router.replace('/onboarding'); return; }
     if (!session?.access_token) return;
-    fetchFamily();
+
+    fetchFamily(user.id, session.access_token);
     fetchSuggestions();
     fetchPendingAlerts();
   }, [user, profile, loading, session?.access_token]);
@@ -56,16 +80,13 @@ export default function HomePage() {
       setInstallPrompt(event as BeforeInstallPromptEvent);
       setCanInstall(true);
     };
-
     window.addEventListener('beforeinstallprompt', handler as EventListener);
 
     const standalone = window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone;
     setIsInstalled(Boolean(standalone));
 
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler as EventListener);
-    };
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const seedDemoSocial = useCallback(async (force: boolean) => {
@@ -113,106 +134,7 @@ export default function HomePage() {
     }
   }, [loading, user, profile, session?.access_token, isInstalled, seedDemoSocial]);
 
-  const fetchFamily = async () => {
-    if (!user) return;
-    setDataLoading(true);
-    try {
-      const tokenFromContext = session?.access_token || null;
-      const {
-        data: { session: freshSession },
-      } = await supabase.auth.getSession();
-      let accessToken = freshSession?.access_token || tokenFromContext;
-
-      if (!accessToken) {
-        await fetchFamilyFallback();
-        return;
-      }
-
-      let res = await fetch('/api/tree/full', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      // Handle token timing/refresh races once before falling back.
-      if (res.status === 401) {
-        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-        if (!refreshError && refreshed.session?.access_token) {
-          accessToken = refreshed.session.access_token;
-          res = await fetch('/api/tree/full', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-        }
-      }
-
-      if (!res.ok) {
-        await fetchFamilyFallback();
-        return;
-      }
-
-      const data = await res.json();
-      const nodes: Person[] = data.nodes || [];
-      const edges: Relationship[] = data.edges || [];
-      const selfId: string | null = data.self_person_id;
-
-      const self = nodes.find((p) => p.id === selfId) || null;
-
-      // Guard against partial/empty tree payloads that can happen during API issues.
-      if (!self || nodes.length <= 1) {
-        await fetchFamilyFallback();
-        return;
-      }
-
-      setSelfPerson(self);
-      setPeople(nodes);
-      setRelationships(edges);
-      setFamilyCount(Math.max(0, nodes.length - 1));
-    } catch (err) {
-      console.warn('Family tree API unavailable. Using fallback data source.', err);
-      await fetchFamilyFallback();
-    } finally {
-      setDataLoading(false);
-    }
-  };
-
-  const fetchFamilyFallback = async () => {
-    if (!user) return;
-    try {
-      const [{ data: self }, { data: nodes }, { data: edges }] = await Promise.all([
-        supabase
-          .from('people')
-          .select('*')
-          .eq('owner_id', user.id)
-          .eq('is_self', true)
-          .maybeSingle(),
-        supabase
-          .from('people')
-          .select('*')
-          .eq('owner_id', user.id),
-        supabase
-          .from('relationships')
-          .select('*')
-          .eq('owner_id', user.id),
-      ]);
-
-      const peopleRows = (nodes || []) as Person[];
-      const relationshipRows = (edges || []) as Relationship[];
-      const selfRow = (self as Person | null) || peopleRows.find((p) => p.is_self) || null;
-
-      setSelfPerson(selfRow);
-      setPeople(peopleRows);
-      setRelationships(relationshipRows);
-
-      const directFamilyCount = selfRow
-        ? relationshipRows.filter((r) => r.person_id === selfRow.id).length
-        : Math.max(0, peopleRows.length - 1);
-      setFamilyCount(Math.max(0, directFamilyCount));
-    } catch (fallbackErr) {
-      console.error('Fallback family query failed:', fallbackErr);
-      setSelfPerson(null);
-      setPeople([]);
-      setRelationships([]);
-      setFamilyCount(0);
-    }
-  };
+  // ─── Fetchers ────────────────────────────────────────────
 
   const fetchSuggestions = async () => {
     if (!session?.access_token) return;
@@ -245,25 +167,23 @@ export default function HomePage() {
   };
 
   const handleSuggestionResponse = async (suggestionId: string, action: 'accept' | 'reject') => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !user) return;
     setProcessingSuggestionId(suggestionId);
     try {
       const res = await fetch('/api/inference/respond', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ suggestion_id: suggestionId, action })
+        body: JSON.stringify({ suggestion_id: suggestionId, action }),
       });
       if (res.ok) {
         setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
         if (action === 'accept') {
-          fetchFamily(); // Refresh tree
+          fetchFamily(user.id, session.access_token);
         }
-        if (suggestions.length === 1) {
-          setShowSuggestionsSheet(false);
-        }
+        if (suggestions.length === 1) setShowSuggestionsSheet(false);
       }
     } catch (err) {
       console.error('Failed to process suggestion', err);
@@ -278,7 +198,6 @@ export default function HomePage() {
       setShowInstallSheet(false);
       return;
     }
-
     if (installPrompt) {
       await installPrompt.prompt();
       setInstallPrompt(null);
@@ -287,17 +206,10 @@ export default function HomePage() {
       setShowInstallSheet(false);
       return;
     }
-
     setInstallHint('Use your browser menu and tap "Add to Home Screen" for the best app experience.');
   };
 
-  const handleDeleteMember = useCallback((personId: string) => {
-    setPeople(prev => prev.filter(p => p.id !== personId));
-    setRelationships(prev => prev.filter(
-      r => r.person_id !== personId && r.related_person_id !== personId
-    ));
-    setFamilyCount(prev => Math.max(0, prev - 1));
-  }, []);
+  // ─── Render ──────────────────────────────────────────────
 
   if (loading || dataLoading) {
     return (
@@ -385,13 +297,13 @@ export default function HomePage() {
         {/* Floating Search Bar */}
         {familyCount > 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-0">
-          <div className="bg-[#FAF7F2]/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-[#8B5E3C]/8 border border-[#C9A66B]/15 flex items-center px-3.5 py-2.5 gap-2">
+          <div className="bg-[#0a0e17]/80 backdrop-blur-xl rounded-2xl shadow-lg shadow-black/20 border border-white/10 flex items-center px-3.5 py-2.5 gap-2">
               <Search size={16} className="text-gray-400" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, phone..."
-                className="flex-1 text-sm outline-none bg-transparent placeholder:text-[#5E5E5E]/40 text-[#2B2B2B]"
+                className="flex-1 text-sm outline-none bg-transparent placeholder:text-[#FAF7F2]/30 text-[#FAF7F2]"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 transition-colors p-0.5">
@@ -403,13 +315,54 @@ export default function HomePage() {
         )}
 
         {selfPerson && people.length > 1 ? (
-          <FamilyFlow
-            selfPersonId={selfPerson.id}
-            people={people}
-            relationships={relationships}
-            onNodeClick={(id) => setSelectedPersonId(id)}
-            searchQuery={searchQuery}
-          />
+          <>
+            <FamilyCosmos
+              selfPersonId={selfPerson.id}
+              people={people}
+              relationships={relationships}
+              onNodeClick={(id) => setSelectedPerson(id)}
+              onCenterChange={setCenterPerson}
+              centerPersonId={centerPersonId || selfPerson.id}
+              maxHops={focusHops}
+              searchQuery={searchQuery}
+            />
+
+            {/* Cosmos Controls — positioned above bottom nav */}
+            <div className="absolute bottom-24 left-4 z-20 flex flex-col gap-2" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
+              {/* Re-center on Me — ALWAYS visible, most prominent */}
+              <button
+                onClick={() => setCenterPerson(selfPerson.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold active:scale-95 transition-all ${
+                  centerPersonId && centerPersonId !== selfPerson.id
+                    ? 'bg-[#355E3B] text-white border border-[#C9A66B]/30 shadow-[#355E3B]/40'
+                    : 'bg-[#0a0e17]/80 backdrop-blur-lg text-[#FAF7F2]/60 border border-white/10'
+                }`}
+              >
+                <Home size={12} /> {centerPersonId && centerPersonId !== selfPerson.id ? 'Re-center on Me' : 'Centered'}
+              </button>
+
+              {/* Hop radius controls */}
+              <div className="flex items-center gap-1 bg-[#0a0e17]/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/10 px-2 py-1.5">
+                <button
+                  onClick={() => setFocusHops(focusHops - 1)}
+                  disabled={focusHops <= 1}
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ZoomOut size={12} />
+                </button>
+                <span className="text-[9px] font-bold text-[#FAF7F2]/70 min-w-[40px] text-center">
+                  {focusHops} {focusHops === 1 ? 'ring' : 'rings'}
+                </span>
+                <button
+                  onClick={() => setFocusHops(focusHops + 1)}
+                  disabled={focusHops >= 5}
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ZoomIn size={12} />
+                </button>
+              </div>
+            </div>
+          </>
         ) : (
           /* Empty state */
           <div className="h-full flex items-center justify-center px-6">
@@ -432,7 +385,7 @@ export default function HomePage() {
         )}
 
         {familyCount > 0 && (
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute right-4 z-20" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
             <Link
               href="/add-member"
               className="w-14 h-14 bg-gradient-to-br from-[#355E3B] to-[#6E8B74] rounded-full flex items-center justify-center shadow-xl shadow-[#355E3B]/30 hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-90 transition-all"
@@ -450,12 +403,16 @@ export default function HomePage() {
           people={people}
           relationships={relationships}
           selfPersonId={selfPerson.id}
-          onClose={() => setSelectedPersonId(null)}
-          onDelete={handleDeleteMember}
+          onClose={() => setSelectedPerson(null)}
+          onDelete={removeMember}
           accessToken={session?.access_token || ''}
         />
       )}
 
+      {/* Quick Add Sheet */}
+      <QuickAddSheet />
+
+      {/* Install Sheet */}
       <Sheet open={showInstallSheet} onOpenChange={setShowInstallSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh]">
           <SheetHeader className="sr-only">
@@ -475,7 +432,6 @@ export default function HomePage() {
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             <button
               onClick={handleInstall}
@@ -494,7 +450,7 @@ export default function HomePage() {
         </SheetContent>
       </Sheet>
 
-      {/* Suggestions Bottom Sheet */}
+      {/* Suggestions Sheet */}
       <Sheet open={showSuggestionsSheet} onOpenChange={setShowSuggestionsSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[85vh] overflow-y-auto">
           <SheetHeader className="sr-only">
@@ -512,7 +468,6 @@ export default function HomePage() {
               Based on your family tree, we inferred these relationships.
             </p>
           </div>
-          
           <div className="space-y-4">
             {suggestions.map((suggestion) => (
               <div key={suggestion.id} className="bg-[#EFE6D5]/40 rounded-2xl p-4 border border-[#C9A66B]/15">

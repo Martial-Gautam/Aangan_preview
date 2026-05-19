@@ -4,40 +4,66 @@ import { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
-  Controls,
+  MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  ReactFlowProvider,
   BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import FamilyNode from './FamilyNode';
 import { transformToFlow, Person, Relationship } from '@/lib/tree-to-flow';
-import { applyFamilyLayout } from '@/lib/flow-layout';
+import { applyDagreLayout } from '@/lib/flow-layout';
 
 const nodeTypes = { familyNode: FamilyNode };
 
-interface FamilyFlowProps {
+// MiniMap color mapping
+function miniMapNodeColor(node: any): string {
+  if (node.data?.isCenterPerson) return '#355E3B';
+  const rel = node.data?.relationshipType;
+  if (rel === 'self') return '#355E3B';
+  if (rel === 'father' || rel === 'mother') return '#8B5E3C';
+  if (rel === 'spouse') return '#C9A66B';
+  if (rel === 'child') return '#4a7a52';
+  if (rel === 'sibling') return '#6E8B74';
+  if (rel === 'connection') return '#C9A66B';
+  return '#9ca3af';
+}
+
+// ─── Inner Component (needs ReactFlowProvider) ──────────────
+
+interface FamilyFlowInnerProps {
   selfPersonId: string;
   people: Person[];
   relationships: Relationship[];
   onNodeClick: (personId: string) => void;
   searchQuery?: string;
+  centerPersonId: string;
+  onCenterChange: (personId: string) => void;
+  maxHops?: number;
 }
 
-export default function FamilyFlow({
+function FamilyFlowInner({
   selfPersonId,
   people,
   relationships,
   onNodeClick,
   searchQuery = '',
-}: FamilyFlowProps) {
+  centerPersonId,
+  onCenterChange,
+  maxHops = 3,
+}: FamilyFlowInnerProps) {
+  const reactFlowInstance = useReactFlow();
 
+  // Transform data with Focus Mode
   const { flowNodes, flowEdges } = useMemo(() =>
-    transformToFlow(selfPersonId, people, relationships),
-    [selfPersonId, people, relationships]
+    transformToFlow(centerPersonId, selfPersonId, people, relationships, maxHops),
+    [centerPersonId, selfPersonId, people, relationships, maxHops]
   );
 
+  // Apply search highlighting
   const searchedNodes = useMemo(() => {
     if (!searchQuery.trim()) return flowNodes;
     const lowerQuery = searchQuery.toLowerCase();
@@ -55,47 +81,100 @@ export default function FamilyFlow({
     });
   }, [flowNodes, searchQuery]);
 
-  const positionedNodes = useMemo(() =>
-    applyFamilyLayout(searchedNodes, relationships, selfPersonId),
-    [searchedNodes, relationships, selfPersonId]
+  // Apply Dagre layout
+  const { layoutNodes, layoutEdges } = useMemo(() =>
+    applyDagreLayout(searchedNodes, flowEdges, centerPersonId, relationships),
+    [searchedNodes, flowEdges, centerPersonId, relationships]
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(positionedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
 
-  // CRITICAL FIX: Sync nodes/edges when data changes.
-  // useNodesState/useEdgesState only use the initial value — they don't update
-  // when the argument changes. We need useEffect to push new data.
+  // Sync when data changes
   useEffect(() => {
-    setNodes(positionedNodes);
-  }, [positionedNodes, setNodes]);
+    setNodes(layoutNodes);
+    setEdges(layoutEdges);
 
-  useEffect(() => {
-    setEdges(flowEdges);
-  }, [flowEdges, setEdges]);
+    // Auto-fit view after layout with smooth animation
+    setTimeout(() => {
+      reactFlowInstance.fitView({
+        padding: 0.4,
+        maxZoom: 1.0,
+        duration: 500,
+      });
+    }, 80);
+  }, [layoutNodes, layoutEdges, setNodes, setEdges, reactFlowInstance]);
 
+  // Handle node click — single click selects
   const handleNodeClick = useCallback((_: React.MouseEvent, node: any) => {
     onNodeClick(node.data.personId);
   }, [onNodeClick]);
 
+  // Double-click = re-center the view on this person (Focus Mode navigation)
+  const handleNodeDoubleClick = useCallback((_: React.MouseEvent, node: any) => {
+    onCenterChange(node.data.personId);
+  }, [onCenterChange]);
+
+  const showMiniMap = nodes.length > 6;
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onNodeClick={handleNodeClick}
+      onNodeDoubleClick={handleNodeDoubleClick}
+      nodeTypes={nodeTypes}
+      fitView
+      fitViewOptions={{ padding: 0.4, maxZoom: 1.0 }}
+      minZoom={0.2}
+      maxZoom={1.8}
+      proOptions={{ hideAttribution: true }}
+      // Cleaner default edge appearance
+      defaultEdgeOptions={{
+        style: { strokeWidth: 1.5 },
+      }}
+    >
+      <Background
+        variant={BackgroundVariant.Dots}
+        gap={28}
+        size={0.6}
+        color="#ddd8d0"
+      />
+      {showMiniMap && (
+        <MiniMap
+          nodeColor={miniMapNodeColor}
+          maskColor="rgba(250, 247, 242, 0.85)"
+          className="!bottom-20 !left-4 !bg-[#FAF7F2]/90 !border !border-[#C9A66B]/15 !rounded-xl !shadow-lg"
+          pannable
+          zoomable
+          style={{ width: 110, height: 75 }}
+        />
+      )}
+    </ReactFlow>
+  );
+}
+
+// ─── Outer Component with Provider ───────────────────────────
+
+interface FamilyFlowProps {
+  selfPersonId: string;
+  people: Person[];
+  relationships: Relationship[];
+  onNodeClick: (personId: string) => void;
+  searchQuery?: string;
+  centerPersonId: string;
+  onCenterChange: (personId: string) => void;
+  maxHops?: number;
+}
+
+export default function FamilyFlow(props: FamilyFlowProps) {
   return (
     <div style={{ width: '100%', height: '100%' }} className="absolute inset-0">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        minZoom={0.2}
-        maxZoom={2}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={24} size={0.8} color="#e0ddd8" />
-        <Controls showInteractive={false} className="!bottom-20 !right-4" />
-      </ReactFlow>
+      <ReactFlowProvider>
+        <FamilyFlowInner {...props} />
+      </ReactFlowProvider>
     </div>
   );
 }

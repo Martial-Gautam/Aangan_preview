@@ -65,45 +65,23 @@
 .react-flow__background {
   background-color: transparent;
 }
+/* Hide default controls since we use custom Focus Mode controls */
 .react-flow__controls {
-  border-radius: 14px !important;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(53, 94, 59, 0.10) !important;
-  border: 1px solid rgba(110, 139, 116, 0.15) !important;
-  background: rgba(250, 247, 242, 0.95) !important;
-  backdrop-filter: blur(12px);
-  width: 40px !important;
+  display: none !important;
 }
-.react-flow__controls button {
-  width: 40px !important;
-  height: 40px !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: none !important;
-  border-bottom: 1px solid rgba(110, 139, 116, 0.08) !important;
-  background: transparent !important;
-  color: #5E5E5E !important;
-  transition: all 0.15s ease;
+/* Edge labels should inherit proper font */
+.react-flow__edge-text {
+  font-family: 'Inter', system-ui, sans-serif;
 }
-.react-flow__controls button:hover {
-  background: rgba(53, 94, 59, 0.08) !important;
-  color: #355E3B !important;
-}
-.react-flow__controls button:last-child {
-  border-bottom: none !important;
-}
-.react-flow__controls button svg {
-  width: 16px !important;
-  height: 16px !important;
-  max-width: 16px !important;
-  max-height: 16px !important;
-  fill: currentColor !important;
-}
+/* Smoother edge paths */
 .react-flow__edge-path {
-  stroke: #C9A66B;
-  stroke-width: 1.5;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+/* Node selection outline */
+.react-flow__node.selected {
+  outline: 2px solid #355E3B;
+  outline-offset: 2px;
+  border-radius: 16px;
 }
 
 /* Claim modal animations */

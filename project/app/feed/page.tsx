@@ -3,37 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useStream } from '@/lib/stream-provider';
+import { StreamProvider } from '@/lib/stream-provider';
 import BottomNav from '@/components/BottomNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Heart, MessageCircle, Send, Plus, Loader2, ArrowUp,
   Newspaper, MessagesSquare, Tag, Trash2
 } from 'lucide-react';
+import type { Channel as StreamChannel } from 'stream-chat';
+
+// ─── Constants ───────────────────────────────────────────────
 
 type PostType = 'post' | 'discussion';
-
-interface Post {
-  id: string;
-  author_id: string;
-  type: PostType;
-  title: string | null;
-  content: string;
-  category: string;
-  likes_count: number;
-  comments_count: number;
-  liked_by_me: boolean;
-  created_at: string;
-  author: { id?: string; full_name: string; photo_url: string | null };
-}
-
-interface Comment {
-  id: string;
-  post_id: string;
-  author_id: string;
-  content: string;
-  created_at: string;
-  author: { full_name: string; photo_url: string | null };
-}
 
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
@@ -44,224 +26,125 @@ const CATEGORY_COLORS: Record<string, string> = {
   'celebration': 'bg-[#C9A66B]/15 text-[#C9A66B]',
 };
 
-function buildDummyPosts(type: PostType): Post[] {
-  const now = Date.now();
-  if (type === 'discussion') {
-    return [
-      {
-        id: 'dummy-discussion-1',
-        author_id: 'dummy-author-1',
-        type: 'discussion',
-        title: 'Who has old wedding albums from our grandparents?',
-        content: 'I want to create a memory thread this weekend. If you have photos, please share them here.',
-        category: 'memories',
-        likes_count: 4,
-        comments_count: 2,
-        liked_by_me: false,
-        created_at: new Date(now - 1000 * 60 * 60 * 7).toISOString(),
-        author: { full_name: 'Aangan Demo', photo_url: null },
-      },
-      {
-        id: 'dummy-discussion-2',
-        author_id: 'dummy-author-2',
-        type: 'discussion',
-        title: 'Family gathering menu ideas',
-        content: 'Let’s decide 5 dishes everyone likes. Add your top 2 suggestions.',
-        category: 'general',
-        likes_count: 6,
-        comments_count: 3,
-        liked_by_me: false,
-        created_at: new Date(now - 1000 * 60 * 60 * 28).toISOString(),
-        author: { full_name: 'Aangan Demo', photo_url: null },
-      },
-    ];
-  }
-
-  return [
-    {
-      id: 'dummy-post-1',
-      author_id: 'dummy-author-3',
-      type: 'post',
-      title: 'Welcome to your Family Feed',
-      content: 'This is a sample post so your feed never feels empty. Start posting stories and updates with your family.',
-      category: 'general',
-      likes_count: 8,
-      comments_count: 2,
-      liked_by_me: false,
-      created_at: new Date(now - 1000 * 60 * 60 * 5).toISOString(),
-      author: { full_name: 'Aangan Demo', photo_url: null },
-    },
-    {
-      id: 'dummy-post-2',
-      author_id: 'dummy-author-4',
-      type: 'post',
-      title: 'Memory of the week',
-      content: 'Upload one childhood photo and write a short story. It is a great way to preserve family history.',
-      category: 'memories',
-      likes_count: 5,
-      comments_count: 1,
-      liked_by_me: false,
-      created_at: new Date(now - 1000 * 60 * 60 * 20).toISOString(),
-      author: { full_name: 'Aangan Demo', photo_url: null },
-    },
-  ];
-}
-
-function buildDummyComments(postId: string): Comment[] {
-  const now = Date.now();
-  const shared = [
-    {
-      id: `${postId}-comment-1`,
-      post_id: postId,
-      author_id: 'dummy-author-c1',
-      content: 'Love this idea. Let us do this every weekend.',
-      created_at: new Date(now - 1000 * 60 * 40).toISOString(),
-      author: { full_name: 'Aangan Demo', photo_url: null },
-    },
-    {
-      id: `${postId}-comment-2`,
-      post_id: postId,
-      author_id: 'dummy-author-c2',
-      content: 'I can share photos from our older albums too.',
-      created_at: new Date(now - 1000 * 60 * 15).toISOString(),
-      author: { full_name: 'Aangan Demo', photo_url: null },
-    },
-  ];
-  return shared;
-}
+// ─── Main Export ─────────────────────────────────────────────
 
 export default function FeedPage() {
+  return (
+    <StreamProvider>
+      <FeedContent />
+    </StreamProvider>
+  );
+}
+
+// ─── Feed Content ────────────────────────────────────────────
+
+function FeedContent() {
   const { user, session, loading: authLoading } = useAuth();
+  const { chatClient, connecting: streamConnecting, error: streamError } = useStream();
   const router = useRouter();
 
+  const [feedChannel, setFeedChannel] = useState<StreamChannel | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<PostType>('post');
-  const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [showCreateSheet, setShowCreateSheet] = useState(false);
-  const [showCommentsSheet, setShowCommentsSheet] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(false);
 
   // Create form
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [createType, setCreateType] = useState<PostType>('post');
   const [createTitle, setCreateTitle] = useState('');
   const [createContent, setCreateContent] = useState('');
   const [createCategory, setCreateCategory] = useState('general');
   const [creating, setCreating] = useState(false);
 
-  // Comment form
+  // Comments
+  const [showCommentsSheet, setShowCommentsSheet] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [replies, setReplies] = useState<any[]>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
 
+  // Auth redirect
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) { router.replace('/welcome'); return; }
-    seedDemoSocial();
-    fetchPosts(activeTab);
-  }, [user, authLoading, activeTab, session?.access_token]);
+    if (!authLoading && !user) router.replace('/welcome');
+  }, [authLoading, user]);
 
-  const seedDemoSocial = async () => {
-    if (!user?.id || !session?.access_token) return;
-    const storageKey = `aangan_demo_social_seeded_${user.id}`;
-    const alreadySeeded = typeof window !== 'undefined' && localStorage.getItem(storageKey) === '1';
-    if (alreadySeeded) return;
+  // Initialize feed channel
+  useEffect(() => {
+    if (!chatClient || !user) return;
+    initFeedChannel();
+  }, [chatClient, user]);
 
+  // Reload on tab change
+  useEffect(() => {
+    if (feedChannel) loadPosts();
+  }, [activeTab, feedChannel]);
+
+  const initFeedChannel = async () => {
+    if (!chatClient || !user) return;
     try {
-      await fetch('/api/demo/seed-social', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      localStorage.setItem(storageKey, '1');
+      // Use a shared family feed channel
+      const channel = chatClient.channel('messaging', 'family-feed', {
+        name: 'Family Feed',
+        members: [user.id],
+      } as any);
+      await channel.watch();
+      setFeedChannel(channel);
+
+      // Listen for new messages
+      channel.on('message.new', () => loadPostsFromChannel(channel));
+      channel.on('reaction.new', () => loadPostsFromChannel(channel));
+      channel.on('reaction.deleted', () => loadPostsFromChannel(channel));
     } catch (err) {
-      console.error('Failed to seed demo social data:', err);
+      console.error('Failed to init feed channel:', err);
     }
   };
 
-  const fetchPosts = async (type: PostType) => {
-    if (!session?.access_token) return;
+  const loadPosts = () => {
+    if (feedChannel) loadPostsFromChannel(feedChannel);
+  };
+
+  const loadPostsFromChannel = async (channel: StreamChannel) => {
     setLoadingPosts(true);
     try {
-      const res = await fetch(`/api/posts/list?type=${type}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      const allMessages = channel.state.messages || [];
+
+      // Filter by type (stored in message extraData)
+      const filtered = allMessages.filter((msg: any) => {
+        const msgType = msg.post_type || 'post';
+        return msgType === activeTab && !msg.parent_id; // Exclude replies
       });
-      if (res.ok) {
-        const data = await res.json();
-        const fetched = data.posts || [];
-        setPosts(fetched.length > 0 ? fetched : buildDummyPosts(type));
-      } else {
-        setPosts(buildDummyPosts(type));
-      }
+
+      // Sort by newest first
+      const sorted = [...filtered].reverse();
+      setPosts(sorted);
     } catch (err) {
-      console.error('Failed to fetch posts:', err);
-      setPosts(buildDummyPosts(type));
+      console.error('Failed to load posts:', err);
     } finally {
       setLoadingPosts(false);
     }
   };
 
-  const handleLike = async (postId: string) => {
-    const isDummyPost = postId.startsWith('dummy-');
-    if (!session?.access_token) return;
-    // Optimistic update
-    setPosts(prev => prev.map(p => {
-      if (p.id === postId) {
-        return {
-          ...p,
-          liked_by_me: !p.liked_by_me,
-          likes_count: p.liked_by_me ? p.likes_count - 1 : p.likes_count + 1,
-        };
-      }
-      return p;
-    }));
-
-    if (isDummyPost) return;
-
-    try {
-      await fetch('/api/posts/like', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ post_id: postId }),
-      });
-    } catch (err) {
-      console.error('Failed to like:', err);
-      // Revert on error
-      fetchPosts(activeTab);
-    }
-  };
+  // ─── Create Post ────────────────────────────────────
 
   const handleCreate = async () => {
-    if (!session?.access_token || !createContent.trim()) return;
+    if (!feedChannel || !createContent.trim()) return;
     if (createType === 'discussion' && !createTitle.trim()) return;
     setCreating(true);
     try {
-      const res = await fetch('/api/posts/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          type: createType,
-          title: createType === 'discussion' ? createTitle.trim() : null,
-          content: createContent.trim(),
-          category: createCategory,
-        }),
-      });
-      if (res.ok) {
-        setShowCreateSheet(false);
-        setCreateTitle('');
-        setCreateContent('');
-        setCreateCategory('general');
-        setActiveTab(createType);
-        fetchPosts(createType);
-      }
+      await feedChannel.sendMessage({
+        text: createContent.trim(),
+        // Custom fields
+        post_type: createType,
+        post_title: createType === 'discussion' ? createTitle.trim() : undefined,
+        post_category: createCategory,
+      } as any);
+
+      setShowCreateSheet(false);
+      setCreateTitle('');
+      setCreateContent('');
+      setCreateCategory('general');
+      setActiveTab(createType);
     } catch (err) {
       console.error('Failed to create post:', err);
     } finally {
@@ -269,95 +152,76 @@ export default function FeedPage() {
     }
   };
 
-  const handleDelete = async (postId: string) => {
-    if (postId.startsWith('dummy-')) {
-      setPosts(prev => prev.filter(p => p.id !== postId));
-      return;
-    }
-    if (!session?.access_token) return;
-    if (!confirm('Delete this post?')) return;
+  // ─── Like / Unlike ─────────────────────────────────
+
+  const handleLike = async (msg: any) => {
+    if (!feedChannel) return;
     try {
-      await fetch('/api/posts/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ post_id: postId }),
-      });
-      setPosts(prev => prev.filter(p => p.id !== postId));
+      const reactionType = activeTab === 'discussion' ? 'upvote' : 'love';
+      const hasMyReaction = msg.own_reactions?.some((r: any) => r.type === reactionType);
+
+      if (hasMyReaction) {
+        await feedChannel.deleteReaction(msg.id, reactionType);
+      } else {
+        await feedChannel.sendReaction(msg.id, { type: reactionType });
+      }
     } catch (err) {
-      console.error('Failed to delete:', err);
+      console.error('Failed to react:', err);
     }
   };
 
-  const openComments = async (postId: string) => {
-    setSelectedPostId(postId);
+  // ─── Comments (Thread Replies) ──────────────────────
+
+  const openComments = async (msg: any) => {
+    setSelectedMessage(msg);
     setShowCommentsSheet(true);
-    setLoadingComments(true);
-    if (postId.startsWith('dummy-')) {
-      setComments(buildDummyComments(postId));
-      setLoadingComments(false);
-      return;
-    }
+    setLoadingReplies(true);
     try {
-      const res = await fetch(`/api/posts/comments?post_id=${postId}`, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const fetched = data.comments || [];
-        setComments(fetched.length > 0 ? fetched : buildDummyComments(postId));
-      } else {
-        setComments(buildDummyComments(postId));
+      if (feedChannel) {
+        const response = await feedChannel.getReplies(msg.id, { limit: 50 });
+        setReplies(response.messages || []);
       }
     } catch (err) {
-      console.error('Failed to fetch comments:', err);
-      setComments(buildDummyComments(postId));
+      console.error('Failed to load replies:', err);
+      setReplies([]);
     } finally {
-      setLoadingComments(false);
+      setLoadingReplies(false);
     }
   };
 
   const handleAddComment = async () => {
-    if (!session?.access_token || !newComment.trim() || !selectedPostId) return;
-    if (selectedPostId.startsWith('dummy-')) {
-      const dummyComment: Comment = {
-        id: `dummy-local-${Date.now()}`,
-        post_id: selectedPostId,
-        author_id: user?.id || 'dummy-user',
-        content: newComment.trim(),
-        created_at: new Date().toISOString(),
-        author: { full_name: 'You', photo_url: null },
-      };
-      setComments(prev => [...prev, dummyComment]);
-      setNewComment('');
-      setPosts(prev => prev.map(p => p.id === selectedPostId ? { ...p, comments_count: p.comments_count + 1 } : p));
-      return;
-    }
+    if (!feedChannel || !newComment.trim() || !selectedMessage) return;
     setSendingComment(true);
     try {
-      const res = await fetch('/api/posts/comments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ post_id: selectedPostId, content: newComment.trim() }),
+      const response = await feedChannel.sendMessage({
+        text: newComment.trim(),
+        parent_id: selectedMessage.id,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setComments(prev => [...prev, { ...data.comment, author: { full_name: 'You', photo_url: null } }]);
-        setNewComment('');
-        // Update comment count
-        setPosts(prev => prev.map(p => p.id === selectedPostId ? { ...p, comments_count: p.comments_count + 1 } : p));
+      if (response.message) {
+        setReplies(prev => [...prev, response.message]);
       }
+      setNewComment('');
     } catch (err) {
       console.error('Failed to add comment:', err);
     } finally {
       setSendingComment(false);
     }
   };
+
+  // ─── Delete Post ────────────────────────────────────
+
+  const handleDelete = async (msgId: string) => {
+    if (!chatClient) return;
+    if (!confirm('Delete this post?')) return;
+    try {
+      await chatClient.deleteMessage(msgId);
+      setPosts(prev => prev.filter(p => p.id !== msgId));
+    } catch (err) {
+      console.error('Failed to delete:', err);
+    }
+  };
+
+  // ─── Helpers ────────────────────────────────────────
 
   const formatTime = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -373,6 +237,26 @@ export default function FeedPage() {
 
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const getReactionCount = (msg: any, type: string) => {
+    return msg.reaction_counts?.[type] || 0;
+  };
+
+  const hasMyReaction = (msg: any, type: string) => {
+    return msg.own_reactions?.some((r: any) => r.type === type) || false;
+  };
+
+  // ─── Loading ────────────────────────────────────────
+
+  if (authLoading || streamConnecting) {
+    return (
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+        <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+      </div>
+    );
+  }
+
+  // ─── Render ─────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
@@ -409,7 +293,7 @@ export default function FeedPage() {
           </div>
         </div>
 
-        {/* Posts List */}
+        {/* Posts */}
         <div className="px-4 space-y-3 mt-4">
           {loadingPosts ? (
             <div className="flex justify-center py-16">
@@ -430,80 +314,89 @@ export default function FeedPage() {
               </p>
             </div>
           ) : (
-            posts.map(post => (
-              <div key={post.id} className="bg-[#FAF7F2] rounded-2xl shadow-sm border border-[#C9A66B]/10 overflow-hidden">
-                {/* Author Header */}
-                <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {post.author.photo_url ? (
-                      <img src={post.author.photo_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-xs font-bold">{getInitials(post.author.full_name)}</span>
+            posts.map((msg: any) => {
+              const authorName = msg.user?.name || 'Family Member';
+              const authorImage = msg.user?.image || null;
+              const postTitle = msg.post_title;
+              const postCategory = msg.post_category || 'general';
+              const reactionType = activeTab === 'discussion' ? 'upvote' : 'love';
+              const likeCount = getReactionCount(msg, reactionType);
+              const liked = hasMyReaction(msg, reactionType);
+              const replyCount = msg.reply_count || 0;
+
+              return (
+                <div key={msg.id} className="bg-[#FAF7F2] rounded-2xl shadow-sm border border-[#C9A66B]/10 overflow-hidden">
+                  {/* Author */}
+                  <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {authorImage ? (
+                        <img src={authorImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white text-xs font-bold">{getInitials(authorName)}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#2B2B2B] truncate">{authorName}</p>
+                      <p className="text-[10px] text-[#5E5E5E]/60">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
+                    </div>
+                    {activeTab === 'discussion' && postCategory && (
+                      <span className={`text-[10px] font-semibold px-2 py-1 rounded-full capitalize ${CATEGORY_COLORS[postCategory] || CATEGORY_COLORS.general}`}>
+                        {postCategory.replace('-', ' ')}
+                      </span>
+                    )}
+                    {msg.user?.id === user?.id && (
+                      <button onClick={() => handleDelete(msg.id)} className="p-1.5 rounded-lg hover:bg-[#6B2E2E]/8 transition-colors">
+                        <Trash2 size={14} className="text-[#5E5E5E]/40" />
+                      </button>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#2B2B2B] truncate">{post.author.full_name}</p>
-                    <p className="text-[10px] text-[#5E5E5E]/60">{formatTime(post.created_at)}</p>
+
+                  {/* Content */}
+                  <div className="px-4 pb-3">
+                    {postTitle && (
+                      <h3 className="text-base font-bold text-[#2B2B2B] mb-1.5">{postTitle}</h3>
+                    )}
+                    <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   </div>
-                  {post.type === 'discussion' && post.category && (
-                    <span className={`text-[10px] font-semibold px-2 py-1 rounded-full capitalize ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}>
-                      {post.category.replace('-', ' ')}
-                    </span>
-                  )}
-                  {post.author_id === user?.id && (
-                    <button onClick={() => handleDelete(post.id)} className="p-1.5 rounded-lg hover:bg-[#6B2E2E]/8 transition-colors">
-                      <Trash2 size={14} className="text-[#5E5E5E]/40" />
-                    </button>
-                  )}
-                </div>
 
-                {/* Content */}
-                <div className="px-4 pb-3">
-                  {post.title && (
-                    <h3 className="text-base font-bold text-[#2B2B2B] mb-1.5">{post.title}</h3>
-                  )}
-                  <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                </div>
-
-                {/* Action Bar */}
-                <div className="flex items-center border-t border-[#C9A66B]/8 px-4 py-2.5">
-                  {activeTab === 'discussion' ? (
-                    /* Reddit-style upvote */
+                  {/* Actions */}
+                  <div className="flex items-center border-t border-[#C9A66B]/8 px-4 py-2.5">
+                    {activeTab === 'discussion' ? (
+                      <button
+                        onClick={() => handleLike(msg)}
+                        className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                          liked ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#355E3B]'
+                        }`}
+                      >
+                        <ArrowUp size={16} className={liked ? 'text-[#355E3B]' : ''} />
+                        <span>{likeCount}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleLike(msg)}
+                        className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                          liked ? 'text-[#B76E5D]' : 'text-[#5E5E5E]/60 hover:text-[#B76E5D]'
+                        }`}
+                      >
+                        <Heart size={16} fill={liked ? '#B76E5D' : 'none'} />
+                        <span>{likeCount}</span>
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleLike(post.id)}
-                      className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                        post.liked_by_me ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#355E3B]'
-                      }`}
+                      onClick={() => openComments(msg)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-[#5E5E5E]/60 hover:text-[#355E3B] transition-colors ml-5"
                     >
-                      <ArrowUp size={16} className={post.liked_by_me ? 'text-[#355E3B]' : ''} />
-                      <span>{post.likes_count}</span>
+                      <MessageCircle size={16} />
+                      <span>{replyCount}</span>
                     </button>
-                  ) : (
-                    /* Instagram-style heart */
-                    <button
-                      onClick={() => handleLike(post.id)}
-                      className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                        post.liked_by_me ? 'text-[#B76E5D]' : 'text-[#5E5E5E]/60 hover:text-[#B76E5D]'
-                      }`}
-                    >
-                      <Heart size={16} fill={post.liked_by_me ? '#B76E5D' : 'none'} />
-                      <span>{post.likes_count}</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => openComments(post.id)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-[#5E5E5E]/60 hover:text-[#355E3B] transition-colors ml-5"
-                  >
-                    <MessageCircle size={16} />
-                    <span>{post.comments_count}</span>
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
-        {/* Floating Create Button */}
+        {/* FAB */}
         <div className="fixed bottom-20 right-4 z-30 sm:right-[calc(50%-12rem)]">
           <button
             onClick={() => { setCreateType(activeTab); setShowCreateSheet(true); }}
@@ -514,7 +407,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Create Post Sheet */}
+      {/* Create Sheet */}
       <Sheet open={showCreateSheet} onOpenChange={setShowCreateSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[85vh] overflow-y-auto">
           <SheetHeader className="sr-only">
@@ -548,7 +441,6 @@ export default function FeedPage() {
             </button>
           </div>
 
-          {/* Title (discussions only) */}
           {createType === 'discussion' && (
             <input
               value={createTitle}
@@ -558,7 +450,6 @@ export default function FeedPage() {
             />
           )}
 
-          {/* Content */}
           <textarea
             value={createContent}
             onChange={e => setCreateContent(e.target.value)}
@@ -567,7 +458,6 @@ export default function FeedPage() {
             className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40 resize-none"
           />
 
-          {/* Category (discussions only) */}
           {createType === 'discussion' && (
             <div className="mb-4">
               <p className="text-xs font-semibold text-[#5E5E5E] mb-2 flex items-center gap-1">
@@ -614,35 +504,34 @@ export default function FeedPage() {
           <h2 className="text-base font-bold text-[#2B2B2B] mb-3">💬 Comments</h2>
 
           <div className="flex-1 overflow-y-auto space-y-3 mb-4 min-h-0">
-            {loadingComments ? (
+            {loadingReplies ? (
               <div className="flex justify-center py-8">
                 <Loader2 size={20} className="text-[#355E3B] animate-spin" />
               </div>
-            ) : comments.length === 0 ? (
+            ) : replies.length === 0 ? (
               <p className="text-sm text-[#5E5E5E] text-center py-6">No comments yet. Be the first!</p>
             ) : (
-              comments.map(comment => (
-                <div key={comment.id} className="flex gap-2.5">
+              replies.map((reply: any) => (
+                <div key={reply.id} className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {comment.author.photo_url ? (
-                      <img src={comment.author.photo_url} alt="" className="w-full h-full rounded-full object-cover" />
+                    {reply.user?.image ? (
+                      <img src={reply.user.image} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-[9px] font-bold text-[#355E3B]">{getInitials(comment.author.full_name)}</span>
+                      <span className="text-[9px] font-bold text-[#355E3B]">{getInitials(reply.user?.name || 'U')}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-bold text-[#2B2B2B]">{comment.author.full_name}</span>
-                      <span className="text-[9px] text-[#5E5E5E]/50">{formatTime(comment.created_at)}</span>
+                      <span className="text-xs font-bold text-[#2B2B2B]">{reply.user?.name || 'User'}</span>
+                      <span className="text-[9px] text-[#5E5E5E]/50">{reply.created_at ? formatTime(reply.created_at) : ''}</span>
                     </div>
-                    <p className="text-sm text-[#2B2B2B] mt-0.5 leading-relaxed">{comment.content}</p>
+                    <p className="text-sm text-[#2B2B2B] mt-0.5 leading-relaxed">{reply.text}</p>
                   </div>
                 </div>
               ))
             )}
           </div>
 
-          {/* Comment Input */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <input
               value={newComment}

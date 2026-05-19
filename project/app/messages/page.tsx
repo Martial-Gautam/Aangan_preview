@@ -3,267 +3,172 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useStream } from '@/lib/stream-provider';
+import { StreamProvider } from '@/lib/stream-provider';
 import BottomNav from '@/components/BottomNav';
-import { ArrowLeft, Send, Search, MessageCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft, Send, Search, MessageCircle, Loader2,
+} from 'lucide-react';
+import type { Channel as StreamChannel } from 'stream-chat';
 
-interface Conversation {
-  partner_id: string;
-  partner_name: string;
-  partner_photo: string | null;
-  last_message: string;
-  last_message_time: string;
-  unread_count: number;
-}
-
-interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  read: boolean;
-  created_at: string;
-}
-
-function buildDummyConversations(userId: string): Conversation[] {
-  const now = Date.now();
-  return [
-    {
-      partner_id: userId,
-      partner_name: 'Aangan Demo',
-      partner_photo: null,
-      last_message: 'Welcome to messages. This demo chat shows how conversations will look.',
-      last_message_time: new Date(now - 1000 * 60 * 8).toISOString(),
-      unread_count: 0,
-    },
-  ];
-}
-
-function buildDummyThread(userId: string): Message[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'dummy-msg-1',
-      sender_id: userId,
-      receiver_id: userId,
-      content: 'Hi! This is your demo conversation.',
-      read: true,
-      created_at: new Date(now - 1000 * 60 * 60 * 2).toISOString(),
-    },
-    {
-      id: 'dummy-msg-2',
-      sender_id: userId,
-      receiver_id: userId,
-      content: 'Once your family members link their accounts, real messages appear here.',
-      read: true,
-      created_at: new Date(now - 1000 * 60 * 60 + 1000 * 60 * 3).toISOString(),
-    },
-    {
-      id: 'dummy-msg-3',
-      sender_id: userId,
-      receiver_id: userId,
-      content: 'Tip: install Aangan for a smoother messaging experience.',
-      read: true,
-      created_at: new Date(now - 1000 * 60 * 22).toISOString(),
-    },
-  ];
-}
+// ─── Main Export (wraps with StreamProvider) ─────────────────
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
-        <Loader2 size={24} className="text-[#355E3B] animate-spin" />
-      </div>
-    }>
-      <MessagesContent />
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+          <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+        </div>
+      }
+    >
+      <StreamProvider>
+        <MessagesContent />
+      </StreamProvider>
     </Suspense>
   );
 }
 
+// ─── Types ───────────────────────────────────────────────────
+
+interface ChannelPreview {
+  channel: StreamChannel;
+  name: string;
+  image: string | null;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
+  memberId: string;
+}
+
+// ─── Messages Content ────────────────────────────────────────
+
 function MessagesContent() {
   const { user, session, loading: authLoading } = useAuth();
+  const { chatClient, connecting: streamConnecting, error: streamError } = useStream();
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatPartnerId = searchParams.get('to');
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [chatPartner, setChatPartner] = useState<{ name: string; photo: string | null } | null>(null);
+  const [channels, setChannels] = useState<ChannelPreview[]>([]);
+  const [activeChannel, setActiveChannel] = useState<StreamChannel | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loadingConvos, setLoadingConvos] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [chatPartnerName, setChatPartnerName] = useState('');
+  const [chatPartnerImage, setChatPartnerImage] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auth redirect
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    if (!authLoading && !user) router.replace('/welcome');
+  }, [authLoading, user]);
 
-    const seedDemoSocial = async () => {
-      const storageKey = `aangan_demo_social_seeded_${user.id}`;
-      const shouldForce =
-        typeof window !== 'undefined' &&
-        sessionStorage.getItem('aangan_post_login_bootstrap') === '1';
-
-      if (shouldForce && typeof window !== 'undefined') {
-        sessionStorage.removeItem('aangan_post_login_bootstrap');
-      }
-
-      const alreadySeeded = typeof window !== 'undefined' && localStorage.getItem(storageKey) === '1';
-      if (!shouldForce && alreadySeeded) return;
-
-      try {
-        await fetch('/api/demo/seed-social', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-        localStorage.setItem(storageKey, '1');
-      } catch (err) {
-        console.error('Failed to seed demo social data:', err);
-      }
-    };
-
-    seedDemoSocial();
-  }, [user?.id, session?.access_token]);
-
+  // Load channels or open direct chat
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) { router.replace('/welcome'); return; }
+    if (!chatClient || !user) return;
+
     if (chatPartnerId) {
-      fetchThread(chatPartnerId);
-      markAsRead(chatPartnerId);
+      openDirectChat(chatPartnerId);
     } else {
-      fetchConversations();
+      loadChannels();
     }
-  }, [user, authLoading, chatPartnerId]);
+  }, [chatClient, user, chatPartnerId]);
 
-  // Poll for new messages in chat view
-  useEffect(() => {
-    if (!chatPartnerId || !session?.access_token) return;
-    const interval = setInterval(() => fetchThread(chatPartnerId, true), 5000);
-    return () => clearInterval(interval);
-  }, [chatPartnerId, session]);
-
+  // Auto-scroll messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const fetchConversations = async () => {
-    if (!session?.access_token || !user?.id) return;
-    setLoadingConvos(true);
+  // ─── Load Channel List ──────────────────────────────
+
+  const loadChannels = async () => {
+    if (!chatClient || !user) return;
+    setLoading(true);
     try {
-      const res = await fetch('/api/messages/conversations', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      const filter = { type: 'messaging', members: { $in: [user.id] } };
+      const sort = [{ last_message_at: -1 as const }];
+      const result = await chatClient.queryChannels(filter, sort, { limit: 30 });
+
+      const previews: ChannelPreview[] = result.map(ch => {
+        const members = Object.values(ch.state.members);
+        const otherMember = members.find(m => m.user_id !== user.id);
+        const name = otherMember?.user?.name || 'Unknown';
+        const image = (otherMember?.user?.image as string) || null;
+        const lastMsg = ch.state.messages[ch.state.messages.length - 1];
+
+        return {
+          channel: ch,
+          name,
+          image,
+          lastMessage: lastMsg?.text || 'No messages yet',
+          lastMessageTime: lastMsg?.created_at?.toString() || ch.data?.created_at?.toString() || new Date().toISOString(),
+          unreadCount: ch.countUnread(),
+          memberId: otherMember?.user_id || '',
+        };
       });
-      if (res.ok) {
-        const data = await res.json();
-        const fetched = data.conversations || [];
-        const normalized = fetched.map((conv: Conversation) => (
-          conv.partner_id === user.id
-            ? { ...conv, partner_name: 'Aangan Demo' }
-            : conv
-        ));
-        setConversations(normalized.length > 0 ? normalized : buildDummyConversations(user.id));
-      } else {
-        setConversations(buildDummyConversations(user.id));
-      }
+
+      setChannels(previews);
     } catch (err) {
-      console.error('Failed to fetch conversations:', err);
-      setConversations(buildDummyConversations(user.id));
+      console.error('Failed to load channels:', err);
     } finally {
-      setLoadingConvos(false);
+      setLoading(false);
     }
   };
 
-  const fetchThread = async (partnerId: string, silent = false) => {
-    if (!session?.access_token || !user?.id) return;
-    if (!silent) setLoadingMessages(true);
+  // ─── Open/Create Direct Chat ────────────────────────
+
+  const openDirectChat = async (partnerId: string) => {
+    if (!chatClient || !user) return;
+    setLoading(true);
     try {
-      const res = await fetch(`/api/messages/thread?partner_id=${partnerId}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+      // Create or get 1:1 channel
+      const channelId = [user.id, partnerId].sort().join('--');
+      const channel = chatClient.channel('messaging', channelId, {
+        members: [user.id, partnerId],
+      } as any);
+      await channel.watch();
+
+      setActiveChannel(channel);
+
+      // Get partner info
+      const members = Object.values(channel.state.members);
+      const partner = members.find(m => m.user_id !== user.id);
+      setChatPartnerName(partner?.user?.name || 'Family Member');
+      setChatPartnerImage((partner?.user?.image as string) || null);
+
+      // Load messages
+      setMessages(channel.state.messages || []);
+
+      // Mark as read
+      await channel.markRead();
+
+      // Listen for new messages
+      channel.on('message.new', (event) => {
+        if (event.message) {
+          setMessages(prev => [...prev, event.message!]);
+        }
       });
-      if (res.ok) {
-        const data = await res.json();
-        const fetched = data.messages || [];
-        setMessages(fetched.length > 0 ? fetched : buildDummyThread(user.id));
-      } else {
-        setMessages(buildDummyThread(user.id));
-      }
-
-      // Also get partner info if not set
-      if (!chatPartner) {
-        if (partnerId === user.id) {
-          setChatPartner({ name: 'Aangan Demo', photo: null });
-          return;
-        }
-
-        const convRes = await fetch('/api/messages/conversations', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (convRes.ok) {
-          const convData = await convRes.json();
-          const match = (convData.conversations || []).find((c: Conversation) => c.partner_id === partnerId);
-          if (match) {
-            setChatPartner({
-              name: match.partner_id === user.id ? 'Aangan Demo' : match.partner_name,
-              photo: match.partner_photo
-            });
-          } else {
-            setChatPartner({ name: 'Family Member', photo: null });
-          }
-        } else if (partnerId === user.id) {
-          setChatPartner({ name: 'Aangan Demo', photo: null });
-        }
-      }
     } catch (err) {
-      console.error('Failed to fetch thread:', err);
-      setMessages(buildDummyThread(user.id));
-      if (partnerId === user.id) {
-        setChatPartner({ name: 'Aangan Demo', photo: null });
-      }
+      console.error('Failed to open chat:', err);
     } finally {
-      if (!silent) setLoadingMessages(false);
+      setLoading(false);
     }
   };
 
-  const markAsRead = async (partnerId: string) => {
-    if (!session?.access_token) return;
-    try {
-      await fetch('/api/messages/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ partner_id: partnerId }),
-      });
-    } catch (err) {
-      console.error('Failed to mark as read:', err);
-    }
-  };
+  // ─── Send Message ───────────────────────────────────
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !chatPartnerId || !session?.access_token || sending) return;
+    if (!newMessage.trim() || !activeChannel || sending) return;
     setSending(true);
     try {
-      const res = await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ receiver_id: chatPartnerId, content: newMessage.trim() }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(prev => [...prev, data.message]);
-        setNewMessage('');
-        inputRef.current?.focus();
-      }
+      await activeChannel.sendMessage({ text: newMessage.trim() });
+      setNewMessage('');
+      inputRef.current?.focus();
     } catch (err) {
       console.error('Failed to send:', err);
     } finally {
@@ -271,16 +176,18 @@ function MessagesContent() {
     }
   };
 
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  // ─── Helpers ────────────────────────────────────────
 
-    if (days === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (days === 1) return 'Yesterday';
-    if (days < 7) return date.toLocaleDateString([], { weekday: 'short' });
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const formatTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d`;
+    return new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
   const getDateLabel = (dateStr: string) => {
@@ -288,23 +195,62 @@ function MessagesContent() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
   };
 
-  const filteredConversations = conversations.filter(c =>
-    (c.partner_id === user?.id ? 'Aangan Demo' : c.partner_name)
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
-  // =========== CHAT VIEW ===========
-  if (chatPartnerId) {
+  // ─── Loading / Connecting State ─────────────────────
+
+  if (authLoading || streamConnecting) {
+    return (
+      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+          <p className="text-xs text-[#5E5E5E]">Connecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Stream Error Fallback ──────────────────────────
+
+  if (streamError || !chatClient) {
+    return (
+      <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">
+            <h1 className="text-xl font-bold text-[#2B2B2B]">Messages</h1>
+            <p className="text-xs text-[#5E5E5E] mt-0.5">Chat with your family members</p>
+          </div>
+          <div className="px-4 mt-8">
+            <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15">
+              <div className="w-16 h-16 rounded-full bg-[#B76E5D]/10 flex items-center justify-center mb-4">
+                <MessageCircle size={28} className="text-[#B76E5D]" />
+              </div>
+              <h3 className="font-bold text-[#2B2B2B] mb-1">Connection Issue</h3>
+              <p className="text-sm text-[#5E5E5E] leading-relaxed">
+                Unable to connect to messaging service. Please check your internet and try again.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-5 py-2 rounded-xl bg-[#355E3B] text-white text-sm font-semibold"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ═══════════ CHAT VIEW ═══════════
+  if (chatPartnerId && activeChannel) {
     return (
       <div className="h-screen bg-[#EFE6D5]/30 flex justify-center">
         <div className="h-full w-full max-w-sm flex flex-col bg-[#EFE6D5]/20">
@@ -317,23 +263,23 @@ function MessagesContent() {
               <ArrowLeft size={18} className="text-[#355E3B]" />
             </button>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
-              {chatPartner?.photo ? (
-                <img src={chatPartner.photo} alt="" className="w-full h-full object-cover" />
+              {chatPartnerImage ? (
+                <img src={chatPartnerImage} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-white text-xs font-bold">{chatPartner ? getInitials(chatPartner.name) : '?'}</span>
+                <span className="text-white text-xs font-bold">{getInitials(chatPartnerName)}</span>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#2B2B2B] truncate">{chatPartner?.name || 'Loading...'}</p>
+              <p className="text-sm font-bold text-[#2B2B2B] truncate">{chatPartnerName}</p>
               <p className="text-[10px] text-[#6E8B74] font-medium">
-                {chatPartnerId === user?.id ? 'Demo conversation' : 'Family member'}
+                {activeChannel.state.watcher_count && activeChannel.state.watcher_count > 1 ? '🟢 Online' : 'Family member'}
               </p>
             </div>
           </div>
 
-          {/* Messages Area */}
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 min-h-0">
-            {loadingMessages ? (
+            {loading ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 size={24} className="text-[#355E3B] animate-spin" />
               </div>
@@ -349,12 +295,14 @@ function MessagesContent() {
             ) : (
               <>
                 {messages.map((msg, i) => {
-                  const isMine = msg.sender_id === user?.id;
-                  const showDate = i === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[i - 1].created_at).toDateString();
+                  const isMine = msg.user?.id === user?.id;
+                  const msgDate = msg.created_at ? new Date(msg.created_at).toDateString() : '';
+                  const prevDate = i > 0 && messages[i-1].created_at ? new Date(messages[i-1].created_at).toDateString() : '';
+                  const showDate = i === 0 || msgDate !== prevDate;
 
                   return (
                     <div key={msg.id}>
-                      {showDate && (
+                      {showDate && msg.created_at && (
                         <div className="flex justify-center my-3">
                           <span className="text-[10px] font-semibold text-[#5E5E5E]/60 bg-[#FAF7F2] px-3 py-1 rounded-full border border-[#C9A66B]/10">
                             {getDateLabel(msg.created_at)}
@@ -369,10 +317,12 @@ function MessagesContent() {
                               : 'bg-[#FAF7F2] text-[#2B2B2B] border border-[#C9A66B]/10 rounded-bl-md'
                           }`}
                         >
-                          <p>{msg.content}</p>
-                          <p className={`text-[9px] mt-1 ${isMine ? 'text-white/50' : 'text-[#5E5E5E]/50'} text-right`}>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                          <p>{msg.text}</p>
+                          {msg.created_at && (
+                            <p className={`text-[9px] mt-1 ${isMine ? 'text-white/50' : 'text-[#5E5E5E]/50'} text-right`}>
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -383,7 +333,7 @@ function MessagesContent() {
             )}
           </div>
 
-          {/* Message Input */}
+          {/* Input */}
           <div className="bg-[#FAF7F2] border-t border-[#C9A66B]/15 px-4 py-3 flex items-center gap-2 flex-shrink-0" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
             <input
               ref={inputRef}
@@ -410,14 +360,18 @@ function MessagesContent() {
     );
   }
 
-  // =========== INBOX VIEW ===========
+  // ═══════════ INBOX VIEW ═══════════
+  const filteredChannels = channels.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
       <div className="max-w-sm mx-auto">
         {/* Header */}
         <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">
           <h1 className="text-xl font-bold text-[#2B2B2B]">Messages</h1>
-          <p className="text-xs text-[#5E5E5E] mt-0.5">Chat with your family members</p>
+          <p className="text-xs text-[#5E5E5E] mt-0.5">Real-time chat with your family</p>
         </div>
 
         {/* Search */}
@@ -433,56 +387,54 @@ function MessagesContent() {
           </div>
         </div>
 
-        {/* Conversations List */}
+        {/* Channel List */}
         <div className="px-4 space-y-2 mt-2">
-          {loadingConvos ? (
+          {loading ? (
             <div className="flex justify-center py-16">
               <Loader2 size={24} className="text-[#355E3B] animate-spin" />
             </div>
-          ) : filteredConversations.length === 0 ? (
+          ) : filteredChannels.length === 0 ? (
             <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15 mt-4">
               <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mb-4">
                 <MessageCircle size={28} className="text-[#6E8B74]" />
               </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">No messages yet</h3>
+              <h3 className="font-bold text-[#2B2B2B] mb-1">No conversations yet</h3>
               <p className="text-sm text-[#5E5E5E] leading-relaxed">
                 Tap on a family member in your tree and select &quot;Send Message&quot; to start chatting.
               </p>
             </div>
           ) : (
-            filteredConversations.map(conv => (
+            filteredChannels.map(ch => (
               <button
-                key={conv.partner_id}
-                onClick={() => router.push(`/messages?to=${conv.partner_id}`)}
+                key={ch.memberId || ch.channel.id}
+                onClick={() => router.push(`/messages?to=${ch.memberId}`)}
                 className="w-full bg-[#FAF7F2] rounded-2xl p-4 flex items-center gap-3 border border-[#C9A66B]/10 hover:bg-[#355E3B]/3 transition-colors text-left active:scale-[0.99]"
               >
                 <div className="relative flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden">
-                    {conv.partner_photo ? (
-                      <img src={conv.partner_photo} alt="" className="w-full h-full object-cover" />
+                    {ch.image ? (
+                      <img src={ch.image} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-sm font-bold">
-                        {getInitials(conv.partner_id === user?.id ? 'Aangan Demo' : conv.partner_name)}
-                      </span>
+                      <span className="text-white text-sm font-bold">{getInitials(ch.name)}</span>
                     )}
                   </div>
-                  {conv.unread_count > 0 && (
+                  {ch.unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
-                      <span className="text-[9px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
+                      <span className="text-[9px] font-bold text-white">{ch.unreadCount > 9 ? '9+' : ch.unreadCount}</span>
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold text-[#2B2B2B]' : 'font-semibold text-[#2B2B2B]'}`}>
-                      {conv.partner_id === user?.id ? 'Aangan Demo' : conv.partner_name}
+                    <p className={`text-sm truncate ${ch.unreadCount > 0 ? 'font-bold text-[#2B2B2B]' : 'font-semibold text-[#2B2B2B]'}`}>
+                      {ch.name}
                     </p>
-                    <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#355E3B] font-semibold' : 'text-[#5E5E5E]/50'}`}>
-                      {formatTime(conv.last_message_time)}
+                    <span className={`text-[10px] flex-shrink-0 ml-2 ${ch.unreadCount > 0 ? 'text-[#355E3B] font-semibold' : 'text-[#5E5E5E]/50'}`}>
+                      {formatTime(ch.lastMessageTime)}
                     </span>
                   </div>
-                  <p className={`text-xs truncate mt-0.5 ${conv.unread_count > 0 ? 'text-[#2B2B2B] font-medium' : 'text-[#5E5E5E]'}`}>
-                    {conv.last_message}
+                  <p className={`text-xs truncate mt-0.5 ${ch.unreadCount > 0 ? 'text-[#2B2B2B] font-medium' : 'text-[#5E5E5E]'}`}>
+                    {ch.lastMessage}
                   </p>
                 </div>
               </button>

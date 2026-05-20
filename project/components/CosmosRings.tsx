@@ -7,10 +7,10 @@ import * as THREE from 'three';
 const RING_SPACING = 3.0; // Must match cosmos-layout.ts
 const NUM_RINGS = 4;
 const RING_COLORS = [
-  '#C9A66B', // Ring 1 — gold
-  '#6E8B74', // Ring 2 — sage
-  '#8B5E3C', // Ring 3 — earth
-  '#5E5E5E', // Ring 4 — grey
+  '#1B4332', // Ring 1
+  '#1B4332', // Ring 2
+  '#1B4332', // Ring 3
+  '#9ca3af', // Ring 4 — grey
 ];
 
 // ─── Component ───────────────────────────────────────────────
@@ -60,7 +60,7 @@ export default function CosmosRings() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <circleGeometry args={[0.3, 32]} />
         <meshBasicMaterial
-          color="#355E3B"
+          color="#1B4332"
           transparent
           opacity={0.12}
           side={THREE.DoubleSide}

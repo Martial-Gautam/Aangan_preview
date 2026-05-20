@@ -4,12 +4,14 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { supabase, RelationshipType } from '@/lib/supabase';
+import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import BottomNav from '@/components/BottomNav';
 import ClaimProfileModal, { ClaimMatch } from '@/components/ClaimProfileModal';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Camera, LogOut, Check, CreditCard as Edit2, ChevronRight,
-  Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle
+  Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle,
+  BarChart3, Bell
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -161,19 +163,12 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
     setSaving(true);
     try {
       let photoUrl = profile?.photo_url || '';
       if (photo) {
-        const ext = photo.name.split('.').pop();
-        const path = `${user.id}/avatar.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(path, photo, { upsert: true });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-        photoUrl = urlData.publicUrl + `?t=${Date.now()}`;
+        photoUrl = `${await uploadImageToCloudinaryViaApi(photo, session.access_token, 'profiles')}?t=${Date.now()}`;
       }
 
       await supabase.from('profiles').update({
@@ -271,9 +266,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-sm mx-auto">
-          <div className="bg-[#FAF7F2] px-6 pt-14 pb-6 border-b border-[#C9A66B]/10">
+          <div className="glass-header px-6 pt-14 pb-6">
             <div className="flex items-center justify-between mb-6">
               <div className="skeleton w-20 h-5" />
               <div className="skeleton w-16 h-7 rounded-xl" />
@@ -301,15 +296,15 @@ export default function ProfilePage() {
   const initials = (profile?.full_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
+    <div className="min-h-screen pb-24 animate-pageEnter" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
-        <div className="bg-[#FAF7F2] px-6 pt-12 pb-6 shadow-sm border-b border-[#C9A66B]/10">
+        <div className="glass-header px-6 pt-12 pb-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-xl font-bold text-gray-900">Profile</h1>
             <button
               onClick={() => setEditing(!editing)}
-              className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl transition-all ${
-                editing ? 'bg-[#EFE6D5] text-[#5E5E5E]' : 'bg-[#355E3B]/8 text-[#355E3B] hover:bg-[#355E3B]/15'
+              className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                editing ? 'bg-gray-100 text-gray-500' : 'bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/12'
               }`}
             >
               <Edit2 size={14} />
@@ -319,17 +314,17 @@ export default function ProfilePage() {
 
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#355E3B]/10 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#1B4332]/10 flex items-center justify-center">
                 {displayPhoto ? (
                   <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-[#355E3B]">{initials}</span>
+                  <span className="text-3xl font-bold text-[#1B4332]">{initials}</span>
                 )}
               </div>
               {editing && (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#355E3B] rounded-full flex items-center justify-center shadow-md hover:bg-[#2d5033] transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#1B4332] rounded-full flex items-center justify-center shadow-md hover:bg-[#1B4332]/90 transition-colors"
                 >
                   <Camera size={14} className="text-white" />
                 </button>
@@ -348,17 +343,17 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setShowFamilyMembersSheet(true)}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center hover:border-[#355E3B]/25 hover:bg-[#355E3B]/5 transition-all active:scale-[0.98]"
+              className="glass-card rounded-xl p-4 text-center hover:bg-white/70 transition-all active:scale-[0.98] cursor-pointer"
             >
               <div className="flex justify-center mb-1">
-                <Users size={20} className="text-[#C9A66B]" />
+                <Users size={20} className="text-[#1B4332]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{familyCount}</p>
               <p className="text-xs text-gray-500">Family Members</p>
             </button>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+            <div className="glass-card rounded-xl p-4 text-center">
               <div className="flex justify-center mb-1">
-                <Calendar size={20} className="text-[#C9A66B]" />
+                <Calendar size={20} className="text-[#1B4332]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.date_of_birth
@@ -369,7 +364,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
+          <div className="glass-card rounded-xl overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Personal Details</h3>
             </div>
@@ -384,7 +379,7 @@ export default function ProfilePage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -395,10 +390,10 @@ export default function ProfilePage() {
                       <button
                         key={g}
                         onClick={() => setGender(gender === g ? '' : g)}
-                        className={`py-2.5 rounded-xl border-2 text-xs font-medium capitalize transition-all ${
+                        className={`py-2.5 rounded-lg border-2 text-xs font-medium capitalize transition-all ${
                           gender === g
-                            ? 'border-[#355E3B] bg-[#355E3B]/5 text-[#355E3B]'
-                            : 'border-[#C9A66B]/15 text-[#5E5E5E] hover:border-[#355E3B]/30'
+                            ? 'border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]'
+                            : 'border-gray-200 text-gray-500 hover:border-[#1B4332]/30'
                         }`}
                       >
                         {g}
@@ -413,7 +408,7 @@ export default function ProfilePage() {
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all text-[#2B2B2B]"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all text-gray-900"
                   />
                 </div>
                 <div>
@@ -425,17 +420,17 @@ export default function ProfilePage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Your phone number"
-                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#C9A66B]/20 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-[#5E5E5E]/40"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                     saved
-                      ? 'bg-[#355E3B] text-white'
-                      : 'bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] shadow-md shadow-[#355E3B]/20'
+                      ? 'bg-[#1B4332] text-white'
+                      : 'bg-[#1B4332] text-white hover:bg-[#1B4332]/90 active:scale-[0.98]'
                   } disabled:opacity-60`}
                 >
                   {saved ? <><Check size={16} /> Saved!</> : saving ? 'Saving...' : 'Save Changes'}
@@ -468,7 +463,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Claim Profile section */}
-          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
+          <div className="glass-card rounded-xl overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Claim Profile</h3>
             </div>
@@ -479,7 +474,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleClaimCheck}
                 disabled={claimChecking}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-[#355E3B]/20 bg-[#355E3B]/5 text-[#355E3B] text-sm font-semibold hover:bg-[#355E3B]/10 hover:border-[#355E3B]/30 active:scale-[0.98] transition-all disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border-2 border-[#1B4332]/20 bg-[#1B4332]/5 text-[#1B4332] text-sm font-semibold hover:bg-[#1B4332]/10 active:scale-[0.98] transition-all disabled:opacity-60"
               >
                 {claimChecking ? (
                   <>
@@ -499,7 +494,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-[#C9A66B]/15 overflow-hidden">
+          <div className="glass-card rounded-xl overflow-hidden">
             <div className="px-5 pt-4 pb-2">
               <h3 className="text-sm font-semibold text-gray-700">Account</h3>
             </div>
@@ -516,10 +511,10 @@ export default function ProfilePage() {
               </div>
               <button
                 onClick={() => router.push('/stats')}
-                className="w-full flex items-center py-2.5 gap-3 hover:bg-[#355E3B]/5 rounded-xl transition-colors px-1"
+                className="w-full flex items-center py-2.5 gap-3 hover:bg-gray-50 rounded-lg transition-colors px-1"
               >
-                <div className="w-8 h-8 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">📊</span>
+                <div className="w-8 h-8 rounded-full bg-[#1B4332]/8 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 size={14} className="text-[#1B4332]" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-gray-800">Tree Statistics</p>
@@ -529,10 +524,10 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => router.push('/notifications')}
-                className="w-full flex items-center py-2.5 gap-3 hover:bg-[#355E3B]/5 rounded-xl transition-colors px-1"
+                className="w-full flex items-center py-2.5 gap-3 hover:bg-gray-50 rounded-lg transition-colors px-1"
               >
-                <div className="w-8 h-8 rounded-full bg-[#C9A66B]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">🔔</span>
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Bell size={14} className="text-gray-500" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-gray-800">Notifications</p>
@@ -545,7 +540,7 @@ export default function ProfilePage() {
 
           <button
             onClick={handleSignOut}
-            className="w-full bg-white border-2 border-gray-200 text-gray-600 py-4 rounded-2xl font-semibold text-sm hover:bg-gray-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+            className="w-full glass-card text-gray-600 py-4 rounded-2xl font-semibold text-sm hover:bg-white/70 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <LogOut size={18} />
             Sign Out
@@ -553,7 +548,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="w-full bg-[#FAF7F2] border-2 border-[#6B2E2E]/15 text-[#6B2E2E] py-4 rounded-2xl font-semibold text-sm hover:bg-[#6B2E2E]/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-white border border-red-200 text-red-600 py-4 rounded-xl font-semibold text-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <Trash2 size={18} />
             Delete Account
@@ -606,13 +601,13 @@ export default function ProfilePage() {
                     <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
                     <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
                     {member.user_id && (
-                      <p className="text-[11px] text-[#C9A66B]">Linked profile</p>
+                      <p className="text-[11px] text-[#1B4332]">Linked profile</p>
                     )}
                   </div>
                   <button
                     onClick={() => handleDeleteMember(member.id)}
                     disabled={deletingMemberId === member.id || !!member.user_id}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#6B2E2E]/15 text-[#6B2E2E] hover:bg-[#6B2E2E]/5 disabled:opacity-50"
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
                     {deletingMemberId === member.id ? 'Deleting...' : 'Delete'}
                   </button>

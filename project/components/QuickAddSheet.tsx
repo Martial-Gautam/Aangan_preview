@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useFamilyStore } from '@/lib/family-store';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
+import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import { Camera, User, Check, Loader2, X } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -18,19 +18,19 @@ interface RelOption {
 
 function getRelationshipOptions(gender: string | null): RelOption[] {
   const base: RelOption[] = [
-    { value: 'father', label: 'Father', icon: '👨', desc: 'Their dad' },
-    { value: 'mother', label: 'Mother', icon: '👩', desc: 'Their mom' },
-    { value: 'child', label: 'Child', icon: '👶', desc: 'Son or daughter' },
-    { value: 'sibling', label: 'Sibling', icon: '🧑', desc: 'Brother or sister' },
+    { value: 'father', label: 'Father', icon: 'F', desc: 'Their dad' },
+    { value: 'mother', label: 'Mother', icon: 'M', desc: 'Their mom' },
+    { value: 'child', label: 'Child', icon: 'C', desc: 'Son or daughter' },
+    { value: 'sibling', label: 'Sibling', icon: 'S', desc: 'Brother or sister' },
   ];
 
   // Add spouse option with gender-aware label
   if (gender === 'male') {
-    base.push({ value: 'spouse', label: 'Wife', icon: '👩', desc: 'Their wife' });
+    base.push({ value: 'spouse', label: 'Wife', icon: 'W', desc: 'Their wife' });
   } else if (gender === 'female') {
-    base.push({ value: 'spouse', label: 'Husband', icon: '👨', desc: 'Their husband' });
+    base.push({ value: 'spouse', label: 'Husband', icon: 'H', desc: 'Their husband' });
   } else {
-    base.push({ value: 'spouse', label: 'Spouse', icon: '💑', desc: 'Husband or wife' });
+    base.push({ value: 'spouse', label: 'Spouse', icon: 'S', desc: 'Husband or wife' });
   }
 
   return base;
@@ -105,15 +105,7 @@ export default function QuickAddSheet() {
     try {
       let photoUrl = '';
       if (photo) {
-        const ext = photo.name.split('.').pop();
-        const memberId = crypto.randomUUID();
-        const path = `${session.user.id}/members/${memberId}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(path, photo, { upsert: true });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-        photoUrl = urlData.publicUrl;
+        photoUrl = await uploadImageToCloudinaryViaApi(photo, session.access_token, 'members');
       }
 
       // Use the add-relative API — it adds relative of a specific person
@@ -187,10 +179,10 @@ export default function QuickAddSheet() {
 
         {step === 'choose' && (
           <div>
-            <h2 className="text-lg font-bold text-[#2B2B2B] mb-1">
+            <h2 className="text-lg font-bold text-gray-900 mb-1">
               Add {targetPerson.full_name.split(' ')[0]}&apos;s...
             </h2>
-            <p className="text-sm text-[#5E5E5E] mb-5">
+            <p className="text-sm text-gray-500 mb-5">
               Choose who to add to the tree
             </p>
 
@@ -199,11 +191,11 @@ export default function QuickAddSheet() {
                 <button
                   key={opt.value}
                   onClick={() => handleChooseRel(opt.value)}
-                  className="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-[#C9A66B]/15 bg-[#FAF7F2] hover:border-[#355E3B]/30 hover:bg-[#355E3B]/5 transition-all active:scale-95 text-left"
+                  className="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-gray-200/40 bg-white/40 backdrop-blur-md hover:border-[#1B4332]/30 hover:bg-[#1B4332]/5 transition-all active:scale-95 text-left"
                 >
-                  <span className="text-2xl">{opt.icon}</span>
+                  <span className="w-8 h-8 rounded-lg bg-[#1B4332]/10 flex items-center justify-center text-sm font-bold text-[#1B4332]">{opt.icon}</span>
                   <div>
-                    <p className="text-sm font-semibold text-[#2B2B2B]">{opt.label}</p>
+                    <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
                     <p className="text-xs text-gray-400">{opt.desc}</p>
                   </div>
                 </button>
@@ -215,7 +207,7 @@ export default function QuickAddSheet() {
                 handleClose();
                 router.push('/add-member');
               }}
-              className="w-full mt-4 py-3 text-sm text-[#355E3B] font-medium hover:underline"
+              className="w-full mt-4 py-3 text-sm text-[#1B4332] font-medium hover:underline"
             >
               Or go to full Add Member page →
             </button>
@@ -229,7 +221,7 @@ export default function QuickAddSheet() {
                 <X size={18} className="text-gray-400" />
               </button>
               <div>
-                <h2 className="text-lg font-bold text-[#2B2B2B]">
+                <h2 className="text-lg font-bold text-gray-900">
                   Add {targetPerson.full_name.split(' ')[0]}&apos;s {selectedRel}
                 </h2>
               </div>
@@ -239,12 +231,12 @@ export default function QuickAddSheet() {
             <div className="flex items-center gap-4 mb-4">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#355E3B]/25 bg-[#355E3B]/5 flex flex-col items-center justify-center overflow-hidden flex-shrink-0 active:scale-95"
+                className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#1B4332]/25 bg-[#1B4332]/5 flex flex-col items-center justify-center overflow-hidden flex-shrink-0 active:scale-95"
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <Camera size={18} className="text-[#355E3B]/50" />
+                  <Camera size={18} className="text-[#1B4332]/50" />
                 )}
               </button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
@@ -258,7 +250,7 @@ export default function QuickAddSheet() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Full name"
                     autoFocus
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 transition-all placeholder:text-gray-300"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 transition-all placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -276,8 +268,8 @@ export default function QuickAddSheet() {
                   onClick={() => setGender(gender === g.value ? '' : g.value)}
                   className={`py-2 rounded-xl border-2 text-xs font-medium transition-all active:scale-95 ${
                     gender === g.value
-                      ? 'border-[#355E3B] bg-[#355E3B]/5 text-[#355E3B]'
-                      : 'border-[#C9A66B]/15 text-[#5E5E5E] hover:border-[#355E3B]/30'
+                      ? 'border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]'
+                      : 'border-gray-200/40 text-gray-500 hover:border-[#1B4332]/30'
                   }`}
                 >
                   {g.label}
@@ -286,7 +278,7 @@ export default function QuickAddSheet() {
             </div>
 
             {error && (
-              <div className="bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-xl px-3 py-2 text-sm text-[#6B2E2E] mb-3">
+              <div className="bg-red-500/8 border border-red-500/15 rounded-xl px-3 py-2 text-sm text-red-600 mb-3">
                 {error}
               </div>
             )}
@@ -296,8 +288,8 @@ export default function QuickAddSheet() {
               disabled={!name.trim() || saving || success}
               className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 ${
                 success
-                  ? 'bg-[#355E3B] shadow-[#355E3B]/20 text-white'
-                  : 'bg-gradient-to-r from-[#355E3B] to-[#6E8B74] shadow-[#355E3B]/20 text-white hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98]'
+                  ? 'bg-[#1B4332] shadow-[#1B4332]/20 text-white'
+                  : 'bg-[#1B4332] shadow-[#1B4332]/20 text-white hover:bg-[#1B4332]/90 active:scale-[0.98]'
               }`}
             >
               {success ? <><Check size={16} /> Added!</> : saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : 'Add to Tree'}

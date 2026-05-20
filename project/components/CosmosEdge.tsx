@@ -16,10 +16,10 @@ interface CosmosEdgeProps {
 // ─── Color & Style Definitions ───────────────────────────────
 
 const EDGE_STYLES: Record<string, { color: string; lineWidth: number; dashed: boolean }> = {
-  parent:    { color: '#355E3B', lineWidth: 1.5, dashed: false },
-  spouse:    { color: '#C9A66B', lineWidth: 2.0, dashed: false },
-  sibling:   { color: '#6E8B74', lineWidth: 1.0, dashed: true },
-  crossTree: { color: '#C9A66B', lineWidth: 0.8, dashed: true },
+  parent:    { color: '#1B4332', lineWidth: 1.5, dashed: false },
+  spouse:    { color: '#1B4332', lineWidth: 2.0, dashed: false },
+  sibling:   { color: '#1B4332', lineWidth: 1.0, dashed: true },
+  crossTree: { color: '#9ca3af', lineWidth: 0.8, dashed: true },
 };
 
 function getEdgeStyle(relType: string, isCrossTree: boolean) {

@@ -101,9 +101,9 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 bg-[#FAF7F2] rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
+      <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden animate-slideUp border border-white/30">
         {/* Header */}
-        <div className="relative bg-gradient-to-br from-[#355E3B] to-[#6E8B74] px-6 pt-6 pb-8">
+        <div className="relative bg-[#1B4332] px-6 pt-6 pb-8">
           <button
             onClick={onDismiss}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -132,8 +132,8 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
         {/* Success state */}
         {success && (
           <div className="px-6 py-10 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-[#355E3B]/10 flex items-center justify-center mb-4 animate-bounceIn">
-              <Check size={32} className="text-[#355E3B]" />
+            <div className="w-16 h-16 rounded-full bg-[#1B4332]/10 flex items-center justify-center mb-4 animate-bounceIn">
+              <Check size={32} className="text-[#1B4332]" />
             </div>
             <p className="text-gray-600 text-sm text-center">
               Your identity is linked. Connection requests have been sent to confirm relationships.
@@ -143,9 +143,9 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
 
         {/* Error */}
         {error && (
-          <div className="mx-6 mt-4 bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-2xl px-4 py-3 flex items-start gap-2">
-            <AlertCircle size={16} className="text-[#6B2E2E] mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-[#6B2E2E]">{error}</p>
+          <div className="mx-6 mt-4 bg-red-500/8 border border-red-500/15 rounded-2xl px-4 py-3 flex items-start gap-2">
+            <AlertCircle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
 
@@ -163,17 +163,17 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
               return (
                 <div
                   key={match.id}
-                  className={`bg-[#EFE6D5]/30 rounded-2xl border overflow-hidden transition-colors ${
+                  className={`bg-white/30 backdrop-blur-md rounded-2xl border overflow-hidden transition-colors ${
                     selectedIds.includes(match.id)
-                      ? 'border-[#355E3B]/40 bg-[#355E3B]/5'
-                      : 'border-[#C9A66B]/15 hover:border-[#355E3B]/25'
+                      ? 'border-[#1B4332]/40 bg-[#1B4332]/5'
+                      : 'border-gray-200/40 hover:border-[#1B4332]/25'
                   }`}
                   onClick={() => toggleSelect(match.id)}
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-bold text-[#355E3B]">{initials}</span>
+                      <div className="w-12 h-12 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-[#1B4332]">{initials}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 text-sm truncate">{match.full_name}</p>
@@ -184,8 +184,8 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         selectedIds.includes(match.id)
-                          ? 'bg-[#355E3B] border-[#355E3B]'
-                          : 'border-[#C9A66B]/40'
+                          ? 'bg-[#1B4332] border-[#1B4332]'
+                          : 'border-gray-300'
                       }`}>
                         {selectedIds.includes(match.id) && <Check size={14} className="text-white" />}
                       </div>
@@ -227,7 +227,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
             <button
               onClick={handleClaim}
               disabled={claiming || selectedIds.length === 0}
-              className="w-full bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white py-3 rounded-xl text-sm font-semibold hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-[#1B4332] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {claiming ? (
                 <>

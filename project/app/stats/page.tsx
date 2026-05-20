@@ -64,12 +64,12 @@ export default function StatsPage() {
 
   if (loading || statsLoading) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#355E3B]/10 flex items-center justify-center animate-pulse">
-            <TreePine size={20} className="text-[#355E3B]" />
+          <div className="w-10 h-10 rounded-2xl bg-[#1B4332]/10 flex items-center justify-center animate-pulse">
+            <TreePine size={20} className="text-[#1B4332]" />
           </div>
-          <p className="text-sm text-[#5E5E5E]">Loading statistics...</p>
+          <p className="text-sm text-gray-500">Loading statistics...</p>
         </div>
       </div>
     );
@@ -81,44 +81,44 @@ export default function StatsPage() {
       label: 'Direct Members',
       value: stats?.direct_count || 0,
       subtitle: 'In your tree',
-      color: 'bg-[#355E3B]',
-      iconBg: 'bg-[#355E3B]/10',
-      iconColor: 'text-[#355E3B]',
+      color: 'bg-[#1B4332]',
+      iconBg: 'bg-[#1B4332]/10',
+      iconColor: 'text-[#1B4332]',
     },
     {
       icon: Globe,
       label: 'Extended Network',
       value: stats?.extended_count || 0,
       subtitle: 'Connected trees',
-      color: 'bg-[#6E8B74]',
-      iconBg: 'bg-[#6E8B74]/10',
-      iconColor: 'text-[#6E8B74]',
+      color: 'bg-[#1B4332]',
+      iconBg: 'bg-[#1B4332]/10',
+      iconColor: 'text-[#1B4332]',
     },
     {
       icon: TreePine,
       label: 'Generations',
       value: stats?.generations || 1,
       subtitle: 'Depth of your tree',
-      color: 'bg-[#8B5E3C]',
-      iconBg: 'bg-[#8B5E3C]/10',
-      iconColor: 'text-[#8B5E3C]',
+      color: 'bg-[#1B4332]',
+      iconBg: 'bg-[#1B4332]/10',
+      iconColor: 'text-[#1B4332]',
     },
     {
       icon: TrendingUp,
       label: 'Growth',
       value: `${stats?.growth_percent || 0}%`,
       subtitle: `${stats?.new_this_month || 0} new this month`,
-      color: 'bg-[#C9A66B]',
-      iconBg: 'bg-[#C9A66B]/10',
-      iconColor: 'text-[#C9A66B]',
+      color: 'bg-[#1B4332]',
+      iconBg: 'bg-[#1B4332]/10',
+      iconColor: 'text-[#1B4332]',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="bg-[#FAF7F2] px-5 pt-12 pb-5 shadow-sm border-b border-[#C9A66B]/10">
+        <div className="glass-header px-5 pt-12 pb-5">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
@@ -141,7 +141,7 @@ export default function StatsPage() {
             {statCards.map(({ icon: Icon, label, value, subtitle, iconBg, iconColor }, idx) => (
               <div
                 key={label}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                className="glass-card rounded-2xl p-4 hover:bg-white/70 transition-shadow"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
@@ -156,10 +156,10 @@ export default function StatsPage() {
 
           {/* Oldest Member */}
           {stats?.oldest && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="glass-card rounded-2xl p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#C9A66B]/10 flex items-center justify-center flex-shrink-0">
-                  <Crown size={20} className="text-[#C9A66B]" />
+                <div className="w-10 h-10 rounded-xl bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
+                  <Crown size={20} className="text-[#1B4332]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -183,8 +183,8 @@ export default function StatsPage() {
           {stats?.youngest && stats.youngest.name !== stats.oldest?.name && (
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#6E8B74]/10 flex items-center justify-center flex-shrink-0">
-                  <Baby size={20} className="text-[#6E8B74]" />
+                <div className="w-10 h-10 rounded-xl bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
+                  <Baby size={20} className="text-[#1B4332]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -206,10 +206,10 @@ export default function StatsPage() {
 
           {/* Birthplaces */}
           {stats && stats.birthplace_count > 0 && (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="glass-card rounded-2xl p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#B76E5D]/10 flex items-center justify-center flex-shrink-0">
-                  <Globe size={20} className="text-[#B76E5D]" />
+                <div className="w-10 h-10 rounded-xl bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
+                  <Globe size={20} className="text-[#1B4332]" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -234,7 +234,7 @@ export default function StatsPage() {
           )}
 
           {/* Encouragement */}
-          <div className="bg-gradient-to-br from-[#355E3B] to-[#6E8B74] rounded-2xl p-5 shadow-lg shadow-[#355E3B]/20">
+          <div className="bg-[#1B4332] rounded-2xl p-5 shadow-lg shadow-[#1B4332]/20">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <TreePine size={20} className="text-white" />

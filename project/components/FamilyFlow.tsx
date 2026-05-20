@@ -21,14 +21,14 @@ const nodeTypes = { familyNode: FamilyNode };
 
 // MiniMap color mapping
 function miniMapNodeColor(node: any): string {
-  if (node.data?.isCenterPerson) return '#355E3B';
+  if (node.data?.isCenterPerson) return '#1B4332';
   const rel = node.data?.relationshipType;
-  if (rel === 'self') return '#355E3B';
-  if (rel === 'father' || rel === 'mother') return '#8B5E3C';
-  if (rel === 'spouse') return '#C9A66B';
-  if (rel === 'child') return '#4a7a52';
-  if (rel === 'sibling') return '#6E8B74';
-  if (rel === 'connection') return '#C9A66B';
+  if (rel === 'self') return '#1B4332';
+  if (rel === 'father' || rel === 'mother') return '#1B4332';
+  if (rel === 'spouse') return '#1B4332';
+  if (rel === 'child') return '#1B4332';
+  if (rel === 'sibling') return '#1B4332';
+  if (rel === 'connection') return '#9ca3af';
   return '#9ca3af';
 }
 
@@ -146,7 +146,7 @@ function FamilyFlowInner({
         <MiniMap
           nodeColor={miniMapNodeColor}
           maskColor="rgba(250, 247, 242, 0.85)"
-          className="!bottom-20 !left-4 !bg-[#FAF7F2]/90 !border !border-[#C9A66B]/15 !rounded-xl !shadow-lg"
+          className="!bottom-20 !left-4 !bg-white/60 !backdrop-blur-xl !border !border-white/20 !rounded-xl !shadow-lg"
           pannable
           zoomable
           style={{ width: 110, height: 75 }}

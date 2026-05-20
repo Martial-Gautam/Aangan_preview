@@ -28,14 +28,21 @@ interface Message {
   created_at: string;
 }
 
+interface RelativeCandidate {
+  person_id: string;
+  full_name: string;
+  photo_url: string | null;
+  user_id: string | null;
+}
+
 // ─── Main Export ─────────────────────────────────────────────
 
 export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
-          <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
+          <Loader2 size={24} className="text-[#1B4332] animate-spin" />
         </div>
       }
     >
@@ -51,6 +58,8 @@ function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatPartnerId = searchParams.get('to');
+  const chatPartnerNameParam = searchParams.get('name');
+  const chatPartnerPhotoParam = searchParams.get('photo');
 
   // Stream state
   const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
@@ -66,6 +75,9 @@ function MessagesContent() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [relatives, setRelatives] = useState<RelativeCandidate[]>([]);
+  const [relativesLoading, setRelativesLoading] = useState(false);
+  const [resolvingRelativeId, setResolvingRelativeId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +92,11 @@ function MessagesContent() {
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
     initStream();
+  }, [user?.id, session?.access_token]);
+
+  useEffect(() => {
+    if (!user?.id || !session?.access_token) return;
+    fetchRelatives();
   }, [user?.id, session?.access_token]);
 
   // Load data once we know which backend to use
@@ -102,6 +119,15 @@ function MessagesContent() {
       }
     }
   }, [user?.id, streamReady, useStream, chatPartnerId]);
+
+  useEffect(() => {
+    if (!chatPartnerId) return;
+    if (!chatPartnerNameParam && !chatPartnerPhotoParam) return;
+    setChatPartner({
+      name: chatPartnerNameParam || 'Family Member',
+      photo: chatPartnerPhotoParam || null,
+    });
+  }, [chatPartnerId, chatPartnerNameParam, chatPartnerPhotoParam]);
 
   // Auto-scroll
   useEffect(() => {
@@ -131,18 +157,26 @@ function MessagesContent() {
 
       const { token, userId, userName, userImage } = await res.json();
       const client = StreamChat.getInstance(apiKey);
-
-      await client.connectUser(
-        { id: userId, name: userName, image: userImage || undefined },
-        token
-      );
+      const alreadyConnectedUserId = (client as any).userID as string | undefined;
+      if (!alreadyConnectedUserId) {
+        await client.connectUser(
+          { id: userId, name: userName, image: userImage || undefined },
+          token
+        );
+      } else if (alreadyConnectedUserId !== userId) {
+        await client.disconnectUser();
+        await client.connectUser(
+          { id: userId, name: userName, image: userImage || undefined },
+          token
+        );
+      }
 
       setStreamClient(client);
       setStreamReady(true);
       setUseStream(true);
-      console.log('✅ Stream connected');
+      console.log('Stream connected');
     } catch (err) {
-      console.warn('⚠️ Stream unavailable, using Supabase fallback:', err);
+      console.warn('Stream unavailable, using Supabase fallback:', err);
       setUseStream(false);
       setStreamReady(true); // mark as "done trying"
     }
@@ -158,9 +192,12 @@ function MessagesContent() {
       const sort = [{ last_message_at: -1 as const }];
       const result = await streamClient.queryChannels(filter, sort, { limit: 30 });
 
-      const convos: Conversation[] = result.map(ch => {
+      const convos: Conversation[] = result
+      .filter((ch) => ch.id !== 'family-feed')
+      .map((ch) => {
         const members = Object.values(ch.state.members);
         const other = members.find(m => m.user_id !== user.id);
+        if (!other?.user_id) return null;
         const lastMsg = ch.state.messages[ch.state.messages.length - 1];
         return {
           partner_id: other?.user_id || '',
@@ -170,7 +207,8 @@ function MessagesContent() {
           last_message_time: lastMsg?.created_at?.toString() || new Date().toISOString(),
           unread_count: ch.countUnread(),
         };
-      });
+      })
+      .filter((c): c is Conversation => Boolean(c));
       setConversations(convos);
     } catch { setConversations([]); }
     finally { setLoading(false); }
@@ -201,6 +239,9 @@ function MessagesContent() {
       });
     } catch (err) {
       console.error('Stream chat failed:', err);
+      setUseStream(false);
+      setActiveChannel(null);
+      await fetchSupabaseThread(partnerId);
     } finally { setLoading(false); }
   };
 
@@ -230,6 +271,88 @@ function MessagesContent() {
       } else { setConversations([]); }
     } catch { setConversations([]); }
     finally { setLoading(false); }
+  };
+
+  const fetchRelatives = async () => {
+    if (!session?.access_token || !user?.id) return;
+    setRelativesLoading(true);
+    try {
+      const res = await fetch('/api/tree/full', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) {
+        setRelatives([]);
+        return;
+      }
+
+      const data = await res.json();
+      const nodes = (data.nodes || []) as Array<{
+        id: string;
+        full_name: string;
+        photo_url: string | null;
+        user_id: string | null;
+        is_self: boolean;
+      }>;
+      const selfId = data.self_person_id as string | null;
+
+      const family = nodes
+        .filter((node) => !node.is_self && node.id !== selfId && node.full_name?.trim())
+        .map((node) => ({
+          person_id: node.id,
+          full_name: node.full_name,
+          photo_url: node.photo_url ?? null,
+          user_id: node.user_id ?? null,
+        }))
+        .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+      setRelatives(family);
+    } catch (err) {
+      console.error('Failed to fetch relatives for search:', err);
+      setRelatives([]);
+    } finally {
+      setRelativesLoading(false);
+    }
+  };
+
+  const openConversation = (partnerId: string, partnerName?: string, partnerPhoto?: string | null) => {
+    const params = new URLSearchParams({ to: partnerId });
+    if (partnerName) params.set('name', partnerName);
+    if (partnerPhoto) params.set('photo', partnerPhoto);
+    router.push(`/messages?${params.toString()}`);
+  };
+
+  const resolveRelativeTarget = async (relative: RelativeCandidate): Promise<string | null> => {
+    if (!session?.access_token) return null;
+    try {
+      const res = await fetch(`/api/messages/resolve-target?person_id=${relative.person_id}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.target_user_id || null;
+    } catch (err) {
+      console.error('Failed to resolve relative chat target:', err);
+      return null;
+    }
+  };
+
+  const handleRelativeSelect = async (relative: RelativeCandidate) => {
+    const directTargetId = relative.user_id;
+    if (directTargetId) {
+      openConversation(directTargetId, relative.full_name, relative.photo_url);
+      return;
+    }
+
+    setResolvingRelativeId(relative.person_id);
+    const resolvedTargetId = await resolveRelativeTarget(relative);
+    setResolvingRelativeId(null);
+
+    if (resolvedTargetId) {
+      openConversation(resolvedTargetId, relative.full_name, relative.photo_url);
+      return;
+    }
+
+    alert(`${relative.full_name} is not available for chat yet.`);
   };
 
   const fetchSupabaseThread = async (partnerId: string, silent = false) => {
@@ -316,15 +439,15 @@ function MessagesContent() {
 
   if (authLoading || (!streamReady && useStream)) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40">
+      <div className="min-h-screen" style={{ background: 'transparent' }}>
         <div className="max-w-sm mx-auto">
-          <div className="bg-[#FAF7F2] px-6 pt-14 pb-4 border-b border-[#C9A66B]/10">
+          <div className="glass-header px-6 pt-14 pb-4">
             <div className="skeleton w-28 h-5 mb-1" />
             <div className="skeleton w-20 h-3" />
           </div>
           <div className="px-4 pt-4 space-y-2">
             {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-[#FAF7F2]">
+              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl glass-card">
                 <div className="skeleton w-11 h-11 rounded-full flex-shrink-0" />
                 <div className="flex-1 space-y-1.5">
                   <div className="skeleton w-24 h-2.5" />
@@ -351,17 +474,17 @@ function MessagesContent() {
     }));
 
     return (
-      <div className="h-screen bg-[#EFE6D5]/30 flex justify-center">
-        <div className="h-full w-full max-w-sm flex flex-col bg-[#EFE6D5]/20">
+      <div className="h-screen flex justify-center" style={{ background: 'transparent' }}>
+        <div className="h-full w-full max-w-sm flex flex-col">
           {/* Chat Header */}
-          <div className="bg-[#FAF7F2] px-4 pt-12 pb-3 flex items-center gap-3 border-b border-[#C9A66B]/15 flex-shrink-0 shadow-sm">
+          <div className="glass-header px-4 pt-12 pb-3 flex items-center gap-3 flex-shrink-0">
             <button
               onClick={() => router.push('/messages')}
-              className="w-9 h-9 rounded-xl bg-[#355E3B]/8 flex items-center justify-center hover:bg-[#355E3B]/15 transition-colors"
+              className="w-9 h-9 rounded-xl bg-white/40 backdrop-blur-md flex items-center justify-center hover:bg-white/60 transition-colors"
             >
-              <ArrowLeft size={18} className="text-[#355E3B]" />
+              <ArrowLeft size={18} className="text-gray-600" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
               {chatPartner?.photo ? (
                 <img src={chatPartner.photo} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -369,9 +492,9 @@ function MessagesContent() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#2B2B2B] truncate">{chatPartner?.name || 'Loading...'}</p>
-              <p className="text-[10px] text-[#6E8B74] font-medium">
-                {useStream ? '🟢 Real-time' : 'Family member'}
+              <p className="text-sm font-bold text-gray-900 truncate">{chatPartner?.name || 'Loading...'}</p>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Family member
               </p>
             </div>
           </div>
@@ -380,15 +503,15 @@ function MessagesContent() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 min-h-0">
             {loading ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+                <Loader2 size={24} className="text-[#1B4332] animate-spin" />
               </div>
             ) : normalizedMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mx-auto mb-3">
-                    <MessageCircle size={28} className="text-[#6E8B74]" />
+                  <div className="w-16 h-16 rounded-full bg-[#1B4332]/8 flex items-center justify-center mx-auto mb-3">
+                    <MessageCircle size={28} className="text-[#1B4332]/40" />
                   </div>
-                  <p className="text-sm text-[#5E5E5E]">Say hello to start the conversation!</p>
+                  <p className="text-sm text-gray-500">Say hello to start the conversation!</p>
                 </div>
               </div>
             ) : (
@@ -402,7 +525,7 @@ function MessagesContent() {
                     <div key={msg.id}>
                       {showDate && msg.created_at && (
                         <div className="flex justify-center my-3">
-                          <span className="text-[10px] font-semibold text-[#5E5E5E]/60 bg-[#FAF7F2] px-3 py-1 rounded-full border border-[#C9A66B]/10">
+                          <span className="text-[10px] font-semibold text-gray-400 bg-white/60 backdrop-blur-md px-3 py-1 rounded-full border border-gray-200/30">
                             {getDateLabel(msg.created_at)}
                           </span>
                         </div>
@@ -410,12 +533,12 @@ function MessagesContent() {
                       <div className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} mb-1.5`}>
                         <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                           msg.isMine
-                            ? 'bg-[#355E3B] text-white rounded-br-md'
-                            : 'bg-[#FAF7F2] text-[#2B2B2B] border border-[#C9A66B]/10 rounded-bl-md'
+                            ? 'bg-[#1B4332] text-white rounded-br-md'
+                            : 'bg-white/60 backdrop-blur-md text-gray-900 border border-gray-200/30 rounded-bl-md'
                         }`}>
                           <p>{msg.text}</p>
                           {msg.created_at && (
-                            <p className={`text-[9px] mt-1 ${msg.isMine ? 'text-white/50' : 'text-[#5E5E5E]/50'} text-right`}>
+                            <p className={`text-[9px] mt-1 ${msg.isMine ? 'text-white/50' : 'text-gray-400'} text-right`}>
                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
@@ -430,19 +553,19 @@ function MessagesContent() {
           </div>
 
           {/* Input */}
-          <div className="bg-[#FAF7F2] border-t border-[#C9A66B]/15 px-4 py-3 flex items-center gap-2 flex-shrink-0" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+          <div className="glass-header px-4 py-3 flex items-center gap-2 flex-shrink-0 !border-t !border-b-0 border-gray-200/30" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
             <input
               ref={inputRef}
               value={newMessage}
               onChange={e => setNewMessage(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-[#EFE6D5]/50 border border-[#C9A66B]/15 text-sm outline-none placeholder:text-[#5E5E5E]/40 text-[#2B2B2B] focus:border-[#355E3B]/30 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-2xl glass-input text-sm outline-none placeholder:text-gray-400 text-gray-900 focus:ring-1 focus:ring-[#1B4332]/20 transition-all"
             />
             <button
               onClick={handleSend}
               disabled={!newMessage.trim() || sending}
-              className="w-10 h-10 rounded-xl bg-[#355E3B] flex items-center justify-center hover:bg-[#2d5033] transition-colors disabled:opacity-40 active:scale-95 shadow-sm shadow-[#355E3B]/20"
+              className="w-10 h-10 rounded-xl bg-[#1B4332] flex items-center justify-center hover:bg-[#1B4332]/90 transition-colors disabled:opacity-40 active:scale-95"
             >
               {sending ? <Loader2 size={16} className="text-white animate-spin" /> : <Send size={16} className="text-white" />}
             </button>
@@ -453,86 +576,148 @@ function MessagesContent() {
   }
 
   // ═══════════ INBOX VIEW ═══════════
-  const filteredConvos = conversations.filter(c =>
-    c.partner_name.toLowerCase().includes(searchQuery.toLowerCase())
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredConvos = conversations.filter((c) =>
+    c.partner_name.toLowerCase().includes(normalizedQuery)
   );
+  const conversationPartnerIds = new Set(filteredConvos.map((c) => c.partner_id));
+  const relativeMatches = normalizedQuery.length > 0
+    ? relatives.filter((relative) => {
+        if (!relative.full_name.toLowerCase().includes(normalizedQuery)) return false;
+        if (relative.user_id && conversationPartnerIds.has(relative.user_id)) return false;
+        return true;
+      })
+    : [];
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
+    <div className="min-h-screen pb-24 animate-pageEnter" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">
-          <h1 className="text-xl font-bold text-[#2B2B2B]">Messages</h1>
-          <p className="text-xs text-[#5E5E5E] mt-0.5">
-            {useStream ? '🟢 Real-time chat' : 'Chat with your family members'}
+        <div className="glass-header px-6 pt-12 pb-4">
+          <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Chat with your family members
           </p>
         </div>
 
         {/* Search */}
         <div className="px-4 pt-4 pb-2">
-          <div className="bg-[#FAF7F2] rounded-2xl border border-[#C9A66B]/10 flex items-center px-3.5 py-2.5 gap-2">
-            <Search size={16} className="text-[#5E5E5E]/40" />
+          <div className="glass-input rounded-xl flex items-center px-3.5 py-2.5 gap-2">
+            <Search size={16} className="text-gray-400" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search conversations..."
-              className="flex-1 text-sm outline-none bg-transparent placeholder:text-[#5E5E5E]/40 text-[#2B2B2B]"
+              className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-900"
             />
           </div>
+          {normalizedQuery && relativesLoading && (
+            <p className="text-[11px] text-gray-400 mt-1.5 px-1">Searching relatives...</p>
+          )}
         </div>
 
         {/* Conversations */}
         <div className="px-4 space-y-2 mt-2">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+              <Loader2 size={24} className="text-[#1B4332] animate-spin" />
             </div>
-          ) : filteredConvos.length === 0 ? (
-            <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15 mt-4">
-              <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mb-4">
-                <MessageCircle size={28} className="text-[#6E8B74]" />
+          ) : filteredConvos.length === 0 && relativeMatches.length === 0 ? (
+            <div className="glass-card rounded-3xl p-8 flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-[#1B4332]/8 flex items-center justify-center mb-4">
+                <MessageCircle size={28} className="text-[#1B4332]/40" />
               </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">No messages yet</h3>
-              <p className="text-sm text-[#5E5E5E] leading-relaxed">
-                Tap on a family member in your tree and select &quot;Send Message&quot; to start chatting.
+              <h3 className="font-bold text-gray-900 mb-1">
+                {normalizedQuery ? 'No matches found' : 'No messages yet'}
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {normalizedQuery
+                  ? 'Try another name to find a conversation or relative.'
+                  : 'Tap on a family member in your tree and select "Send Message" to start chatting.'}
               </p>
             </div>
           ) : (
-            filteredConvos.map(conv => (
-              <button
-                key={conv.partner_id}
-                onClick={() => router.push(`/messages?to=${conv.partner_id}`)}
-                className="w-full bg-[#FAF7F2] rounded-2xl p-4 flex items-center gap-3 border border-[#C9A66B]/10 hover:bg-[#355E3B]/3 transition-colors text-left active:scale-[0.99]"
-              >
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden">
-                    {conv.partner_photo ? (
-                      <img src={conv.partner_photo} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-sm font-bold">{getInitials(conv.partner_name)}</span>
-                    )}
-                  </div>
-                  {conv.unread_count > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
-                      <span className="text-[9px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold' : 'font-semibold'} text-[#2B2B2B]`}>
-                      {conv.partner_name}
+            <>
+              {filteredConvos.length > 0 && (
+                <div className="space-y-2">
+                  {relativeMatches.length > 0 && (
+                    <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
+                      Conversations
                     </p>
-                    <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#355E3B] font-semibold' : 'text-[#5E5E5E]/50'}`}>
-                      {formatTime(conv.last_message_time)}
-                    </span>
-                  </div>
-                  <p className={`text-xs truncate mt-0.5 ${conv.unread_count > 0 ? 'text-[#2B2B2B] font-medium' : 'text-[#5E5E5E]'}`}>
-                    {conv.last_message}
-                  </p>
+                  )}
+                  {filteredConvos.map((conv) => (
+                    <button
+                      key={conv.partner_id}
+                      onClick={() => openConversation(conv.partner_id, conv.partner_name, conv.partner_photo)}
+                      className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:bg-white/70 transition-colors text-left active:scale-[0.99]"
+                    >
+                      <div className="relative flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden">
+                          {conv.partner_photo ? (
+                            <img src={conv.partner_photo} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white text-sm font-bold">{getInitials(conv.partner_name)}</span>
+                          )}
+                        </div>
+                        {conv.unread_count > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#1B4332] rounded-full border-2 border-white flex items-center justify-center">
+                            <span className="text-[9px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold' : 'font-semibold'} text-gray-900`}>
+                            {conv.partner_name}
+                          </p>
+                          <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#1B4332] font-semibold' : 'text-gray-400'}`}>
+                            {formatTime(conv.last_message_time)}
+                          </span>
+                        </div>
+                        <p className={`text-xs truncate mt-0.5 ${conv.unread_count > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                          {conv.last_message}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              </button>
-            ))
+              )}
+
+              {relativeMatches.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
+                    Relatives
+                  </p>
+                  {relativeMatches.map((relative) => (
+                    <button
+                      key={relative.person_id}
+                      onClick={() => handleRelativeSelect(relative)}
+                      disabled={resolvingRelativeId === relative.person_id}
+                      className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:bg-white/70 transition-colors text-left active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {relative.photo_url ? (
+                          <img src={relative.photo_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white text-sm font-bold">{getInitials(relative.full_name)}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{relative.full_name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {resolvingRelativeId === relative.person_id
+                            ? 'Resolving chat...'
+                            : (relative.user_id ? 'Start conversation' : 'Find and start conversation')}
+                        </p>
+                      </div>
+                      {resolvingRelativeId === relative.person_id && (
+                        <Loader2 size={14} className="text-[#1B4332] animate-spin flex-shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

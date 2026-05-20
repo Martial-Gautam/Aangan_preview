@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'crypto';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+function getCloudinaryConfig() {
+  const cloudinaryUrl = process.env.CLOUDINARY_URL || '';
+  if (cloudinaryUrl.startsWith('cloudinary://')) {
+    const match = cloudinaryUrl.match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
+    if (match) {
+      return {
+        apiKey: decodeURIComponent(match[1]),
+        apiSecret: decodeURIComponent(match[2]),
+        cloudName: decodeURIComponent(match[3]),
+      };
+    }
+  }
+
+  return {
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  };
+}
+
+function buildCloudinarySignature(params: Record<string, string | number>, apiSecret: string) {
+  const payload = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && `${value}`.length > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  return createHash('sha1').update(`${payload}${apiSecret}`).digest('hex');
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,30 +76,59 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
+    const { apiKey, apiSecret, cloudName } = getCloudinaryConfig();
+    if (!apiKey || !apiSecret || !cloudName) {
+      return NextResponse.json(
+        { error: 'Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_* vars.' },
+        { status: 500 }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Generate file path
     const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
     const timestamp = Date.now();
     const random = Math.random().toString(36).slice(2, 8);
-    const filePath = `${user.id}/${folder}/${timestamp}-${random}.${ext}`;
+    const publicId = `${user.id}/${folder}/${timestamp}-${random}`;
+    const uploadTimestamp = Math.floor(Date.now() / 1000);
+    const cloudinaryFolder = `aangan/${bucket}/${user.id}/${folder}`;
+    const signature = buildCloudinarySignature(
+      {
+        folder: cloudinaryFolder,
+        public_id: publicId,
+        timestamp: uploadTimestamp,
+      },
+      apiSecret
+    );
 
-    // Upload to storage
-    const arrayBuffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, arrayBuffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+    const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+    const cloudinaryForm = new FormData();
+    cloudinaryForm.append('file', file, `${publicId}.${ext}`);
+    cloudinaryForm.append('api_key', apiKey);
+    cloudinaryForm.append('timestamp', String(uploadTimestamp));
+    cloudinaryForm.append('folder', cloudinaryFolder);
+    cloudinaryForm.append('public_id', publicId);
+    cloudinaryForm.append('signature', signature);
 
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 });
+    const uploadRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+      { method: 'POST', body: cloudinaryForm }
+    );
+
+    if (!uploadRes.ok) {
+      const errBody = await uploadRes.text();
+      console.error('Cloudinary upload failed:', errBody);
+      return NextResponse.json(
+        { error: 'Cloudinary upload failed' },
+        { status: 500 }
+      );
     }
 
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    const mediaUrl = urlData.publicUrl;
+    const uploadData = await uploadRes.json();
+    const mediaUrl = uploadData.secure_url as string;
+    if (!mediaUrl) {
+      return NextResponse.json({ error: 'Cloudinary did not return a media URL' }, { status: 500 });
+    }
 
     // If a post_id is given, create a media_attachment record
     let attachment = null;

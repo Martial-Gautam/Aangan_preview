@@ -9,20 +9,20 @@ import type { CosmosPosition, LineageSector } from '@/lib/cosmos-layout';
 // ─── Color System ────────────────────────────────────────────
 
 const SECTOR_COLORS: Record<LineageSector, string> = {
-  self:     '#355E3B',
-  maternal: '#B76E5D',
-  paternal: '#8B5E3C',
-  spouse:   '#C9A66B',
-  siblings: '#6E8B74',
+  self:     '#1B4332',
+  maternal: '#1B4332',
+  paternal: '#1B4332',
+  spouse:   '#1B4332',
+  siblings: '#1B4332',
   children: '#4a7a52',
 };
 
 const SECTOR_EMISSIVE: Record<LineageSector, string> = {
-  self:     '#355E3B',
-  maternal: '#B76E5D',
-  paternal: '#8B5E3C',
-  spouse:   '#C9A66B',
-  siblings: '#6E8B74',
+  self:     '#1B4332',
+  maternal: '#1B4332',
+  paternal: '#1B4332',
+  spouse:   '#1B4332',
+  siblings: '#1B4332',
   children: '#4a7a52',
 };
 
@@ -170,7 +170,7 @@ export default function CosmosNode({
       {isCenterPerson && !isSelf && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -baseSize * 0.6, 0]}>
           <ringGeometry args={[baseSize * 1.2, baseSize * 1.4, 32]} />
-          <meshBasicMaterial color="#C9A66B" transparent opacity={0.5} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#1B4332" transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       )}
 
@@ -259,7 +259,7 @@ export default function CosmosNode({
               <div style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#FAF7F2',
+                color: '#ffffff',
                 textAlign: 'center',
                 maxWidth: 90,
                 whiteSpace: 'nowrap',
@@ -302,7 +302,7 @@ export default function CosmosNode({
             <div style={{
               fontSize: 9,
               fontWeight: 600,
-              color: '#FAF7F2',
+              color: '#ffffff',
               textShadow: '0 1px 3px rgba(0,0,0,0.6)',
               textAlign: 'center',
               whiteSpace: 'nowrap',

@@ -4,12 +4,12 @@ import { RelationshipType } from '@/lib/supabase';
 import { TreeNodeData } from '@/lib/tree-utils';
 
 const RELATIONSHIP_COLORS: Record<string, { bg: string; text: string; border: string; badge: string }> = {
-  self: { bg: 'bg-[#355E3B]', text: 'text-white', border: 'border-[#355E3B]', badge: 'bg-[#355E3B]/10 text-[#355E3B]' },
-  father: { bg: 'bg-[#8B5E3C]/15', text: 'text-[#8B5E3C]', border: 'border-[#8B5E3C]/30', badge: 'bg-[#8B5E3C]/10 text-[#8B5E3C]' },
-  mother: { bg: 'bg-[#B76E5D]/15', text: 'text-[#B76E5D]', border: 'border-[#B76E5D]/30', badge: 'bg-[#B76E5D]/10 text-[#B76E5D]' },
-  sibling: { bg: 'bg-[#6E8B74]/15', text: 'text-[#6E8B74]', border: 'border-[#6E8B74]/30', badge: 'bg-[#6E8B74]/10 text-[#6E8B74]' },
-  spouse: { bg: 'bg-[#C9A66B]/15', text: 'text-[#8B5E3C]', border: 'border-[#C9A66B]/30', badge: 'bg-[#C9A66B]/10 text-[#8B5E3C]' },
-  child: { bg: 'bg-[#355E3B]/10', text: 'text-[#355E3B]', border: 'border-[#355E3B]/25', badge: 'bg-[#355E3B]/8 text-[#355E3B]' },
+  self: { bg: 'bg-[#1B4332]', text: 'text-white', border: 'border-[#1B4332]', badge: 'bg-[#1B4332]/10 text-[#1B4332]' },
+  father: { bg: 'bg-[#1B4332]/10', text: 'text-[#1B4332]', border: 'border-[#1B4332]/25', badge: 'bg-[#1B4332]/10 text-[#1B4332]' },
+  mother: { bg: 'bg-[#1B4332]/10', text: 'text-[#1B4332]', border: 'border-[#1B4332]/25', badge: 'bg-[#1B4332]/10 text-[#1B4332]' },
+  sibling: { bg: 'bg-[#1B4332]/8', text: 'text-[#1B4332]', border: 'border-[#1B4332]/20', badge: 'bg-[#1B4332]/10 text-[#1B4332]' },
+  spouse: { bg: 'bg-[#1B4332]/8', text: 'text-[#1B4332]', border: 'border-[#1B4332]/20', badge: 'bg-[#1B4332]/10 text-[#1B4332]' },
+  child: { bg: 'bg-[#1B4332]/8', text: 'text-[#1B4332]', border: 'border-[#1B4332]/20', badge: 'bg-[#1B4332]/8 text-[#1B4332]' },
 };
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
@@ -39,7 +39,7 @@ export default function TreeNode({ nodeData }: TreeNodeProps) {
       <div
         className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm border-2 shadow-sm ${
           isSelf
-            ? 'bg-[#355E3B] text-white border-[#355E3B] shadow-md shadow-[#355E3B]/20'
+            ? 'bg-[#1B4332] text-white border-[#1B4332] shadow-md shadow-[#1B4332]/20'
             : `${colors.bg} ${colors.text} ${colors.border}`
         }`}
       >
@@ -62,7 +62,7 @@ export default function TreeNode({ nodeData }: TreeNodeProps) {
       {/* Relationship badge */}
       <span
         className={`mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-          isSelf ? 'bg-[#355E3B]/10 text-[#355E3B]' : colors.badge
+          isSelf ? 'bg-[#1B4332]/10 text-[#1B4332]' : colors.badge
         }`}
       >
         {label}

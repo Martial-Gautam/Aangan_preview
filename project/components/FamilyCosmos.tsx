@@ -44,6 +44,20 @@ interface SceneProps {
   centerKey: number;
   maxHops: number;
   searchQuery: string;
+  onReady?: () => void;
+}
+
+function SceneReady({ onReady }: { onReady?: () => void }) {
+  const readyCalledRef = useRef(false);
+
+  useEffect(() => {
+    if (!onReady || readyCalledRef.current) return;
+    readyCalledRef.current = true;
+    const frame = requestAnimationFrame(() => onReady());
+    return () => cancelAnimationFrame(frame);
+  }, [onReady]);
+
+  return null;
 }
 
 function Scene({
@@ -56,6 +70,7 @@ function Scene({
   centerKey,
   maxHops,
   searchQuery,
+  onReady,
 }: SceneProps) {
   const controlsRef = useRef<any>(null);
   const { camera } = useThree();
@@ -183,8 +198,8 @@ function Scene({
     <>
       {/* Lighting */}
       <ambientLight intensity={0.4} />
-      <pointLight position={[10, 15, 10]} intensity={0.6} color="#FAF7F2" />
-      <pointLight position={[-10, 10, -10]} intensity={0.3} color="#C9A66B" />
+      <pointLight position={[10, 15, 10]} intensity={0.6} color="#ffffff" />
+      <pointLight position={[-10, 10, -10]} intensity={0.3} color="#d4d4d4" />
 
       {/* Fog for depth */}
       <fog attach="fog" args={['#0a0e17', 15, 40]} />
@@ -286,6 +301,7 @@ function Scene({
 
       {/* Camera position animator */}
       <CameraAnimator targetPosition={[0, 0, 0]} />
+      <SceneReady onReady={onReady} />
     </>
   );
 }
@@ -302,6 +318,7 @@ interface FamilyCosmosProps {
   centerKey: number;
   maxHops: number;
   searchQuery: string;
+  onReady?: () => void;
 }
 
 export default function FamilyCosmos(props: FamilyCosmosProps) {

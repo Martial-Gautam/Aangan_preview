@@ -69,12 +69,12 @@ function createParentChildEdge(id: string, parentId: string, childId: string): E
     targetHandle: 'top-target',
     type: 'smoothstep',
     style: {
-      stroke: '#355E3B',
+      stroke: '#1B4332',
       strokeWidth: 2,
     },
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#355E3B',
+      color: '#1B4332',
       width: 8,
       height: 8,
     },
@@ -95,17 +95,17 @@ function createSpouseEdge(id: string, personA: string, personB: string): Edge {
     targetHandle: 'left-target',
     type: 'straight',
     style: {
-      stroke: '#C9A66B',
+      stroke: '#1B4332',
       strokeWidth: 2.5,
     },
     label: '♥',
     labelStyle: {
       fontSize: 11,
-      fill: '#C9A66B',
+      fill: '#1B4332',
       fontWeight: 600,
     },
     labelBgStyle: {
-      fill: '#FAF7F2',
+      fill: '#ffffff',
       fillOpacity: 0.9,
     },
     labelBgPadding: [4, 6] as [number, number],
@@ -127,7 +127,7 @@ function createSiblingEdge(id: string, personA: string, personB: string): Edge {
     targetHandle: 'left-target',
     type: 'straight',
     style: {
-      stroke: '#6E8B74',
+      stroke: '#1B4332',
       strokeWidth: 1.5,
       strokeDasharray: '4 4',
     },
@@ -145,7 +145,7 @@ function createConnectionEdge(id: string, personA: string, personB: string): Edg
     target: personB,
     type: 'smoothstep',
     style: {
-      stroke: '#C9A66B',
+      stroke: '#9ca3af',
       strokeWidth: 1.5,
       strokeDasharray: '8 4',
       opacity: 0.6,

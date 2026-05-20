@@ -34,7 +34,7 @@ export function SkeletonLine({ width = '100%', height = 12 }: { width?: string |
 
 export function SkeletonCard() {
   return (
-    <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#C9A66B]/10 space-y-3">
+    <div className="glass-card rounded-2xl p-4 space-y-3">
       <div className="flex items-center gap-3">
         <SkeletonAvatar size={36} />
         <div className="flex-1 space-y-1.5">
@@ -63,7 +63,7 @@ export function SkeletonMessageList() {
   return (
     <div className="animate-pageEnter space-y-2 px-4 pt-4">
       {[1, 2, 3, 4, 5].map(i => (
-        <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-[#FAF7F2]">
+        <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-white/40 backdrop-blur-md">
           <SkeletonAvatar size={44} />
           <div className="flex-1 space-y-1.5">
             <SkeletonLine width="50%" height={11} />

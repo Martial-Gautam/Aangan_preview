@@ -3,17 +3,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { supabase, RelationshipType } from '@/lib/supabase';
+import { RelationshipType } from '@/lib/supabase';
+import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import BottomNav from '@/components/BottomNav';
 import { Camera, ChevronLeft, Check, User, Mail, Phone, Users } from 'lucide-react';
 import Link from 'next/link';
 
 const RELATIONSHIP_OPTIONS: { value: RelationshipType; label: string; desc: string; icon: string }[] = [
-  { value: 'father', label: 'Father', desc: 'Your dad', icon: '👨' },
-  { value: 'mother', label: 'Mother', desc: 'Your mom', icon: '👩' },
-  { value: 'sibling', label: 'Sibling', desc: 'Brother or sister', icon: '🧑' },
-  { value: 'spouse', label: 'Spouse', desc: 'Husband or wife', icon: '💑' },
-  { value: 'child', label: 'Child', desc: 'Son or daughter', icon: '👶' },
+  { value: 'father', label: 'Father', desc: 'Your dad', icon: 'F' },
+  { value: 'mother', label: 'Mother', desc: 'Your mom', icon: 'M' },
+  { value: 'sibling', label: 'Sibling', desc: 'Brother or sister', icon: 'S' },
+  { value: 'spouse', label: 'Spouse', desc: 'Husband or wife', icon: 'Sp' },
+  { value: 'child', label: 'Child', desc: 'Son or daughter', icon: 'C' },
 ];
 
 const genders = [
@@ -77,15 +78,7 @@ export default function AddMemberPage() {
     try {
       let photoUrl = '';
       if (photo) {
-        const ext = photo.name.split('.').pop();
-        const memberId = crypto.randomUUID();
-        const path = `${user.id}/members/${memberId}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(path, photo, { upsert: true });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-        photoUrl = urlData.publicUrl;
+        photoUrl = await uploadImageToCloudinaryViaApi(photo, session.access_token, 'members');
       }
 
       const res = await fetch('/api/members/add', {
@@ -128,9 +121,9 @@ export default function AddMemberPage() {
   const isValid = relationship !== '' && name.trim().length >= 2;
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
-        <div className="bg-[#FAF7F2] px-6 pt-12 pb-5 shadow-sm border-b border-[#C9A66B]/10">
+        <div className="glass-header px-6 pt-12 pb-5">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-gray-100 transition-colors -ml-2">
               <ChevronLeft size={20} className="text-gray-600" />
@@ -143,7 +136,7 @@ export default function AddMemberPage() {
           {/* Import Contacts Button */}
           <Link
             href="/import-contacts"
-            className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#355E3B]/5 text-[#355E3B] rounded-2xl border border-[#355E3B]/20 font-semibold text-sm hover:bg-[#355E3B]/10 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#1B4332]/5 text-[#1B4332] rounded-2xl border border-[#1B4332]/20 font-semibold text-sm hover:bg-[#1B4332]/10 transition-colors"
           >
             <Users size={18} />
             Import from Contacts
@@ -155,7 +148,7 @@ export default function AddMemberPage() {
             <div className="h-px bg-gray-200 flex-1"></div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Relationship</h3>
             <div className="grid grid-cols-2 gap-2">
               {RELATIONSHIP_OPTIONS.map((opt) => (
@@ -164,13 +157,13 @@ export default function AddMemberPage() {
                   onClick={() => setRelationship(opt.value)}
                   className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all active:scale-95 text-left ${
                     relationship === opt.value
-                      ? 'border-[#355E3B] bg-[#355E3B]/5'
-                      : 'border-[#C9A66B]/15 bg-[#EFE6D5]/30 hover:border-[#355E3B]/30'
+                      ? 'border-[#1B4332] bg-[#1B4332]/5'
+                      : 'border-gray-200/40 bg-white/30 backdrop-blur-md hover:border-[#1B4332]/30'
                   }`}
                 >
-                  <span className="text-2xl">{opt.icon}</span>
+                  <span className="w-8 h-8 rounded-lg bg-[#1B4332]/10 flex items-center justify-center text-sm font-bold text-[#1B4332]">{opt.icon}</span>
                   <div>
-                    <p className={`text-sm font-semibold ${relationship === opt.value ? 'text-[#355E3B]' : 'text-[#2B2B2B]'}`}>
+                    <p className={`text-sm font-semibold ${relationship === opt.value ? 'text-[#1B4332]' : 'text-gray-900'}`}>
                       {opt.label}
                     </p>
                     <p className="text-xs text-gray-400">{opt.desc}</p>
@@ -180,19 +173,19 @@ export default function AddMemberPage() {
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Photo (optional)</h3>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#355E3B]/25 bg-[#355E3B]/5 flex flex-col items-center justify-center hover:border-[#355E3B]/50 hover:bg-[#355E3B]/10 transition-all active:scale-95 overflow-hidden flex-shrink-0"
+                className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#1B4332]/25 bg-[#1B4332]/5 flex flex-col items-center justify-center hover:border-[#1B4332]/50 hover:bg-[#1B4332]/10 transition-all active:scale-95 overflow-hidden flex-shrink-0"
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <>
-                    <Camera size={20} className="text-[#355E3B]/50 mb-1" />
-                    <span className="text-xs text-[#355E3B]">Add</span>
+                    <Camera size={20} className="text-[#1B4332]/50 mb-1" />
+                    <span className="text-xs text-[#1B4332]">Add</span>
                   </>
                 )}
               </button>
@@ -204,7 +197,7 @@ export default function AddMemberPage() {
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Full Name *</h3>
             <div className="relative">
               <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -213,12 +206,12 @@ export default function AddMemberPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter their name"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
               />
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Gender (optional)</h3>
             <div className="grid grid-cols-3 gap-2">
               {genders.map((g) => (
@@ -227,8 +220,8 @@ export default function AddMemberPage() {
                   onClick={() => setGender(gender === g.value ? '' : g.value)}
                   className={`py-2.5 rounded-xl border-2 text-sm font-medium transition-all active:scale-95 ${
                     gender === g.value
-                      ? 'border-[#355E3B] bg-[#355E3B]/5 text-[#355E3B]'
-                      : 'border-[#C9A66B]/15 text-[#5E5E5E] hover:border-[#355E3B]/30'
+                      ? 'border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]'
+                      : 'border-gray-200/40 text-gray-500 hover:border-[#1B4332]/30'
                   }`}
                 >
                   {g.label}
@@ -237,19 +230,19 @@ export default function AddMemberPage() {
             </div>
           </div>
 
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Date of Birth (optional)</h3>
             <input
               type="date"
               value={dob}
               onChange={(e) => setDob(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all text-gray-700"
+              className="w-full px-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all text-gray-700"
             />
           </div>
 
           {/* Contact Info section for claim system */}
-          <div className="bg-[#FAF7F2] rounded-3xl p-5 shadow-sm border border-[#C9A66B]/15">
+          <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Contact Info (optional)</h3>
             <p className="text-xs text-gray-400 mb-3">
               If they join Aangan, they can claim this profile automatically
@@ -262,7 +255,7 @@ export default function AddMemberPage() {
                   value={memberEmail}
                   onChange={(e) => setMemberEmail(e.target.value)}
                   placeholder="Their email address"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
               <div className="relative">
@@ -272,14 +265,14 @@ export default function AddMemberPage() {
                   value={memberPhone}
                   onChange={(e) => setMemberPhone(e.target.value)}
                   placeholder="Their phone number"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#355E3B]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="bg-[#6B2E2E]/8 border border-[#6B2E2E]/15 rounded-2xl px-4 py-3 text-sm text-[#6B2E2E]">
+            <div className="bg-red-500/8 border border-red-500/15 rounded-2xl px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
@@ -289,8 +282,8 @@ export default function AddMemberPage() {
             disabled={!isValid || saving || success}
             className={`w-full py-4 rounded-2xl font-semibold text-base transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               success
-                ? 'bg-[#355E3B] shadow-[#355E3B]/20 text-white'
-                : 'bg-gradient-to-r from-[#355E3B] to-[#6E8B74] shadow-[#355E3B]/20 text-white hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98]'
+                ? 'bg-[#1B4332] shadow-[#1B4332]/20 text-white'
+                : 'bg-[#1B4332] shadow-[#1B4332]/20 text-white hover:bg-[#1B4332]/90 active:scale-[0.98]'
             }`}
           >
             {success ? <><Check size={18} /> Added successfully!</> : saving ? 'Saving...' : 'Add to Family Tree'}

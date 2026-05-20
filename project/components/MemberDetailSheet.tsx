@@ -15,14 +15,14 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  self: 'bg-[#355E3B] text-white',
-  father: 'bg-[#8B5E3C]/12 text-[#8B5E3C]',
-  mother: 'bg-[#B76E5D]/12 text-[#B76E5D]',
-  sibling: 'bg-[#6E8B74]/12 text-[#4a7a52]',
-  spouse: 'bg-[#C9A66B]/12 text-[#8B5E3C]',
-  child: 'bg-[#355E3B]/10 text-[#355E3B]',
-  connection: 'bg-[#C9A66B]/10 text-[#8B5E3C]',
-  relative: 'bg-[#EFE6D5] text-[#5E5E5E]',
+  self: 'bg-[#1B4332] text-white',
+  father: 'bg-[#1B4332]/10 text-[#1B4332]',
+  mother: 'bg-[#1B4332]/10 text-[#1B4332]',
+  sibling: 'bg-[#1B4332]/10 text-[#1B4332]',
+  spouse: 'bg-[#1B4332]/10 text-[#1B4332]',
+  child: 'bg-[#1B4332]/10 text-[#1B4332]',
+  connection: 'bg-[#1B4332]/10 text-[#1B4332]',
+  relative: 'bg-gray-100 text-gray-500',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -48,9 +48,9 @@ function getBirthdayCountdown(dob: string | null | undefined): string | null {
     nextBday = new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
   }
   const diff = Math.ceil((nextBday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return '🎂 Birthday today!';
-  if (diff === 1) return '🎂 Birthday tomorrow!';
-  if (diff <= 30) return `🎂 Birthday in ${diff} days`;
+  if (diff === 0) return 'Birthday today!';
+  if (diff === 1) return 'Birthday tomorrow!';
+  if (diff <= 30) return `Birthday in ${diff} days`;
   return null;
 }
 
@@ -215,13 +215,13 @@ export default function MemberDetailSheet({
           <div className="relative mb-3">
             <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-lg ${
               isSelf
-                ? 'bg-gradient-to-br from-[#355E3B] to-[#4a7a52] border-[#355E3B] shadow-[#355E3B]/25'
-                : 'bg-gradient-to-br from-[#FAF7F2] to-[#EFE6D5] border-[#C9A66B]/30 shadow-black/8'
+                ? 'bg-gradient-to-br from-[#1B4332] to-[#2d5033] border-[#1B4332] shadow-[#1B4332]/25'
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200/50 shadow-black/8'
             }`}>
               {person.photo_url ? (
                 <img src={person.photo_url} alt={person.full_name} className="w-full h-full object-cover" />
               ) : (
-                <span className={isSelf ? 'text-white' : 'text-[#5E5E5E]'}>{initials}</span>
+                <span className={isSelf ? 'text-white' : 'text-gray-500'}>{initials}</span>
               )}
             </div>
             {isLinked && !isSelf && (
@@ -234,7 +234,7 @@ export default function MemberDetailSheet({
           {/* Name & age */}
           <h2 className="text-lg font-bold text-gray-900">{person.full_name}</h2>
           {age !== null && (
-            <p className="text-xs text-[#5E5E5E] mt-0.5">{age} years old</p>
+            <p className="text-xs text-gray-500 mt-0.5">{age} years old</p>
           )}
 
           {/* Badges */}
@@ -251,7 +251,7 @@ export default function MemberDetailSheet({
 
           {/* Birthday countdown */}
           {birthdayNote && (
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#C9A66B] font-medium bg-[#C9A66B]/8 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#1B4332] font-medium bg-[#1B4332]/8 px-3 py-1.5 rounded-full">
               <Cake size={12} />
               {birthdayNote}
             </div>
@@ -259,10 +259,10 @@ export default function MemberDetailSheet({
 
           {/* Degree of relationship path */}
           {degreeResult && degreeResult.degree > 0 && (
-            <div className="flex items-center gap-1.5 mt-2.5 text-xs text-[#5E5E5E] bg-[#EFE6D5]/60 px-3 py-2 rounded-xl">
-              <Route size={12} className="text-[#C9A66B] flex-shrink-0" />
+            <div className="flex items-center gap-1.5 mt-2.5 text-xs text-gray-500 bg-gray-100/60 px-3 py-2 rounded-xl">
+              <Route size={12} className="text-[#1B4332] flex-shrink-0" />
               <span>
-                <span className="font-semibold text-[#355E3B]">{degreeResult.label}</span>
+                <span className="font-semibold text-[#1B4332]">{degreeResult.label}</span>
                 <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'})</span>
               </span>
             </div>
@@ -271,7 +271,7 @@ export default function MemberDetailSheet({
           {/* Immediate Family */}
           {immediateFamily.length > 0 && (
             <div className="w-full mt-5">
-              <h3 className="text-xs font-bold text-[#5E5E5E] uppercase tracking-wider mb-2 text-left">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 text-left">
                 {isSelf ? 'Your Family' : `${person.full_name.split(' ')[0]}'s Family`}
               </h3>
               <div className="space-y-1.5">
@@ -282,9 +282,9 @@ export default function MemberDetailSheet({
                       onClose();
                       setTimeout(() => useFamilyStore.getState().setSelectedPerson(familyMember.id), 300);
                     }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#EFE6D5]/40 transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-100/40 transition-colors text-left"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#EFE6D5] flex items-center justify-center text-xs font-bold text-[#5E5E5E] overflow-hidden flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden flex-shrink-0">
                       {familyMember.photo_url ? (
                         <img src={familyMember.photo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -292,9 +292,9 @@ export default function MemberDetailSheet({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#2B2B2B] truncate">{familyMember.full_name}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{familyMember.full_name}</p>
                     </div>
-                    <span className="text-[10px] font-bold text-[#5E5E5E] bg-[#EFE6D5]/60 px-2 py-0.5 rounded-full capitalize">
+                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100/60 px-2 py-0.5 rounded-full capitalize">
                       {relType}
                     </span>
                   </button>
@@ -333,7 +333,7 @@ export default function MemberDetailSheet({
             {canEdit && (
               <button
                 onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#355E3B] to-[#4a7a52] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:from-[#2d5033] hover:to-[#3f6946] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20"
+                className="w-full py-3 px-4 rounded-2xl bg-[#1B4332] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all shadow-lg shadow-[#1B4332]/20"
               >
                 <Pencil size={16} /> Edit Member
               </button>
@@ -345,7 +345,7 @@ export default function MemberDetailSheet({
                 onClose();
                 setTimeout(() => setQuickAddTarget(personId!), 300);
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-[#355E3B]/8 text-[#355E3B] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#355E3B]/15 active:scale-[0.98] transition-all border border-[#355E3B]/10"
+              className="w-full py-3 px-4 rounded-2xl bg-[#1B4332]/8 text-[#1B4332] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1B4332]/15 active:scale-[0.98] transition-all border border-[#1B4332]/10"
             >
               <UserPlus size={16} /> Add Their Relative
             </button>
@@ -361,7 +361,7 @@ export default function MemberDetailSheet({
                   disabled={!canMessage || resolvingTarget}
                   className={`w-full py-3 px-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all border ${
                     canMessage
-                      ? 'bg-[#C9A66B]/8 text-[#8B5E3C] hover:bg-[#C9A66B]/15 active:scale-[0.98] border-[#C9A66B]/15'
+                      ? 'bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/15 active:scale-[0.98] border-[#1B4332]/15'
                       : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                   }`}
                 >
@@ -378,7 +378,7 @@ export default function MemberDetailSheet({
             {canDelete && (
               <button
                 onClick={handleDelete}
-                className="w-full py-3 px-4 rounded-2xl bg-[#6B2E2E]/6 text-[#6B2E2E] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#6B2E2E]/12 active:scale-[0.98] transition-all"
+                className="w-full py-3 px-4 rounded-2xl bg-red-500/6 text-red-600 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-500/12 active:scale-[0.98] transition-all"
               >
                 <Trash2 size={16} /> Remove Member
               </button>

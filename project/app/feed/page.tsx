@@ -50,11 +50,11 @@ interface Comment {
 
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
-  'general': 'bg-[#6E8B74]/10 text-[#6E8B74]',
-  'family-news': 'bg-[#355E3B]/10 text-[#355E3B]',
-  'memories': 'bg-[#C9A66B]/15 text-[#8B5E3C]',
-  'question': 'bg-[#B76E5D]/10 text-[#B76E5D]',
-  'celebration': 'bg-[#C9A66B]/15 text-[#C9A66B]',
+  'general': 'bg-gray-100 text-gray-600',
+  'family-news': 'bg-[#1B4332]/8 text-[#1B4332]',
+  'memories': 'bg-gray-100 text-gray-600',
+  'question': 'bg-gray-100 text-gray-600',
+  'celebration': 'bg-[#1B4332]/8 text-[#1B4332]',
 };
 
 // ─── Main Export ─────────────────────────────────────────────
@@ -132,7 +132,13 @@ function FeedContent() {
 
       const { token, userId, userName, userImage } = await res.json();
       const client = StreamChat.getInstance(apiKey);
-      await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
+      const alreadyConnectedUserId = (client as any).userID as string | undefined;
+      if (!alreadyConnectedUserId) {
+        await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
+      } else if (alreadyConnectedUserId !== userId) {
+        await client.disconnectUser();
+        await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
+      }
       setStreamClient(client);
 
       const channel = client.channel('messaging', 'family-feed', {
@@ -334,8 +340,8 @@ function FeedContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
-        <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
+        <Loader2 size={24} className="text-[#1B4332] animate-spin" />
       </div>
     );
   }
@@ -343,28 +349,22 @@ function FeedContent() {
   // ─── Render ─────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
+    <div className="min-h-screen pb-24 animate-pageEnter" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="bg-[#FAF7F2] px-5 pt-12 pb-3 shadow-sm border-b border-[#C9A66B]/10">
+        <div className="glass-header px-5 pt-12 pb-3">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-xl font-bold text-[#2B2B2B]">Feed</h1>
-              <p className="text-[10px] text-[#5E5E5E]/60 font-medium">Share with your family</p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-semibold text-[#5E5E5E]/40 uppercase tracking-wider">Section</span>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900">Feed</h1>
           </div>
 
           {/* Two-Section Tabs */}
-          <div className="flex gap-2">
+          <div className="flex bg-white/40 backdrop-blur-md rounded-xl p-0.5 border border-gray-200/30">
             <button
               onClick={() => { setFeedSection('stories'); setActiveTab('post'); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
                 feedSection === 'stories'
-                  ? 'bg-gradient-to-r from-[#355E3B] to-[#4a7a52] text-white shadow-lg shadow-[#355E3B]/20'
-                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
+                  ? 'bg-white/80 text-gray-900 shadow-sm'
+                  : 'text-gray-500'
               }`}
             >
               <Camera size={15} />
@@ -372,10 +372,10 @@ function FeedContent() {
             </button>
             <button
               onClick={() => { setFeedSection('community'); setActiveTab('post'); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
                 feedSection === 'community'
-                  ? 'bg-gradient-to-r from-[#C9A66B] to-[#8B5E3C] text-white shadow-lg shadow-[#C9A66B]/20'
-                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500'
               }`}
             >
               <MessagesSquare size={15} />
@@ -383,7 +383,7 @@ function FeedContent() {
             </button>
           </div>
 
-          {/* Sub-tabs for Stories section */}
+          {/* Sub-tabs for Stories */}
           {feedSection === 'stories' && (
             <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
               {CONTENT_TYPES.map(ct => {
@@ -392,10 +392,10 @@ function FeedContent() {
                   <button
                     key={ct.key}
                     onClick={() => setActiveContentType(ct.key)}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                       activeContentType === ct.key
-                        ? 'bg-[#355E3B]/10 text-[#355E3B] border border-[#355E3B]/20'
-                        : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
+                        ? 'bg-[#1B4332]/8 text-[#1B4332]'
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     <Icon size={12} />
@@ -406,17 +406,17 @@ function FeedContent() {
             </div>
           )}
 
-          {/* Sub-tabs for Community section */}
+          {/* Sub-tabs for Community */}
           {feedSection === 'community' && (
             <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCreateCategory(cat)}
-                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold capitalize transition-all whitespace-nowrap flex-shrink-0 ${
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-all whitespace-nowrap flex-shrink-0 ${
                     createCategory === cat
-                      ? CATEGORY_COLORS[cat] + ' border border-current/10'
-                      : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
+                      ? 'bg-[#1B4332]/8 text-[#1B4332]'
+                      : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   {cat.replace('-', ' ')}
@@ -427,11 +427,11 @@ function FeedContent() {
         </div>
 
         {/* Posts */}
-        <div className="px-4 space-y-3 mt-4">
+        <div className="px-4 space-y-3 mt-3">
           {loadingPosts ? (
             <div className="space-y-3">
               {[1,2,3].map(i => (
-                <div key={i} className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#C9A66B]/10 space-y-3">
+                <div key={i} className="glass-card rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="skeleton w-9 h-9 rounded-full" />
                     <div className="flex-1 space-y-1.5">
@@ -445,24 +445,23 @@ function FeedContent() {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15">
-              <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mb-4">
+            <div className="glass-card rounded-xl p-8 flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-full bg-gray-100/60 flex items-center justify-center mb-4">
                 {feedSection === 'stories' ? (
-                  <Camera size={28} className="text-[#6E8B74]" />
+                  <Camera size={24} className="text-gray-400" />
                 ) : (
-                  <MessagesSquare size={28} className="text-[#6E8B74]" />
+                  <MessagesSquare size={24} className="text-gray-400" />
                 )}
               </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">
+              <h3 className="font-semibold text-gray-900 mb-1">
                 No {feedSection === 'stories' ? 'stories' : 'posts'} yet
               </h3>
-              <p className="text-sm text-[#5E5E5E] leading-relaxed">
-                Be the first to share something with your family!
+              <p className="text-sm text-gray-500">
+                Be the first to share something with your family.
               </p>
             </div>
           ) : (
             posts.map((msg: any) => {
-              // Normalize across both backends
               const authorName = useStreamBackend ? (msg.user?.name || 'Family Member') : (msg.author?.full_name || 'Family Member');
               const authorImage = useStreamBackend ? (msg.user?.image || null) : (msg.author?.photo_url || null);
               const authorId = useStreamBackend ? msg.user?.id : msg.author_id;
@@ -475,54 +474,49 @@ function FeedContent() {
               const replyCount = useStreamBackend ? (msg.reply_count || 0) : (msg.comments_count || 0);
 
               return (
-                <div key={msg.id} className="bg-[#FAF7F2] rounded-2xl shadow-sm border border-[#C9A66B]/10 overflow-hidden">
-                  {/* Author */}
+                <div key={msg.id} className="glass-card rounded-xl overflow-hidden">
                   <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#355E3B] to-[#6E8B74] flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
                       {authorImage ? (
                         <img src={authorImage} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-white text-xs font-bold">{getInitials(authorName)}</span>
+                        <span className="text-white text-xs font-semibold">{getInitials(authorName)}</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#2B2B2B] truncate">{authorName}</p>
-                      <p className="text-[10px] text-[#5E5E5E]/60">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{authorName}</p>
+                      <p className="text-[10px] text-gray-400">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
                     </div>
                     {feedSection === 'community' && postCategory && (
-                      <span className={`text-[10px] font-semibold px-2 py-1 rounded-full capitalize ${CATEGORY_COLORS[postCategory] || CATEGORY_COLORS.general}`}>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[postCategory] || CATEGORY_COLORS.general}`}>
                         {postCategory.replace('-', ' ')}
                       </span>
                     )}
                     {authorId === user?.id && (
-                      <button onClick={() => handleDelete(msg.id)} className="p-1.5 rounded-lg hover:bg-[#6B2E2E]/8 transition-colors">
-                        <Trash2 size={14} className="text-[#5E5E5E]/40" />
+                      <button onClick={() => handleDelete(msg.id)} className="p-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <Trash2 size={14} className="text-gray-300" />
                       </button>
                     )}
                   </div>
-
-                  {/* Content */}
                   <div className="px-4 pb-3">
                     {postTitle && (
-                      <h3 className="text-base font-bold text-[#2B2B2B] mb-1.5">{postTitle}</h3>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1.5">{postTitle}</h3>
                     )}
-                    <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{postText}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{postText}</p>
                   </div>
-
-                    {/* Actions — different per section */}
-                  <div className="flex items-center border-t border-[#C9A66B]/8 px-4 py-2.5">
+                  <div className="flex items-center border-t border-gray-50 px-4 py-2.5">
                     {feedSection === 'community' ? (
                       <>
                         <button
                           onClick={() => handleLike(msg)}
                           className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                            liked ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#355E3B]'
+                            liked ? 'text-[#1B4332]' : 'text-gray-400 hover:text-[#1B4332]'
                           }`}
                         >
-                          <ArrowUp size={16} className={liked ? 'text-[#355E3B]' : ''} />
+                          <ArrowUp size={16} />
                           <span>{likeCount}</span>
                         </button>
-                        <button className="flex items-center gap-1.5 text-xs font-semibold text-[#5E5E5E]/40 ml-1 transition-colors hover:text-[#5E5E5E]">
+                        <button className="flex items-center gap-1.5 text-xs font-semibold text-gray-300 ml-1 transition-colors hover:text-gray-500">
                           <ArrowDown size={16} />
                         </button>
                       </>
@@ -530,16 +524,16 @@ function FeedContent() {
                       <button
                         onClick={() => handleLike(msg)}
                         className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                          liked ? 'text-[#B76E5D]' : 'text-[#5E5E5E]/60 hover:text-[#B76E5D]'
+                          liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
                         }`}
                       >
-                        <Heart size={16} fill={liked ? '#B76E5D' : 'none'} />
+                        <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
                         <span>{likeCount}</span>
                       </button>
                     )}
                     <button
                       onClick={() => openComments(msg)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-[#5E5E5E]/60 hover:text-[#355E3B] transition-colors ml-5"
+                      className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors ml-5"
                     >
                       <MessageCircle size={16} />
                       <span>{replyCount}</span>
@@ -555,9 +549,9 @@ function FeedContent() {
         <div className="fixed bottom-20 right-4 z-30 sm:right-[calc(50%-12rem)]">
           <button
             onClick={() => { setCreateType(activeTab); setShowCreateSheet(true); }}
-            className="w-14 h-14 bg-gradient-to-br from-[#355E3B] to-[#6E8B74] rounded-full flex items-center justify-center shadow-xl shadow-[#355E3B]/30 hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-90 transition-all"
+            className="w-12 h-12 bg-[#1B4332] rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
           >
-            <Plus size={24} className="text-white" />
+            <Plus size={22} className="text-white" />
           </button>
         </div>
       </div>
@@ -573,14 +567,14 @@ function FeedContent() {
           </div>
 
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-[#2B2B2B]">✨ Create</h2>
+            <h2 className="text-lg font-bold text-gray-900">Create</h2>
             {/* Anonymous toggle — Community only */}
             <button
               onClick={() => setIsAnonymous(!isAnonymous)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
                 isAnonymous
-                  ? 'bg-[#8B5E3C]/10 text-[#8B5E3C] border border-[#8B5E3C]/20'
-                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E]/60'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-500'
               }`}
             >
               {isAnonymous ? <EyeOff size={12} /> : <Eye size={12} />}
@@ -590,7 +584,7 @@ function FeedContent() {
 
           {/* Content Type Selector */}
           <div className="mb-3">
-            <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide mb-1.5">Type</p>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Type</p>
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
               {CONTENT_TYPES.map(ct => {
                 const Icon = ct.icon;
@@ -598,10 +592,10 @@ function FeedContent() {
                   <button
                     key={ct.key}
                     onClick={() => setCreateContentType(ct.key)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                       createContentType === ct.key
-                        ? 'bg-[#355E3B] text-white'
-                        : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
+                        ? 'bg-[#1B4332] text-white'
+                        : 'bg-gray-100 text-gray-500'
                     }`}
                   >
                     <Icon size={13} />
@@ -613,8 +607,8 @@ function FeedContent() {
                 onClick={() => setCreateType(createType === 'discussion' ? 'post' : 'discussion')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   createType === 'discussion'
-                    ? 'bg-[#C9A66B] text-white'
-                    : 'bg-[#EFE6D5]/60 text-[#5E5E5E]'
+                    ? 'bg-[#1B4332] text-white'
+                    : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 <MessagesSquare size={13} />
@@ -628,7 +622,7 @@ function FeedContent() {
               value={createTitle}
               onChange={e => setCreateTitle(e.target.value)}
               placeholder="Discussion title..."
-              className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40"
+              className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#1B4332]/20 placeholder:text-gray-400"
             />
           )}
 
@@ -637,7 +631,7 @@ function FeedContent() {
               value={createTitle}
               onChange={e => setCreateTitle(e.target.value)}
               placeholder="Event name..."
-              className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-sm mb-3 outline-none focus:border-[#1B4332]/30 placeholder:text-gray-400"
             />
           )}
 
@@ -652,12 +646,12 @@ function FeedContent() {
               : "What's on your mind?"
             }
             rows={3}
-            className="w-full px-4 py-3 rounded-xl border border-[#C9A66B]/15 bg-[#EFE6D5]/30 text-sm mb-3 outline-none focus:border-[#355E3B]/30 placeholder:text-[#5E5E5E]/40 resize-none"
+            className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#1B4332]/20 placeholder:text-gray-400 resize-none"
           />
 
           {createType === 'discussion' && (
             <div className="mb-3">
-              <p className="text-xs font-semibold text-[#5E5E5E] mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
                 <Tag size={12} /> Category
               </p>
               <div className="flex flex-wrap gap-2">
@@ -665,10 +659,10 @@ function FeedContent() {
                   <button
                     key={cat}
                     onClick={() => setCreateCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
                       createCategory === cat
-                        ? 'bg-[#355E3B] text-white'
-                        : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
+                        ? 'bg-[#1B4332] text-white'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}
                   >
                     {cat.replace('-', ' ')}
@@ -680,13 +674,12 @@ function FeedContent() {
 
           {/* Audience Picker */}
           <div className="mb-4">
-            <p className="text-xs font-bold text-[#2B2B2B] mb-2 flex items-center gap-1.5">
-              <Users size={13} className="text-[#355E3B]" /> Share With
+            <p className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+              <Users size={13} className="text-[#1B4332]" /> Share With
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {/* Column 1: Degree */}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Degree</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Degree</p>
                 {['1st Degree', '2nd Degree', '3rd+ Degree', 'All'].map(deg => (
                   <button
                     key={deg}
@@ -696,17 +689,16 @@ function FeedContent() {
                     )}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                       audienceDegree.includes(deg)
-                        ? 'bg-[#355E3B] text-white shadow-sm'
-                        : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                        ? 'bg-[#1B4332] text-white'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {deg}
                   </button>
                 ))}
               </div>
-              {/* Column 2: Side */}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold text-[#5E5E5E] uppercase tracking-wide">Side</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Side</p>
                 {['Maternal', 'Paternal', 'In-Laws', 'Spouse', 'All'].map(side => (
                   <button
                     key={side}
@@ -716,8 +708,8 @@ function FeedContent() {
                     )}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                       audienceSide.includes(side)
-                        ? 'bg-[#C9A66B] text-white shadow-sm'
-                        : 'bg-white border border-[#C9A66B]/15 text-[#2B2B2B] hover:bg-[#EFE6D5]/50'
+                        ? 'bg-[#1B4332] text-white'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {side}
@@ -730,7 +722,7 @@ function FeedContent() {
           <button
             onClick={handleCreate}
             disabled={creating || !createContent.trim() || (createType === 'discussion' && !createTitle.trim())}
-            className="w-full py-3.5 bg-gradient-to-r from-[#355E3B] to-[#6E8B74] text-white rounded-2xl text-sm font-bold hover:from-[#2d5033] hover:to-[#5f7a64] active:scale-[0.98] transition-all shadow-lg shadow-[#355E3B]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-[#1B4332] text-white rounded-xl text-sm font-semibold hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {creating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             {creating ? 'Posting...' : 'Publish'}
@@ -747,15 +739,15 @@ function FeedContent() {
           <div className="flex justify-center mb-3">
             <div className="w-10 h-1 bg-gray-200 rounded-full" />
           </div>
-          <h2 className="text-base font-bold text-[#2B2B2B] mb-3">💬 Comments</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-3">Comments</h2>
 
           <div className="flex-1 overflow-y-auto space-y-3 mb-4 min-h-0">
             {loadingReplies ? (
               <div className="flex justify-center py-8">
-                <Loader2 size={20} className="text-[#355E3B] animate-spin" />
+                <Loader2 size={20} className="text-[#1B4332] animate-spin" />
               </div>
             ) : replies.length === 0 ? (
-              <p className="text-sm text-[#5E5E5E] text-center py-6">No comments yet. Be the first!</p>
+              <p className="text-sm text-gray-400 text-center py-6">No comments yet. Be the first!</p>
             ) : (
               replies.map((reply: any) => {
                 const rName = useStreamBackend ? (reply.user?.name || 'User') : (reply.author?.full_name || 'User');
@@ -763,19 +755,19 @@ function FeedContent() {
                 const rText = useStreamBackend ? reply.text : reply.content;
                 return (
                 <div key={reply.id} className="flex gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-[#355E3B]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                     {rImage ? (
                       <img src={rImage} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-[9px] font-bold text-[#355E3B]">{getInitials(rName)}</span>
+                      <span className="text-[9px] font-bold text-[#1B4332]">{getInitials(rName)}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-bold text-[#2B2B2B]">{rName}</span>
-                      <span className="text-[9px] text-[#5E5E5E]/50">{reply.created_at ? formatTime(reply.created_at) : ''}</span>
+                      <span className="text-xs font-bold text-gray-900">{rName}</span>
+                      <span className="text-[9px] text-gray-400">{reply.created_at ? formatTime(reply.created_at) : ''}</span>
                     </div>
-                    <p className="text-sm text-[#2B2B2B] mt-0.5 leading-relaxed">{rText}</p>
+                    <p className="text-sm text-gray-700 mt-0.5 leading-relaxed">{rText}</p>
                   </div>
                 </div>
                 );
@@ -789,12 +781,12 @@ function FeedContent() {
               onChange={e => setNewComment(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAddComment()}
               placeholder="Write a comment..."
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-[#EFE6D5]/50 border border-[#C9A66B]/15 text-sm outline-none placeholder:text-[#5E5E5E]/40 text-[#2B2B2B] focus:border-[#355E3B]/30"
+              className="flex-1 px-4 py-2.5 rounded-xl glass-input text-sm outline-none placeholder:text-gray-400 text-gray-900"
             />
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || sendingComment}
-              className="w-9 h-9 rounded-xl bg-[#355E3B] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all"
+              className="w-9 h-9 rounded-lg bg-[#1B4332] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all"
             >
               {sendingComment ? (
                 <Loader2 size={14} className="text-white animate-spin" />

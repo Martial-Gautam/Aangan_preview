@@ -168,7 +168,7 @@ export default function MemberDetailSheet({
   const initials = person.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const label = LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
-  const isLinked = person.user_id !== null;
+  const isLinked = person.user_id !== null || !!messageTargetId;
   const canEdit = !isSelf;
   const canDelete = !isSelf && !isLinked;
   const canMessage = !!messageTargetId;

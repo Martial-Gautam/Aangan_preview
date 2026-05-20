@@ -40,7 +40,7 @@ export default function HomePage() {
   // Zustand store
   const {
     people, relationships, selfPerson, familyCount, dataLoading,
-    selectedPersonId, searchQuery, centerPersonId, focusHops,
+    selectedPersonId, searchQuery, centerPersonId, centerKey, focusHops,
     setSelectedPerson, setSearchQuery, setCenterPerson, setFocusHops,
     fetchFamily, removeMember,
   } = useFamilyStore();
@@ -213,12 +213,29 @@ export default function HomePage() {
 
   if (loading || dataLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#EFE6D5]/60 via-[#FAF7F2] to-[#EFE6D5]/30 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#355E3B]/15 to-[#6E8B74]/10 flex items-center justify-center animate-pulse shadow-sm">
-            <TreePine size={22} className="text-[#355E3B]" />
+      <div className="h-screen bg-gradient-to-b from-[#0a0e17] to-[#111820] flex flex-col">
+        {/* Skeleton header */}
+        <div className="bg-[#FAF7F2]/5 backdrop-blur-xl px-5 pt-12 pb-4 flex-shrink-0 border-b border-white/5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="skeleton w-12 h-2 !bg-white/10" />
+              <div className="skeleton w-32 h-5 !bg-white/10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="skeleton w-20 h-7 rounded-full !bg-white/10" />
+              <div className="skeleton w-16 h-8 rounded-xl !bg-white/10" />
+            </div>
           </div>
-          <p className="text-sm text-[#5E5E5E] font-medium">Loading your family...</p>
+        </div>
+        {/* Skeleton tree area */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="skeleton w-14 h-14 rounded-full !bg-white/10" />
+            <div className="skeleton w-24 h-3 !bg-white/10" />
+            <div className="flex gap-8 mt-4">
+              {[1,2,3].map(i => <div key={i} className="skeleton w-9 h-9 rounded-full !bg-white/10" />)}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -323,40 +340,41 @@ export default function HomePage() {
               onNodeClick={(id) => setSelectedPerson(id)}
               onCenterChange={setCenterPerson}
               centerPersonId={centerPersonId || selfPerson.id}
+              centerKey={centerKey}
               maxHops={focusHops}
               searchQuery={searchQuery}
             />
 
-            {/* Cosmos Controls — positioned above bottom nav */}
-            <div className="absolute bottom-24 left-4 z-20 flex flex-col gap-2" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
-              {/* Re-center on Me — ALWAYS visible, most prominent */}
+            {/* Cosmos Controls — glassmorphism panel */}
+            <div className="absolute bottom-24 left-4 z-20 flex flex-col gap-2" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
+              {/* Re-center button */}
               <button
                 onClick={() => setCenterPerson(selfPerson.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold active:scale-95 transition-all ${
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl shadow-xl text-xs font-bold active:scale-90 transition-all duration-200 ${
                   centerPersonId && centerPersonId !== selfPerson.id
-                    ? 'bg-[#355E3B] text-white border border-[#C9A66B]/30 shadow-[#355E3B]/40'
-                    : 'bg-[#0a0e17]/80 backdrop-blur-lg text-[#FAF7F2]/60 border border-white/10'
+                    ? 'bg-gradient-to-r from-[#355E3B] to-[#4a7a52] text-white shadow-[#355E3B]/40 border border-[#C9A66B]/20'
+                    : 'bg-[#0d1117]/85 backdrop-blur-2xl text-[#FAF7F2]/70 border border-white/8 hover:bg-[#0d1117]/95 hover:text-[#FAF7F2]'
                 }`}
               >
-                <Home size={12} /> {centerPersonId && centerPersonId !== selfPerson.id ? 'Re-center on Me' : 'Centered'}
+                <Home size={13} /> {centerPersonId && centerPersonId !== selfPerson.id ? 'Go Home' : 'My View'}
               </button>
 
-              {/* Hop radius controls */}
-              <div className="flex items-center gap-1 bg-[#0a0e17]/80 backdrop-blur-lg rounded-xl shadow-lg border border-white/10 px-2 py-1.5">
+              {/* Hop radius — compact pill */}
+              <div className="flex items-center gap-1.5 bg-[#0d1117]/85 backdrop-blur-2xl rounded-2xl shadow-xl border border-white/8 px-2.5 py-2">
                 <button
                   onClick={() => setFocusHops(focusHops - 1)}
                   disabled={focusHops <= 1}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-90"
                 >
                   <ZoomOut size={12} />
                 </button>
-                <span className="text-[9px] font-bold text-[#FAF7F2]/70 min-w-[40px] text-center">
+                <span className="text-[9px] font-bold text-[#FAF7F2]/60 min-w-[36px] text-center tabular-nums">
                   {focusHops} {focusHops === 1 ? 'ring' : 'rings'}
                 </span>
                 <button
                   onClick={() => setFocusHops(focusHops + 1)}
                   disabled={focusHops >= 5}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#C9A66B] hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-90"
                 >
                   <ZoomIn size={12} />
                 </button>

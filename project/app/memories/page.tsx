@@ -331,7 +331,7 @@ export default function MemoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#EFE6D5]/45 via-[#FAF7F2] to-[#EFE6D5]/40 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-[#EFE6D5]/45 via-[#FAF7F2] to-[#EFE6D5]/40 pb-24 animate-pageEnter">
       <div className="max-w-sm mx-auto">
         <div className="bg-[#FAF7F2] px-5 pt-11 pb-4 shadow-sm border-b border-[#C9A66B]/12">
           <div className="flex items-center gap-2">

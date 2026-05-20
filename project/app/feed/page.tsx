@@ -6,8 +6,9 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  Heart, MessageCircle, Send, Plus, Loader2, ArrowUp,
-  Newspaper, MessagesSquare, Tag, Trash2, Image, Film, Mail, Users
+  Heart, MessageCircle, Send, Plus, Loader2, ArrowUp, ArrowDown,
+  Newspaper, MessagesSquare, Tag, Trash2, Image, Film, Mail, Users,
+  Eye, EyeOff, Sparkles, TrendingUp, Camera
 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
@@ -84,8 +85,10 @@ function FeedContent() {
   const [creating, setCreating] = useState(false);
   const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
   const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
-  // Content type filter
+  // Feed sections
+  const [feedSection, setFeedSection] = useState<'stories' | 'community'>('stories');
   const [activeContentType, setActiveContentType] = useState<ContentType>('post');
 
   // Comments
@@ -221,7 +224,7 @@ function FeedContent() {
   const handleLike = async (post: any) => {
     if (useStreamBackend && feedChannel) {
       try {
-        const rt = activeTab === 'discussion' ? 'upvote' : 'love';
+        const rt = feedSection === 'community' ? 'upvote' : 'love';
         const has = post.own_reactions?.some((r: any) => r.type === rt);
         if (has) await feedChannel.deleteReaction(post.id, rt);
         else await feedChannel.sendReaction(post.id, { type: rt });
@@ -340,62 +343,119 @@ function FeedContent() {
   // ─── Render ─────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="bg-[#FAF7F2] px-6 pt-12 pb-3 shadow-sm border-b border-[#C9A66B]/10">
-          <h1 className="text-xl font-bold text-[#2B2B2B]">Family Feed</h1>
-          <p className="text-xs text-[#5E5E5E] mt-0.5">Share stories, memories & discussions</p>
+        <div className="bg-[#FAF7F2] px-5 pt-12 pb-3 shadow-sm border-b border-[#C9A66B]/10">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="text-xl font-bold text-[#2B2B2B]">Feed</h1>
+              <p className="text-[10px] text-[#5E5E5E]/60 font-medium">Share with your family</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-semibold text-[#5E5E5E]/40 uppercase tracking-wider">Section</span>
+            </div>
+          </div>
 
-          {/* Content Type Tabs */}
-          <div className="flex gap-1.5 mt-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-            {CONTENT_TYPES.map(ct => {
-              const Icon = ct.icon;
-              return (
-                <button
-                  key={ct.key}
-                  onClick={() => { setActiveContentType(ct.key); setActiveTab('post'); }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
-                    activeContentType === ct.key
-                      ? 'bg-[#355E3B] text-white shadow-md shadow-[#355E3B]/20'
-                      : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
-                  }`}
-                >
-                  <Icon size={14} />
-                  {ct.label}
-                </button>
-              );
-            })}
+          {/* Two-Section Tabs */}
+          <div className="flex gap-2">
             <button
-              onClick={() => setActiveTab(activeTab === 'discussion' ? 'post' : 'discussion')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
-                activeTab === 'discussion'
-                  ? 'bg-[#C9A66B] text-white shadow-md shadow-[#C9A66B]/20'
+              onClick={() => { setFeedSection('stories'); setActiveTab('post'); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                feedSection === 'stories'
+                  ? 'bg-gradient-to-r from-[#355E3B] to-[#4a7a52] text-white shadow-lg shadow-[#355E3B]/20'
                   : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
               }`}
             >
-              <MessagesSquare size={14} />
-              Discussions
+              <Camera size={15} />
+              Stories
+            </button>
+            <button
+              onClick={() => { setFeedSection('community'); setActiveTab('post'); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                feedSection === 'community'
+                  ? 'bg-gradient-to-r from-[#C9A66B] to-[#8B5E3C] text-white shadow-lg shadow-[#C9A66B]/20'
+                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E] hover:bg-[#EFE6D5]'
+              }`}
+            >
+              <MessagesSquare size={15} />
+              Community
             </button>
           </div>
+
+          {/* Sub-tabs for Stories section */}
+          {feedSection === 'stories' && (
+            <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
+              {CONTENT_TYPES.map(ct => {
+                const Icon = ct.icon;
+                return (
+                  <button
+                    key={ct.key}
+                    onClick={() => setActiveContentType(ct.key)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
+                      activeContentType === ct.key
+                        ? 'bg-[#355E3B]/10 text-[#355E3B] border border-[#355E3B]/20'
+                        : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
+                    }`}
+                  >
+                    <Icon size={12} />
+                    {ct.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Sub-tabs for Community section */}
+          {feedSection === 'community' && (
+            <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-0.5 scrollbar-hide">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCreateCategory(cat)}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold capitalize transition-all whitespace-nowrap flex-shrink-0 ${
+                    createCategory === cat
+                      ? CATEGORY_COLORS[cat] + ' border border-current/10'
+                      : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
+                  }`}
+                >
+                  {cat.replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Posts */}
         <div className="px-4 space-y-3 mt-4">
           {loadingPosts ? (
-            <div className="flex justify-center py-16">
-              <Loader2 size={24} className="text-[#355E3B] animate-spin" />
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#C9A66B]/10 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="skeleton w-9 h-9 rounded-full" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="skeleton w-24 h-2.5" />
+                      <div className="skeleton w-14 h-2" />
+                    </div>
+                  </div>
+                  <div className="skeleton w-full h-2.5" />
+                  <div className="skeleton w-3/4 h-2.5" />
+                </div>
+              ))}
             </div>
           ) : posts.length === 0 ? (
             <div className="bg-[#FAF7F2] rounded-3xl p-8 flex flex-col items-center text-center shadow-sm border border-[#C9A66B]/15">
               <div className="w-16 h-16 rounded-full bg-[#355E3B]/8 flex items-center justify-center mb-4">
-                {activeTab === 'post' ? (
-                  <Newspaper size={28} className="text-[#6E8B74]" />
+                {feedSection === 'stories' ? (
+                  <Camera size={28} className="text-[#6E8B74]" />
                 ) : (
                   <MessagesSquare size={28} className="text-[#6E8B74]" />
                 )}
               </div>
-              <h3 className="font-bold text-[#2B2B2B] mb-1">No {activeTab === 'post' ? 'posts' : 'discussions'} yet</h3>
+              <h3 className="font-bold text-[#2B2B2B] mb-1">
+                No {feedSection === 'stories' ? 'stories' : 'posts'} yet
+              </h3>
               <p className="text-sm text-[#5E5E5E] leading-relaxed">
                 Be the first to share something with your family!
               </p>
@@ -409,7 +469,7 @@ function FeedContent() {
               const postTitle = useStreamBackend ? msg.post_title : msg.title;
               const postText = useStreamBackend ? msg.text : msg.content;
               const postCategory = useStreamBackend ? (msg.post_category || 'general') : (msg.category || 'general');
-              const reactionType = activeTab === 'discussion' ? 'upvote' : 'love';
+              const reactionType = feedSection === 'community' ? 'upvote' : 'love';
               const likeCount = useStreamBackend ? getReactionCount(msg, reactionType) : (msg.likes_count || 0);
               const liked = useStreamBackend ? hasMyReaction(msg, reactionType) : (msg.liked_by_me || false);
               const replyCount = useStreamBackend ? (msg.reply_count || 0) : (msg.comments_count || 0);
@@ -429,7 +489,7 @@ function FeedContent() {
                       <p className="text-sm font-bold text-[#2B2B2B] truncate">{authorName}</p>
                       <p className="text-[10px] text-[#5E5E5E]/60">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
                     </div>
-                    {activeTab === 'discussion' && postCategory && (
+                    {feedSection === 'community' && postCategory && (
                       <span className={`text-[10px] font-semibold px-2 py-1 rounded-full capitalize ${CATEGORY_COLORS[postCategory] || CATEGORY_COLORS.general}`}>
                         {postCategory.replace('-', ' ')}
                       </span>
@@ -449,18 +509,23 @@ function FeedContent() {
                     <p className="text-sm text-[#2B2B2B] leading-relaxed whitespace-pre-wrap">{postText}</p>
                   </div>
 
-                  {/* Actions */}
+                    {/* Actions — different per section */}
                   <div className="flex items-center border-t border-[#C9A66B]/8 px-4 py-2.5">
-                    {activeTab === 'discussion' ? (
-                      <button
-                        onClick={() => handleLike(msg)}
-                        className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                          liked ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#355E3B]'
-                        }`}
-                      >
-                        <ArrowUp size={16} className={liked ? 'text-[#355E3B]' : ''} />
-                        <span>{likeCount}</span>
-                      </button>
+                    {feedSection === 'community' ? (
+                      <>
+                        <button
+                          onClick={() => handleLike(msg)}
+                          className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                            liked ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#355E3B]'
+                          }`}
+                        >
+                          <ArrowUp size={16} className={liked ? 'text-[#355E3B]' : ''} />
+                          <span>{likeCount}</span>
+                        </button>
+                        <button className="flex items-center gap-1.5 text-xs font-semibold text-[#5E5E5E]/40 ml-1 transition-colors hover:text-[#5E5E5E]">
+                          <ArrowDown size={16} />
+                        </button>
+                      </>
                     ) : (
                       <button
                         onClick={() => handleLike(msg)}
@@ -507,7 +572,21 @@ function FeedContent() {
             <div className="w-10 h-1 bg-gray-200 rounded-full" />
           </div>
 
-          <h2 className="text-lg font-bold text-[#2B2B2B] mb-3">✨ Create</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-[#2B2B2B]">✨ Create</h2>
+            {/* Anonymous toggle — Community only */}
+            <button
+              onClick={() => setIsAnonymous(!isAnonymous)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${
+                isAnonymous
+                  ? 'bg-[#8B5E3C]/10 text-[#8B5E3C] border border-[#8B5E3C]/20'
+                  : 'bg-[#EFE6D5]/60 text-[#5E5E5E]/60'
+              }`}
+            >
+              {isAnonymous ? <EyeOff size={12} /> : <Eye size={12} />}
+              {isAnonymous ? 'Anonymous' : 'Visible'}
+            </button>
+          </div>
 
           {/* Content Type Selector */}
           <div className="mb-3">

@@ -20,8 +20,9 @@ interface FamilyState {
   quickAddTargetId: string | null;
 
   // Focus Mode
-  centerPersonId: string | null;  // who the view is centered on
-  focusHops: number;               // how many hops to render (default 2)
+  centerPersonId: string | null;
+  centerKey: number;                // incrementing key to force re-center
+  focusHops: number;
 
   // Actions
   setSelectedPerson: (id: string | null) => void;
@@ -47,6 +48,7 @@ const initialState = {
   searchQuery: '',
   quickAddTargetId: null as string | null,
   centerPersonId: null as string | null,
+  centerKey: 0,
   focusHops: 3,
 };
 
@@ -56,7 +58,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
   setSelectedPerson: (id) => set({ selectedPersonId: id }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setQuickAddTarget: (id) => set({ quickAddTargetId: id }),
-  setCenterPerson: (id) => set({ centerPersonId: id }),
+  setCenterPerson: (id) => set((s) => ({ centerPersonId: id, centerKey: s.centerKey + 1 })),
   setFocusHops: (n) => set({ focusHops: Math.max(1, Math.min(5, n)) }),
 
   fetchFamily: async (userId, accessToken) => {

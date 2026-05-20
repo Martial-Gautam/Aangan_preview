@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useCallback, Suspense } from 'react';
+import { useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -24,18 +24,10 @@ function CameraAnimator({
 }) {
   const { camera } = useThree();
   const targetRef = useRef(new THREE.Vector3(...targetPosition));
-  const controlsRef = useRef<any>(null);
 
-  // Update target when prop changes
   useMemo(() => {
     targetRef.current.set(...targetPosition);
   }, [targetPosition]);
-
-  useFrame(() => {
-    // We don't directly move the camera here —
-    // OrbitControls handles that. But we could use this
-    // for future animated transitions if needed.
-  });
 
   return null;
 }
@@ -49,6 +41,7 @@ interface SceneProps {
   onNodeClick: (personId: string) => void;
   onCenterChange: (personId: string) => void;
   centerPersonId: string;
+  centerKey: number;
   maxHops: number;
   searchQuery: string;
 }
@@ -60,6 +53,7 @@ function Scene({
   onNodeClick,
   onCenterChange,
   centerPersonId,
+  centerKey,
   maxHops,
   searchQuery,
 }: SceneProps) {
@@ -103,19 +97,39 @@ function Scene({
   const searchLower = searchQuery.toLowerCase().trim();
   const searchActive = searchLower.length > 0;
 
+  // Smooth camera animation target
+  const cameraTargetRef = useRef(new THREE.Vector3(0, 0, 0));
+  const isAnimatingRef = useRef(false);
+
+  // Animate camera to center when centerPersonId changes
+  useEffect(() => {
+    const pos = cosmosPositions.get(centerPersonId);
+    if (pos && controlsRef.current) {
+      cameraTargetRef.current.set(pos.x, pos.z, pos.y);
+      isAnimatingRef.current = true;
+    }
+  }, [centerPersonId, centerKey, cosmosPositions]);
+
+  // Smooth lerp camera animation each frame
+  useFrame(() => {
+    if (isAnimatingRef.current && controlsRef.current) {
+      const controls = controlsRef.current;
+      controls.target.lerp(cameraTargetRef.current, 0.08);
+      controls.update();
+
+      // Stop animating once close enough
+      if (controls.target.distanceTo(cameraTargetRef.current) < 0.01) {
+        controls.target.copy(cameraTargetRef.current);
+        controls.update();
+        isAnimatingRef.current = false;
+      }
+    }
+  });
+
   // Handle center change + camera animation
   const handleCenterChange = useCallback((personId: string) => {
     onCenterChange(personId);
-
-    // Animate camera to look at the new center
-    const pos = cosmosPositions.get(personId);
-    if (pos && controlsRef.current) {
-      const target = new THREE.Vector3(pos.x, pos.z, pos.y);
-      // Smooth lerp to target via OrbitControls
-      controlsRef.current.target.copy(target);
-      controlsRef.current.update();
-    }
-  }, [onCenterChange, cosmosPositions]);
+  }, [onCenterChange]);
 
   // Build visible nodes
   const visiblePeople = useMemo(() =>
@@ -285,6 +299,7 @@ interface FamilyCosmosProps {
   onNodeClick: (personId: string) => void;
   onCenterChange: (personId: string) => void;
   centerPersonId: string;
+  centerKey: number;
   maxHops: number;
   searchQuery: string;
 }

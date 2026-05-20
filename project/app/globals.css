@@ -58,6 +58,16 @@
   border-radius: 2px;
 }
 
+/* ─── Three.js HTML overlay reset ─── */
+/* Removes black lines/borders from Html overlays inside Canvas */
+[data-testid="html"],
+.r3f-html,
+div[style*="transform: translate3d"] {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* React Flow Styles */
 .react-flow__renderer {
   background: transparent;
@@ -65,26 +75,23 @@
 .react-flow__background {
   background-color: transparent;
 }
-/* Hide default controls since we use custom Focus Mode controls */
 .react-flow__controls {
   display: none !important;
 }
-/* Edge labels should inherit proper font */
 .react-flow__edge-text {
   font-family: 'Inter', system-ui, sans-serif;
 }
-/* Smoother edge paths */
 .react-flow__edge-path {
   transition: stroke 0.2s ease, stroke-width 0.2s ease;
 }
-/* Node selection outline */
 .react-flow__node.selected {
   outline: 2px solid #355E3B;
   outline-offset: 2px;
   border-radius: 16px;
 }
 
-/* Claim modal animations */
+/* ─── Premium Animations ─── */
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -101,6 +108,16 @@
   100% { transform: scale(1); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out;
 }
@@ -111,4 +128,25 @@
 
 .animate-bounceIn {
   animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-pageEnter {
+  animation: pageEnter 0.3s ease-out;
+}
+
+/* ─── Skeleton Shimmer ─── */
+.skeleton {
+  background: linear-gradient(90deg, hsl(36 25% 90%) 25%, hsl(36 25% 95%) 50%, hsl(36 25% 90%) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ─── Scrollbar hide ─── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

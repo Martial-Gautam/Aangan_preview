@@ -271,8 +271,28 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#355E3B] border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-[#EFE6D5]/40">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-[#FAF7F2] px-6 pt-14 pb-6 border-b border-[#C9A66B]/10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="skeleton w-20 h-5" />
+              <div className="skeleton w-16 h-7 rounded-xl" />
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="skeleton w-24 h-24 rounded-full" />
+              <div className="skeleton w-28 h-4 mt-3" />
+              <div className="skeleton w-36 h-3 mt-1.5" />
+            </div>
+          </div>
+          <div className="px-4 py-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="skeleton h-20 rounded-2xl" />
+              <div className="skeleton h-20 rounded-2xl" />
+            </div>
+            <div className="skeleton h-48 rounded-3xl" />
+          </div>
+        </div>
+        <BottomNav />
       </div>
     );
   }
@@ -281,7 +301,7 @@ export default function ProfilePage() {
   const initials = (profile?.full_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
       <div className="max-w-sm mx-auto">
         <div className="bg-[#FAF7F2] px-6 pt-12 pb-6 shadow-sm border-b border-[#C9A66B]/10">
           <div className="flex items-center justify-between mb-6">

@@ -44,29 +44,40 @@ export default function BottomNav() {
   }, [session]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#FAF7F2]/90 backdrop-blur-xl border-t border-[#C9A66B]/15">
-      <div className="max-w-sm mx-auto flex items-center justify-around px-2" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-2xl border-t border-[#C9A66B]/10 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+      <div className="max-w-sm mx-auto flex items-center justify-around px-1" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-1 py-3 px-2.5 rounded-2xl transition-all relative ${
-                active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60 hover:text-[#5E5E5E]'
+              prefetch={true}
+              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-2xl transition-all duration-200 relative active:scale-90 ${
+                active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/50 hover:text-[#5E5E5E]/80'
               }`}
             >
-              <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-[#355E3B]/8' : ''}`}>
-                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+              <div className={`p-1.5 rounded-xl transition-all duration-300 ${
+                active
+                  ? 'bg-[#355E3B]/10 shadow-sm shadow-[#355E3B]/5'
+                  : ''
+              }`}>
+                <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
                 {href === '/messages' && unreadCount > 0 && (
-                  <span className="absolute top-2.5 right-3 min-w-[18px] h-[18px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-white leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  <span className="absolute top-1 right-1.5 min-w-[16px] h-[16px] bg-[#B76E5D] rounded-full border-2 border-[#FAF7F2] flex items-center justify-center shadow-sm">
+                    <span className="text-[8px] font-bold text-white leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-semibold tracking-wide ${active ? 'text-[#355E3B]' : 'text-[#5E5E5E]/60'}`}>
+              <span className={`text-[9px] font-semibold tracking-wide transition-all duration-200 ${
+                active ? 'text-[#355E3B] opacity-100' : 'text-[#5E5E5E]/50 opacity-80'
+              }`}>
                 {label}
               </span>
+              {/* Active indicator pill */}
+              {active && (
+                <div className="absolute -bottom-0.5 w-5 h-[3px] rounded-full bg-[#355E3B] shadow-sm shadow-[#355E3B]/30" />
+              )}
             </Link>
           );
         })}

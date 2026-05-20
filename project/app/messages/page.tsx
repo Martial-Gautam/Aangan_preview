@@ -316,11 +316,26 @@ function MessagesContent() {
 
   if (authLoading || (!streamReady && useStream)) {
     return (
-      <div className="min-h-screen bg-[#EFE6D5]/40 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 size={24} className="text-[#355E3B] animate-spin" />
-          <p className="text-xs text-[#5E5E5E]">Connecting...</p>
+      <div className="min-h-screen bg-[#EFE6D5]/40">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-[#FAF7F2] px-6 pt-14 pb-4 border-b border-[#C9A66B]/10">
+            <div className="skeleton w-28 h-5 mb-1" />
+            <div className="skeleton w-20 h-3" />
+          </div>
+          <div className="px-4 pt-4 space-y-2">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-[#FAF7F2]">
+                <div className="skeleton w-11 h-11 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="skeleton w-24 h-2.5" />
+                  <div className="skeleton w-36 h-2" />
+                </div>
+                <div className="skeleton w-10 h-2" />
+              </div>
+            ))}
+          </div>
         </div>
+        <BottomNav />
       </div>
     );
   }
@@ -443,7 +458,7 @@ function MessagesContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24">
+    <div className="min-h-screen bg-[#EFE6D5]/40 pb-24 animate-pageEnter">
       <div className="max-w-sm mx-auto">
         {/* Header */}
         <div className="bg-[#FAF7F2] px-6 pt-12 pb-4 shadow-sm border-b border-[#C9A66B]/10">

@@ -72,7 +72,7 @@ export default function CosmosEdge({
         color={style.color}
         lineWidth={style.lineWidth}
         transparent
-        opacity={isCrossTree ? 0.3 : 0.5}
+        opacity={isCrossTree ? 0.2 : 0.35}
         dashed={style.dashed}
         dashScale={style.dashed ? 3 : undefined}
         dashSize={style.dashed ? 0.3 : undefined}
@@ -88,7 +88,7 @@ export default function CosmosEdge({
       color={style.color}
       lineWidth={style.lineWidth}
       transparent
-      opacity={isCrossTree ? 0.25 : 0.45}
+      opacity={isCrossTree ? 0.15 : 0.3}
       dashed={style.dashed}
       dashScale={style.dashed ? 3 : undefined}
       dashSize={style.dashed ? 0.3 : undefined}

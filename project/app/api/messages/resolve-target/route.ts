@@ -38,12 +38,13 @@ export async function GET(req: NextRequest) {
     }
 
     let targetUserId: string | null = person.user_id || null;
-    let source: 'people_user_id' | 'connection_request' | 'email_match' | 'phone_match' | null =
+    let source: 'people_user_id' | 'connection_request' | 'email_match' | 'phone_match' | 'user_connection' | null =
       targetUserId ? 'people_user_id' : null;
 
-    // If this is my member and not directly linked yet, resolve via pending/direct match records.
-    if (!targetUserId && person.owner_id === user.id) {
-      const { data: requestMatch } = await supabaseAdmin
+    // Step 1: Check connection_requests in BOTH directions
+    if (!targetUserId) {
+      // Check requests FROM current user about this person
+      const { data: outbound } = await supabaseAdmin
         .from('connection_requests')
         .select('to_user_id')
         .eq('from_user_id', user.id)
@@ -53,13 +54,71 @@ export async function GET(req: NextRequest) {
         .limit(1)
         .maybeSingle();
 
-      if (requestMatch?.to_user_id) {
-        targetUserId = requestMatch.to_user_id;
+      if (outbound?.to_user_id) {
+        targetUserId = outbound.to_user_id;
         source = 'connection_request';
       }
     }
 
-    // Fallback email match against auth users.
+    if (!targetUserId) {
+      // Check requests TO current user about this person
+      const { data: inbound } = await supabaseAdmin
+        .from('connection_requests')
+        .select('from_user_id')
+        .eq('to_user_id', user.id)
+        .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
+        .not('from_user_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (inbound?.from_user_id) {
+        targetUserId = inbound.from_user_id;
+        source = 'connection_request';
+      }
+    }
+
+    // Step 2: Check user_connections — find any user connected to current user
+    // who owns a person record matching this personId
+    if (!targetUserId) {
+      const { data: connections } = await supabaseAdmin
+        .from('user_connections')
+        .select('user_id_1, user_id_2')
+        .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
+
+      if (connections && connections.length > 0) {
+        const connectedUserIds = connections.map(c =>
+          c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1
+        ).filter(Boolean);
+
+        // Check if any connected user owns a self-person whose name matches
+        // or if the person record's owner is a connected user
+        if (connectedUserIds.length > 0 && person.owner_id !== user.id) {
+          // Person is in someone else's tree — check if owner is connected
+          if (connectedUserIds.includes(person.owner_id)) {
+            targetUserId = person.owner_id;
+            source = 'user_connection';
+          }
+        }
+
+        // Also check if any connected user has claimed this person
+        if (!targetUserId) {
+          const { data: claimedCheck } = await supabaseAdmin
+            .from('people')
+            .select('user_id')
+            .eq('id', personId)
+            .not('user_id', 'is', null)
+            .maybeSingle();
+
+          if (claimedCheck?.user_id && claimedCheck.user_id !== user.id) {
+            targetUserId = claimedCheck.user_id;
+            source = 'people_user_id';
+          }
+        }
+      }
+    }
+
+    // Step 3: Fallback email match against auth users.
     if (!targetUserId && person.email) {
       const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
       const matchedUser = (usersPage?.users || []).find(
@@ -74,7 +133,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fallback phone match against profile records.
+    // Step 4: Fallback phone match against profile records.
     if (!targetUserId && person.phone_number) {
       const { data: profileMatch } = await supabaseAdmin
         .from('profiles')

@@ -15,12 +15,12 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  self: 'bg-[#1B4332] text-white',
-  father: 'bg-[#1B4332]/10 text-[#1B4332]',
-  mother: 'bg-[#1B4332]/10 text-[#1B4332]',
-  sibling: 'bg-[#1B4332]/10 text-[#1B4332]',
-  spouse: 'bg-[#1B4332]/10 text-[#1B4332]',
-  child: 'bg-[#1B4332]/10 text-[#1B4332]',
+  self: 'bg-emerald-500 text-white',
+  father: 'bg-blue-500/15 text-blue-600',
+  mother: 'bg-violet-500/15 text-violet-600',
+  sibling: 'bg-amber-500/15 text-amber-600',
+  spouse: 'bg-pink-500/15 text-pink-600',
+  child: 'bg-teal-500/15 text-teal-600',
   connection: 'bg-[#1B4332]/10 text-[#1B4332]',
   relative: 'bg-gray-100 text-gray-500',
 };
@@ -211,21 +211,27 @@ export default function MemberDetailSheet({
         </div>
 
         <div className="flex flex-col items-center text-center">
-          {/* Avatar */}
+          {/* Avatar — gradient ring */}
           <div className="relative mb-3">
-            <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center text-xl font-bold overflow-hidden shadow-lg ${
+            <div className={`w-[84px] h-[84px] rounded-full p-[3px] ${
               isSelf
-                ? 'bg-gradient-to-br from-[#1B4332] to-[#2d5033] border-[#1B4332] shadow-[#1B4332]/25'
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200/50 shadow-black/8'
+                ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600'
+                : 'bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200'
             }`}>
-              {person.photo_url ? (
-                <img src={person.photo_url} alt={person.full_name} className="w-full h-full object-cover" />
-              ) : (
-                <span className={isSelf ? 'text-white' : 'text-gray-500'}>{initials}</span>
-              )}
+              <div className={`w-full h-full rounded-full flex items-center justify-center text-xl font-bold overflow-hidden ${
+                isSelf
+                  ? 'bg-gradient-to-br from-[#1B4332] to-[#2d5033]'
+                  : 'bg-white'
+              }`}>
+                {person.photo_url ? (
+                  <img src={person.photo_url} alt={person.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className={isSelf ? 'text-white' : 'text-gray-500'}>{initials}</span>
+                )}
+              </div>
             </div>
             {isLinked && !isSelf && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
                 <LinkIcon size={10} className="text-white" />
               </div>
             )}
@@ -268,41 +274,43 @@ export default function MemberDetailSheet({
             </div>
           )}
 
-          {/* Immediate Family */}
+          {/* Immediate Family — horizontal scroll (Instagram-style) */}
           {immediateFamily.length > 0 && (
             <div className="w-full mt-5">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 text-left">
+              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-3 text-left px-1">
                 {isSelf ? 'Your Family' : `${person.full_name.split(' ')[0]}'s Family`}
               </h3>
-              <div className="space-y-1.5">
-                {immediateFamily.slice(0, 6).map(({ person: familyMember, relType }) => (
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+                {immediateFamily.slice(0, 8).map(({ person: familyMember, relType }) => (
                   <button
                     key={familyMember.id}
                     onClick={() => {
                       onClose();
                       setTimeout(() => useFamilyStore.getState().setSelectedPerson(familyMember.id), 300);
                     }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-100/40 transition-colors text-left"
+                    className="flex flex-col items-center gap-1.5 min-w-[60px] group"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden flex-shrink-0">
+                    <div className="w-[50px] h-[50px] rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden flex-shrink-0 ring-2 ring-gray-100 group-hover:ring-[#1B4332]/20 transition-all">
                       {familyMember.photo_url ? (
                         <img src={familyMember.photo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         familyMember.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{familyMember.full_name}</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100/60 px-2 py-0.5 rounded-full capitalize">
+                    <span className="text-[10px] font-semibold text-gray-700 truncate max-w-[60px] text-center">
+                      {familyMember.full_name.split(' ')[0]}
+                    </span>
+                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">
                       {relType}
                     </span>
                   </button>
                 ))}
-                {immediateFamily.length > 6 && (
-                  <p className="text-xs text-gray-400 text-center py-1">
-                    +{immediateFamily.length - 6} more
-                  </p>
+                {immediateFamily.length > 8 && (
+                  <div className="flex flex-col items-center justify-center min-w-[60px]">
+                    <div className="w-[50px] h-[50px] rounded-full bg-gray-50 flex items-center justify-center">
+                      <span className="text-xs font-bold text-gray-400">+{immediateFamily.length - 8}</span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -328,59 +336,76 @@ export default function MemberDetailSheet({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="w-full mt-5 space-y-2">
-            {canEdit && (
-              <button
-                onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
-                className="w-full py-3 px-4 rounded-2xl bg-[#1B4332] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all shadow-lg shadow-[#1B4332]/20"
-              >
-                <Pencil size={16} /> Edit Member
-              </button>
-            )}
-
-            {/* Quick Add */}
-            <button
-              onClick={() => {
-                onClose();
-                setTimeout(() => setQuickAddTarget(personId!), 300);
-              }}
-              className="w-full py-3 px-4 rounded-2xl bg-[#1B4332]/8 text-[#1B4332] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1B4332]/15 active:scale-[0.98] transition-all border border-[#1B4332]/10"
-            >
-              <UserPlus size={16} /> Add Their Relative
-            </button>
-
-            {!isSelf && (
-              <>
+          {/* Actions — grouped card */}
+          <div className="w-full mt-5">
+            <div className="bg-gray-50/60 rounded-2xl overflow-hidden">
+              {canEdit && (
                 <button
-                  onClick={() => {
-                    if (!messageTargetId) return;
-                    onClose();
-                    router.push(`/messages?to=${messageTargetId}`);
-                  }}
-                  disabled={!canMessage || resolvingTarget}
-                  className={`w-full py-3 px-4 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all border ${
-                    canMessage
-                      ? 'bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/15 active:scale-[0.98] border-[#1B4332]/15'
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  }`}
+                  onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
+                  className="w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 hover:bg-gray-100/60 active:bg-gray-100 transition-all text-gray-900"
                 >
-                  <MessageCircle size={16} /> Send Message
+                  <div className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center flex-shrink-0">
+                    <Pencil size={14} className="text-white" />
+                  </div>
+                  Edit Member
                 </button>
-                {!canMessage && !resolvingTarget && (
-                  <p className="text-[11px] text-gray-400 text-center px-2">
-                    No linked Aangan account found yet
-                  </p>
-                )}
-              </>
-            )}
+              )}
+
+              {canEdit && <div className="h-px bg-gray-200/50 mx-4" />}
+
+              {/* Quick Add */}
+              <button
+                onClick={() => {
+                  onClose();
+                  setTimeout(() => setQuickAddTarget(personId!), 300);
+                }}
+                className="w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 hover:bg-gray-100/60 active:bg-gray-100 transition-all text-gray-900"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
+                  <UserPlus size={14} className="text-[#1B4332]" />
+                </div>
+                Add Their Relative
+              </button>
+
+              {!isSelf && (
+                <>
+                  <div className="h-px bg-gray-200/50 mx-4" />
+                  <button
+                    onClick={() => {
+                      if (!messageTargetId) return;
+                      onClose();
+                      router.push(`/messages?to=${messageTargetId}`);
+                    }}
+                    disabled={!canMessage || resolvingTarget}
+                    className={`w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 transition-all ${
+                      canMessage
+                        ? 'hover:bg-gray-100/60 active:bg-gray-100 text-gray-900'
+                        : 'text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      canMessage ? 'bg-[#1B4332]/10' : 'bg-gray-100'
+                    }`}>
+                      <MessageCircle size={14} className={canMessage ? 'text-[#1B4332]' : 'text-gray-400'} />
+                    </div>
+                    Send Message
+                  </button>
+                  {!canMessage && !resolvingTarget && (
+                    <p className="text-[10px] text-gray-400 text-center px-4 pb-2 -mt-1">
+                      No linked Aangan account found yet
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
 
             {canDelete && (
               <button
                 onClick={handleDelete}
-                className="w-full py-3 px-4 rounded-2xl bg-red-500/6 text-red-600 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-red-500/12 active:scale-[0.98] transition-all"
+                className="w-full mt-2 py-3 px-4 rounded-2xl text-[13px] font-semibold flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 active:bg-red-100/60 transition-all"
               >
-                <Trash2 size={16} /> Remove Member
+                <Trash2 size={14} />
+                Remove Member
               </button>
             )}
           </div>

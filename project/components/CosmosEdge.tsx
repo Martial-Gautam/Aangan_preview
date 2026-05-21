@@ -13,21 +13,20 @@ interface CosmosEdgeProps {
   isCrossTree?: boolean;
 }
 
-// ─── Color & Style Definitions ───────────────────────────────
+// ─── Premium Color & Style System ────────────────────────────
 
 const EDGE_STYLES: Record<string, { color: string; lineWidth: number; dashed: boolean }> = {
-  parent:    { color: '#1B4332', lineWidth: 1.5, dashed: false },
-  spouse:    { color: '#1B4332', lineWidth: 2.0, dashed: false },
-  sibling:   { color: '#1B4332', lineWidth: 1.0, dashed: true },
-  crossTree: { color: '#9ca3af', lineWidth: 0.8, dashed: true },
+  father:    { color: '#3B82F6', lineWidth: 1.8, dashed: false },   // Blue (paternal)
+  mother:    { color: '#8B5CF6', lineWidth: 1.8, dashed: false },   // Violet (maternal)
+  child:     { color: '#14B8A6', lineWidth: 1.6, dashed: false },   // Teal
+  spouse:    { color: '#EC4899', lineWidth: 2.5, dashed: false },   // Pink
+  sibling:   { color: '#F59E0B', lineWidth: 1.2, dashed: true },    // Amber
+  crossTree: { color: '#6B7280', lineWidth: 0.8, dashed: true },    // Gray
 };
 
 function getEdgeStyle(relType: string, isCrossTree: boolean) {
   if (isCrossTree) return EDGE_STYLES.crossTree;
-  if (relType === 'father' || relType === 'mother' || relType === 'child') return EDGE_STYLES.parent;
-  if (relType === 'spouse') return EDGE_STYLES.spouse;
-  if (relType === 'sibling') return EDGE_STYLES.sibling;
-  return EDGE_STYLES.parent;
+  return EDGE_STYLES[relType] || EDGE_STYLES.father;
 }
 
 // ─── Component ───────────────────────────────────────────────
@@ -60,7 +59,7 @@ export default function CosmosEdge({
     // Midpoint with slight curve
     const mid: [number, number, number] = [
       (start[0] + end[0]) / 2,
-      (start[1] + end[1]) / 2 + 0.3, // slight upward bow
+      (start[1] + end[1]) / 2 + 0.4, // slightly more upward bow
       (start[2] + end[2]) / 2,
     ];
 
@@ -72,7 +71,7 @@ export default function CosmosEdge({
         color={style.color}
         lineWidth={style.lineWidth}
         transparent
-        opacity={isCrossTree ? 0.2 : 0.35}
+        opacity={isCrossTree ? 0.2 : 0.5}
         dashed={style.dashed}
         dashScale={style.dashed ? 3 : undefined}
         dashSize={style.dashed ? 0.3 : undefined}
@@ -88,7 +87,7 @@ export default function CosmosEdge({
       color={style.color}
       lineWidth={style.lineWidth}
       transparent
-      opacity={isCrossTree ? 0.15 : 0.3}
+      opacity={isCrossTree ? 0.15 : 0.4}
       dashed={style.dashed}
       dashScale={style.dashed ? 3 : undefined}
       dashSize={style.dashed ? 0.3 : undefined}

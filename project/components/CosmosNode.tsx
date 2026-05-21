@@ -6,24 +6,24 @@ import { Html, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { CosmosPosition, LineageSector } from '@/lib/cosmos-layout';
 
-// ─── Color System ────────────────────────────────────────────
+// ─── Premium Sector Color System ─────────────────────────────
 
 const SECTOR_COLORS: Record<LineageSector, string> = {
-  self:     '#1B4332',
-  maternal: '#1B4332',
-  paternal: '#1B4332',
-  spouse:   '#1B4332',
-  siblings: '#1B4332',
-  children: '#4a7a52',
+  self:     '#10B981',  // Emerald — stands out as "you"
+  maternal: '#8B5CF6',  // Violet
+  paternal: '#3B82F6',  // Blue
+  spouse:   '#EC4899',  // Pink
+  siblings: '#F59E0B',  // Amber
+  children: '#14B8A6',  // Teal
 };
 
 const SECTOR_EMISSIVE: Record<LineageSector, string> = {
-  self:     '#1B4332',
-  maternal: '#1B4332',
-  paternal: '#1B4332',
-  spouse:   '#1B4332',
-  siblings: '#1B4332',
-  children: '#4a7a52',
+  self:     '#10B981',
+  maternal: '#7C3AED',
+  paternal: '#2563EB',
+  spouse:   '#DB2777',
+  siblings: '#D97706',
+  children: '#0D9488',
 };
 
 const SECTOR_LABELS: Record<LineageSector, string> = {
@@ -87,6 +87,7 @@ export default function CosmosNode({
 }: CosmosNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { camera } = useThree();
 
@@ -96,17 +97,14 @@ export default function CosmosNode({
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   // Node size based on relationship
-  const baseSize = isSelf ? 0.55 : isCenterPerson ? 0.48 : 0.38;
+  const baseSize = isSelf ? 0.6 : isCenterPerson ? 0.5 : 0.4;
 
-  // Pulse animation for self node
+  // Pulse animation for self node + hover
   useFrame((state) => {
     if (!meshRef.current) return;
 
-    // Distance from camera for LOD
-    const dist = camera.position.distanceTo(meshRef.current.position);
-
     // Hover scale
-    const targetScale = hovered ? 1.2 : 1.0;
+    const targetScale = hovered ? 1.18 : 1.0;
     meshRef.current.scale.lerp(
       new THREE.Vector3(targetScale, targetScale, targetScale),
       0.1
@@ -114,8 +112,13 @@ export default function CosmosNode({
 
     // Self pulsing glow
     if (glowRef.current && isSelf) {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.15;
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 1.5) * 0.18;
       glowRef.current.scale.set(pulse, pulse, pulse);
+    }
+
+    // Center person ring rotation
+    if (ringRef.current && isCenterPerson) {
+      ringRef.current.rotation.z += 0.005;
     }
 
     // Emissive intensity based on hover
@@ -123,7 +126,7 @@ export default function CosmosNode({
     if (mat && mat.emissiveIntensity !== undefined) {
       mat.emissiveIntensity = THREE.MathUtils.lerp(
         mat.emissiveIntensity,
-        hovered ? 0.8 : 0.3,
+        hovered ? 1.0 : 0.4,
         0.1
       );
     }
@@ -137,7 +140,7 @@ export default function CosmosNode({
   }, [position.hopDistance]);
 
   // Search dimming
-  const opacity = searchActive && isHighlighted === false ? 0.15 : 1;
+  const opacity = searchActive && isHighlighted === false ? 0.12 : 1;
 
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
@@ -156,21 +159,47 @@ export default function CosmosNode({
       {/* Outer glow sphere (self only) */}
       {isSelf && (
         <mesh ref={glowRef}>
-          <sphereGeometry args={[baseSize * 1.8, 16, 16]} />
+          <sphereGeometry args={[baseSize * 2.0, 24, 24]} />
           <meshBasicMaterial
             color={color}
             transparent
-            opacity={0.08}
+            opacity={0.06}
             side={THREE.BackSide}
           />
         </mesh>
       )}
 
-      {/* Center person ring indicator */}
+      {/* Secondary glow halo (self only) */}
+      {isSelf && (
+        <mesh>
+          <sphereGeometry args={[baseSize * 2.8, 16, 16]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.025}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
+      {/* Center person ring indicator — animated rotation */}
       {isCenterPerson && !isSelf && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -baseSize * 0.6, 0]}>
-          <ringGeometry args={[baseSize * 1.2, baseSize * 1.4, 32]} />
-          <meshBasicMaterial color="#1B4332" transparent opacity={0.5} side={THREE.DoubleSide} />
+        <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -baseSize * 0.6, 0]}>
+          <ringGeometry args={[baseSize * 1.3, baseSize * 1.5, 6]} />
+          <meshBasicMaterial color={color} transparent opacity={0.45} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+
+      {/* Sector glow — subtle colored halo for all nodes */}
+      {detailLevel !== 'far' && (
+        <mesh>
+          <sphereGeometry args={[baseSize * 1.5, 16, 16]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={hovered ? 0.08 : 0.03}
+            side={THREE.BackSide}
+          />
         </mesh>
       )}
 
@@ -182,13 +211,13 @@ export default function CosmosNode({
         onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerLeave={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'default'; }}
       >
-        <sphereGeometry args={[baseSize, detailLevel === 'far' ? 8 : 24, detailLevel === 'far' ? 8 : 24]} />
+        <sphereGeometry args={[baseSize, detailLevel === 'far' ? 8 : 32, detailLevel === 'far' ? 8 : 32]} />
         <meshStandardMaterial
           color={color}
           emissive={emissiveColor}
-          emissiveIntensity={0.3}
-          roughness={0.4}
-          metalness={0.1}
+          emissiveIntensity={0.4}
+          roughness={0.3}
+          metalness={0.15}
           transparent
           opacity={opacity}
         />
@@ -197,7 +226,7 @@ export default function CosmosNode({
       {/* Linked indicator dot */}
       {isLinked && !isSelf && detailLevel !== 'far' && (
         <mesh position={[baseSize * 0.7, baseSize * 0.5, 0]}>
-          <sphereGeometry args={[0.08, 8, 8]} />
+          <sphereGeometry args={[0.09, 12, 12]} />
           <meshBasicMaterial color="#22c55e" />
         </mesh>
       )}
@@ -213,13 +242,13 @@ export default function CosmosNode({
               opacity: opacity,
               pointerEvents: 'none',
             }}
-            position={[0, baseSize + 0.4, 0]}
+            position={[0, baseSize + 0.5, 0]}
           >
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '2px',
+              gap: '3px',
               transform: 'scale(1)',
               userSelect: 'none',
             }}>
@@ -229,27 +258,28 @@ export default function CosmosNode({
                   src={photoUrl}
                   alt={name}
                   style={{
-                    width: 36, height: 36,
+                    width: 42, height: 42,
                     borderRadius: '50%',
-                    border: `2px solid ${color}`,
+                    border: `2.5px solid ${color}`,
                     objectFit: 'cover',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    boxShadow: `0 0 12px ${color}44, 0 2px 8px rgba(0,0,0,0.3)`,
                   }}
                 />
               ) : (
                 <div style={{
-                  width: 36, height: 36,
+                  width: 42, height: 42,
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${color}, ${color}99)`,
-                  border: `2px solid ${color}`,
+                  background: `linear-gradient(135deg, ${color}, ${color}88)`,
+                  border: `2.5px solid ${color}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 700,
                   fontFamily: 'Inter, system-ui, sans-serif',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  boxShadow: `0 0 12px ${color}44, 0 2px 8px rgba(0,0,0,0.3)`,
+                  letterSpacing: '0.5px',
                 }}>
                   {initials}
                 </div>
@@ -257,31 +287,34 @@ export default function CosmosNode({
 
               {/* Name */}
               <div style={{
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 700,
                 color: '#ffffff',
                 textAlign: 'center',
-                maxWidth: 90,
+                maxWidth: 100,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                textShadow: '0 1px 4px rgba(0,0,0,0.7)',
+                textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.4)',
                 fontFamily: 'Inter, system-ui, sans-serif',
+                letterSpacing: '-0.01em',
               }}>
                 {name}
               </div>
 
-              {/* Age + relationship */}
+              {/* Relationship badge — frosted glass */}
               <div style={{
-                fontSize: 8,
-                fontWeight: 600,
-                color: color,
-                background: 'rgba(250,247,242,0.9)',
-                padding: '1px 6px',
-                borderRadius: 6,
+                fontSize: 9,
+                fontWeight: 700,
+                color: '#ffffff',
+                background: `${color}cc`,
+                padding: '2px 8px',
+                borderRadius: 8,
                 textTransform: 'uppercase',
-                letterSpacing: '0.5px',
+                letterSpacing: '0.6px',
                 fontFamily: 'Inter, system-ui, sans-serif',
+                boxShadow: `0 1px 4px ${color}55`,
+                backdropFilter: 'blur(8px)',
               }}>
                 {relationshipLabel}{age !== null ? ` · ${age}y` : ''}
               </div>
@@ -290,36 +323,50 @@ export default function CosmosNode({
         </Billboard>
       )}
 
-      {/* Medium LOD — just name */}
+      {/* Medium LOD — name + small badge */}
       {detailLevel === 'medium' && (
         <Billboard follow lockX={false} lockY={false} lockZ={false}>
           <Html
             center
             distanceFactor={10}
-            style={{ opacity: opacity * 0.85, pointerEvents: 'none' }}
-            position={[0, baseSize + 0.25, 0]}
+            style={{ opacity: opacity * 0.9, pointerEvents: 'none' }}
+            position={[0, baseSize + 0.3, 0]}
           >
             <div style={{
-              fontSize: 9,
-              fontWeight: 600,
-              color: '#ffffff',
-              textShadow: '0 1px 3px rgba(0,0,0,0.6)',
-              textAlign: 'center',
-              whiteSpace: 'nowrap',
-              fontFamily: 'Inter, system-ui, sans-serif',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              userSelect: 'none',
             }}>
-              {name}
+              <div style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: '#ffffff',
+                textShadow: '0 1px 4px rgba(0,0,0,0.7)',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                fontFamily: 'Inter, system-ui, sans-serif',
+              }}>
+                {name}
+              </div>
+              <div style={{
+                width: 6, height: 6,
+                borderRadius: '50%',
+                background: color,
+                boxShadow: `0 0 6px ${color}88`,
+              }} />
             </div>
           </Html>
         </Billboard>
       )}
 
-      {/* Far LOD — just a glow, no label */}
+      {/* Far LOD — colored point light */}
       {detailLevel === 'far' && (
         <pointLight
           color={color}
-          intensity={0.3}
-          distance={2}
+          intensity={0.4}
+          distance={2.5}
         />
       )}
     </group>

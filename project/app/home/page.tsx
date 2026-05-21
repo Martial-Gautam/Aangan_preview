@@ -14,7 +14,7 @@ import Link from 'next/link';
 
 function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#0a0e17]">
+    <div className="absolute inset-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #060b16 0%, #0a1628 50%, #0d0f18 100%)' }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,122,82,0.16),transparent_42%),radial-gradient(circle_at_82%_28%,rgba(27,67,50,0.22),transparent_48%),radial-gradient(circle_at_50%_85%,rgba(122,138,125,0.12),transparent_55%)]" />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e17]/70 via-[#0a0e17]/80 to-[#0a0e17]/95" />
 
@@ -381,38 +381,38 @@ export default function HomePage() {
     <div className="h-screen flex justify-center animate-pageEnter" style={{ background: 'transparent' }}>
     <div className="h-full w-full max-w-sm flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="glass-header px-5 pt-12 pb-4 z-10 flex-shrink-0">
+      <div className="glass-header px-5 pt-12 pb-3.5 z-10 flex-shrink-0">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.15em]">Aangan</p>
-            <h1 className="text-lg font-bold text-gray-900 mt-0.5">
+            <p className="text-[9px] text-gray-400/80 font-bold uppercase tracking-[0.2em]">Aangan</p>
+            <h1 className="text-[17px] font-extrabold text-gray-900 mt-0.5 tracking-tight">
               {profile?.full_name?.split(' ')[0]}&apos;s Family
             </h1>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-gray-400 mr-1">
+            <span className="text-[11px] font-bold text-gray-400/60 bg-gray-100/60 rounded-full px-2.5 py-1 mr-0.5 tabular-nums">
               {familyCount}
             </span>
             <button
               onClick={() => setShowInstallSheet(true)}
-              className="w-9 h-9 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center hover:bg-white/60 transition-colors text-gray-500"
+              className="w-8 h-8 rounded-full bg-gray-100/60 flex items-center justify-center hover:bg-gray-200/60 transition-all active:scale-95 text-gray-400"
             >
-              <Download size={16} />
+              <Download size={14} />
             </button>
             <Link
               href="/add-member"
-              className="w-9 h-9 rounded-full bg-[#1B4332] flex items-center justify-center hover:bg-[#1B4332]/90 transition-colors"
+              className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center hover:bg-[#1B4332]/90 transition-all active:scale-95 shadow-lg shadow-[#1B4332]/20"
             >
-              <UserPlus size={16} className="text-white" />
+              <UserPlus size={14} className="text-white" />
             </Link>
             <Link
               href="/notifications"
-              className="w-9 h-9 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center hover:bg-white/60 transition-colors relative"
+              className="w-8 h-8 rounded-full bg-gray-100/60 flex items-center justify-center hover:bg-gray-200/60 transition-all active:scale-95 relative"
             >
-              <Bell size={16} className="text-gray-500" />
+              <Bell size={14} className="text-gray-400" />
               {pendingAlertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
-                  <span className="text-[8px] font-bold text-white leading-none">{pendingAlertCount > 9 ? '9+' : pendingAlertCount}</span>
+                <span className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] bg-red-500 rounded-full border-[1.5px] border-white flex items-center justify-center">
+                  <span className="text-[7px] font-bold text-white leading-none">{pendingAlertCount > 9 ? '9+' : pendingAlertCount}</span>
                 </span>
               )}
             </Link>
@@ -427,17 +427,17 @@ export default function HomePage() {
 
       {/* Suggestions Banner */}
       {suggestions.length > 0 && !dataLoading && (
-        <div className="bg-white/40 backdrop-blur-lg border-b border-gray-200/30 px-5 py-3 flex-shrink-0 cursor-pointer hover:bg-white/50 transition-all" onClick={() => setShowSuggestionsSheet(true)}>
+        <div className="bg-gradient-to-r from-[#1B4332]/8 via-white/50 to-[#1B4332]/8 backdrop-blur-lg border-b border-[#1B4332]/10 px-5 py-2.5 flex-shrink-0 cursor-pointer hover:from-[#1B4332]/12 hover:to-[#1B4332]/12 transition-all" onClick={() => setShowSuggestionsSheet(true)}>
           <div className="max-w-lg mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-[#1B4332]/10 flex items-center justify-center">
-                <Sparkles size={14} className="text-[#1B4332]" />
+                <Sparkles size={13} className="text-[#1B4332]" />
               </div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-[13px] font-semibold text-gray-800">
                 {suggestions.length} possible {suggestions.length === 1 ? 'connection' : 'connections'}
               </p>
             </div>
-            <button className="text-xs font-semibold text-[#1B4332] glass-card px-3 py-1.5 rounded-full hover:bg-white/80 transition-colors">
+            <button className="text-[11px] font-bold text-[#1B4332] bg-[#1B4332]/8 px-3.5 py-1.5 rounded-full hover:bg-[#1B4332]/15 transition-colors">
               Review
             </button>
           </div>
@@ -446,20 +446,20 @@ export default function HomePage() {
 
       {/* Tree area */}
       <div className="flex-1 relative overflow-hidden min-h-0">
-        {/* Floating Search Bar */}
+        {/* Floating Search Bar — premium frosted glass */}
         {familyCount > 0 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-[calc(100%-2rem)] sm:max-w-sm px-0">
-          <div className="bg-black/60 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center px-3.5 py-2.5 gap-2">
-              <Search size={16} className="text-gray-400" />
+          <div className="bg-black/55 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] flex items-center px-4 py-2.5 gap-2.5">
+              <Search size={15} className="text-white/40" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search family members..."
-                className="flex-1 text-sm outline-none bg-transparent placeholder:text-white/30 text-white"
+                className="flex-1 text-[13px] font-medium outline-none bg-transparent placeholder:text-white/25 text-white tracking-[-0.01em]"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-white transition-colors p-0.5">
-                  <X size={14} />
+                <button onClick={() => setSearchQuery('')} className="text-white/40 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
+                  <X size={13} />
                 </button>
               )}
             </div>
@@ -491,36 +491,45 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-24 left-4 z-20 flex flex-col gap-2" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
-              <button
-                onClick={() => setCenterPerson(selfPerson.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold active:scale-95 transition-all ${
-                  centerPersonId && centerPersonId !== selfPerson.id
-                    ? 'bg-[#1B4332] text-white'
-                    : 'bg-black/60 backdrop-blur-xl text-white/70 border border-white/10'
-                }`}
-              >
-                <Home size={13} /> {centerPersonId && centerPersonId !== selfPerson.id ? 'Go Home' : 'My View'}
-              </button>
-              <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xl rounded-xl border border-white/10 px-2.5 py-2">
+            {/* Controls — premium frosted glass panel */}
+            <div className="absolute z-20 flex flex-col gap-2" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))', left: '1rem' }}>
+              <div className="bg-black/50 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
+                {/* Home / Center button */}
                 <button
-                  onClick={() => setFocusHops(focusHops - 1)}
-                  disabled={focusHops <= 1}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-white/60 hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+                  onClick={() => setCenterPerson(selfPerson.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2.5 text-[11px] font-bold w-full transition-all active:scale-95 ${
+                    centerPersonId && centerPersonId !== selfPerson.id
+                      ? 'text-emerald-400'
+                      : 'text-white/50'
+                  }`}
                 >
-                  <ZoomOut size={12} />
+                  <Home size={13} />
+                  <span>{centerPersonId && centerPersonId !== selfPerson.id ? 'Go Home' : 'My View'}</span>
                 </button>
-                <span className="text-[9px] font-semibold text-white/50 min-w-[36px] text-center tabular-nums">
-                  {focusHops} {focusHops === 1 ? 'ring' : 'rings'}
-                </span>
-                <button
-                  onClick={() => setFocusHops(focusHops + 1)}
-                  disabled={focusHops >= 5}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-white/60 hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-                >
-                  <ZoomIn size={12} />
-                </button>
+
+                {/* Divider */}
+                <div className="h-px bg-white/[0.06] mx-2" />
+
+                {/* Focus rings control */}
+                <div className="flex items-center gap-1.5 px-2.5 py-2">
+                  <button
+                    onClick={() => setFocusHops(focusHops - 1)}
+                    disabled={focusHops <= 1}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white/80 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+                  >
+                    <ZoomOut size={12} />
+                  </button>
+                  <span className="text-[9px] font-bold text-white/40 min-w-[36px] text-center tabular-nums tracking-wide">
+                    {focusHops} {focusHops === 1 ? 'ring' : 'rings'}
+                  </span>
+                  <button
+                    onClick={() => setFocusHops(focusHops + 1)}
+                    disabled={focusHops >= 5}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white/80 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+                  >
+                    <ZoomIn size={12} />
+                  </button>
+                </div>
               </div>
             </div>
           </>
@@ -546,22 +555,23 @@ export default function HomePage() {
         )}
 
         {familyCount > 0 && (
-          <div className="absolute right-4 z-20 flex flex-col items-center gap-2" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="absolute right-4 z-20 flex flex-col items-center gap-2.5" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
             <button
               onClick={() => {
                 setShowNearbySheet(true);
                 fetchNearbyRelatives();
               }}
-              className="w-12 h-12 rounded-full bg-white/85 border border-white/80 backdrop-blur-xl text-[#1B4332] flex items-center justify-center shadow-lg shadow-black/10 hover:bg-white active:scale-95 transition-all"
+              className="w-11 h-11 rounded-full bg-white/90 border border-white/60 backdrop-blur-xl text-[#1B4332] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.15)] hover:bg-white hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] active:scale-90 transition-all"
               aria-label="Relatives around me"
             >
-              <Navigation size={18} />
+              <Navigation size={16} />
             </button>
             <Link
               href="/add-member"
-              className="w-12 h-12 bg-[#1B4332] rounded-full flex items-center justify-center shadow-xl shadow-[#1B4332]/30 hover:bg-[#1B4332]/90 active:scale-90 transition-all"
+              className="w-13 h-13 bg-gradient-to-br from-[#1B4332] to-[#2d6b48] rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(27,67,50,0.4)] hover:shadow-[0_8px_28px_rgba(27,67,50,0.5)] active:scale-90 transition-all"
+              style={{ width: 52, height: 52 }}
             >
-              <Plus size={20} className="text-white" />
+              <Plus size={22} className="text-white" />
             </Link>
           </div>
         )}

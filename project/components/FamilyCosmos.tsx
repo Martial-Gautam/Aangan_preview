@@ -196,23 +196,24 @@ function Scene({
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 15, 10]} intensity={0.6} color="#ffffff" />
-      <pointLight position={[-10, 10, -10]} intensity={0.3} color="#d4d4d4" />
+      {/* Cinematic Lighting — warm/cool contrast */}
+      <ambientLight intensity={0.35} color="#c8d6e5" />
+      <pointLight position={[12, 18, 10]} intensity={0.7} color="#ffffff" />
+      <pointLight position={[-10, 12, -8]} intensity={0.35} color="#a5b4fc" />
+      <pointLight position={[0, -5, 0]} intensity={0.15} color="#10B981" />
 
-      {/* Fog for depth */}
-      <fog attach="fog" args={['#0a0e17', 15, 40]} />
+      {/* Fog for depth — deeper gradient */}
+      <fog attach="fog" args={['#060b16', 12, 45]} />
 
-      {/* Starfield background */}
+      {/* Dense starfield background */}
       <Stars
-        radius={50}
-        depth={40}
-        count={1500}
-        factor={3}
-        saturation={0.1}
+        radius={60}
+        depth={50}
+        count={3500}
+        factor={3.5}
+        saturation={0.25}
         fade
-        speed={0.3}
+        speed={0.2}
       />
 
       {/* Camera controls — Google Maps style traversal */}
@@ -323,7 +324,7 @@ interface FamilyCosmosProps {
 
 export default function FamilyCosmos(props: FamilyCosmosProps) {
   return (
-    <div className="absolute inset-0 w-full h-full" style={{ background: '#0a0e17', zIndex: 0 }}>
+    <div className="absolute inset-0 w-full h-full" style={{ background: 'linear-gradient(180deg, #060b16 0%, #0a1628 50%, #0d0f18 100%)', zIndex: 0 }}>
       <Canvas
         camera={{
           position: [0, 12, 10],

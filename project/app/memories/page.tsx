@@ -68,6 +68,12 @@ type AlbumCategory = {
   albumType: 'memory' | 'event';
 };
 
+type SharePerson = {
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
+};
+
 const MEMORY_PREFIX = '[[memory-image]]';
 const TITLE_SEPARATOR = '::';
 const QR_PLACEHOLDER = 'Camera QR scan will be added in the next update.';
@@ -151,6 +157,9 @@ export default function MemoriesPage() {
   const [joinError, setJoinError] = useState('');
   const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
   const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
+  const [sharePeople, setSharePeople] = useState<SharePerson[]>([]);
+  const [includeUserIds, setIncludeUserIds] = useState<string[]>([]);
+  const [excludeUserIds, setExcludeUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -159,6 +168,7 @@ export default function MemoriesPage() {
       return;
     }
     fetchMemories();
+    fetchSharePeople();
   }, [authLoading, user]);
 
   useEffect(() => {
@@ -186,6 +196,31 @@ export default function MemoriesPage() {
       setMemories([]);
     } finally {
       setLoadingMemories(false);
+    }
+  };
+
+  const fetchSharePeople = async () => {
+    if (!session?.access_token || !user?.id) return;
+    try {
+      const res = await fetch('/api/tree/full', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const nodes = data.nodes || [];
+      const byUser = new Map<string, SharePerson>();
+      for (const node of nodes) {
+        const userId = node.user_id || (node.is_self ? node.owner_id : null);
+        if (!userId || userId === user.id || byUser.has(userId)) continue;
+        byUser.set(userId, {
+          user_id: userId,
+          full_name: node.full_name || 'Relative',
+          photo_url: node.photo_url || null,
+        });
+      }
+      setSharePeople(Array.from(byUser.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
+    } catch (err) {
+      console.error('Failed to fetch share people:', err);
     }
   };
 
@@ -261,6 +296,8 @@ export default function MemoriesPage() {
     setError('');
     setAudienceDegree(['All']);
     setAudienceSide(['All']);
+    setIncludeUserIds([]);
+    setExcludeUserIds([]);
   };
 
   const handleCreateMemory = async () => {
@@ -293,6 +330,10 @@ export default function MemoriesPage() {
           title: buildMemoryTitle(activeCategory, eventTitle.trim()),
           content: packedContent,
           category: 'memories',
+          audience_degrees: audienceDegree,
+          audience_sides: audienceSide,
+          include_user_ids: includeUserIds,
+          exclude_user_ids: excludeUserIds,
         }),
       });
 
@@ -712,6 +753,55 @@ export default function MemoriesPage() {
                         ))}
                       </div>
                     </div>
+                    {sharePeople.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Individuals</p>
+                        <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                          {sharePeople.map((person) => (
+                            <div key={person.user_id} className="rounded-lg border border-gray-200/60 bg-white/55 px-2.5 py-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center">
+                                  {person.photo_url ? (
+                                    <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <Users size={12} className="text-[#1B4332]/70" />
+                                  )}
+                                </div>
+                                <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIncludeUserIds((prev) =>
+                                      prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                                    );
+                                    setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                                  }}
+                                  className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                                    includeUserIds.includes(person.user_id) ? 'bg-[#1B4332] text-white' : 'bg-gray-100 text-gray-600'
+                                  }`}
+                                >
+                                  Include
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setExcludeUserIds((prev) =>
+                                      prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                                    );
+                                    setIncludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                                  }}
+                                  className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                                    excludeUserIds.includes(person.user_id) ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
+                                  }`}
+                                >
+                                  Exclude
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {error && (

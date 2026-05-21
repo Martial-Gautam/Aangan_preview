@@ -20,7 +20,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { type, title, content, category, media_urls } = await req.json();
+    const {
+      type,
+      title,
+      content,
+      category,
+      media_urls,
+      audience_degrees,
+      audience_sides,
+      include_user_ids,
+      exclude_user_ids,
+    } = await req.json();
 
     if (!content?.trim()) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -33,6 +43,32 @@ export async function POST(req: NextRequest) {
 
     // Create the post (media_count may not exist if migration hasn't run)
     const mediaList: Array<{ url: string; type: string; thumbnail_url?: string }> = media_urls || [];
+    const normalizeStringArray = (value: unknown, fallback: string[]) => {
+      if (!Array.isArray(value)) return fallback;
+      const normalized = value
+        .map((item) => (typeof item === 'string' ? item.trim().toLowerCase() : ''))
+        .filter(Boolean);
+      return normalized.length > 0 ? normalized : fallback;
+    };
+    const normalizeUuidArray = (value: unknown) => {
+      if (!Array.isArray(value)) return [] as string[];
+      return value
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter(Boolean);
+    };
+
+    const postPayload = {
+      author_id: user.id,
+      type: type || 'post',
+      title: title?.trim() || null,
+      content: content.trim(),
+      category: category || 'general',
+      media_count: mediaList.length,
+      audience_degrees: normalizeStringArray(audience_degrees, ['all']),
+      audience_sides: normalizeStringArray(audience_sides, ['all']),
+      include_user_ids: normalizeUuidArray(include_user_ids),
+      exclude_user_ids: normalizeUuidArray(exclude_user_ids),
+    };
     
     let data: any = null;
     let insertError: any = null;
@@ -40,19 +76,19 @@ export async function POST(req: NextRequest) {
     // Try with media_count first
     const result1 = await supabase
       .from('posts')
-      .insert({
-        author_id: user.id,
-        type: type || 'post',
-        title: title?.trim() || null,
-        content: content.trim(),
-        category: category || 'general',
-        media_count: mediaList.length,
-      })
+      .insert(postPayload)
       .select()
       .single();
 
-    if (result1.error && result1.error.message?.includes('media_count')) {
-      // Fallback: insert without media_count
+    if (
+      result1.error &&
+      (result1.error.message?.includes('media_count') ||
+        result1.error.message?.includes('audience_degrees') ||
+        result1.error.message?.includes('audience_sides') ||
+        result1.error.message?.includes('include_user_ids') ||
+        result1.error.message?.includes('exclude_user_ids'))
+    ) {
+      // Fallback: insert without columns that may not exist in older schemas
       const result2 = await supabase
         .from('posts')
         .insert({

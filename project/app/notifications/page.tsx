@@ -95,7 +95,11 @@ export default function NotificationsPage() {
         body: JSON.stringify({ to_user_id: userId })
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
         setSuggestions(prev => prev.filter(s => s.user_id !== userId));
+        if (data?.merged) {
+          fetchPendingRequests();
+        }
       }
     } catch (err) {
       console.error('Failed to send request', err);
@@ -231,7 +235,9 @@ export default function NotificationsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-900 truncate">{s.full_name}</p>
-                        <p className="text-[11px] text-gray-500 truncate">Both know {s.mutual_connection}</p>
+                        <p className="text-[11px] text-gray-500 truncate">
+                          {s.reason || `Both know ${s.mutual_connection}`}
+                        </p>
                       </div>
                       <button
                         onClick={() => handleSendConnection(s.user_id)}

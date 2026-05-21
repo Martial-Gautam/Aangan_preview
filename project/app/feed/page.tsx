@@ -48,6 +48,12 @@ interface Comment {
   author: { full_name: string; photo_url: string | null };
 }
 
+interface SharePerson {
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
+}
+
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
   'general': 'bg-gray-100 text-gray-600',
@@ -85,6 +91,9 @@ function FeedContent() {
   const [creating, setCreating] = useState(false);
   const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
   const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
+  const [sharePeople, setSharePeople] = useState<SharePerson[]>([]);
+  const [includeUserIds, setIncludeUserIds] = useState<string[]>([]);
+  const [excludeUserIds, setExcludeUserIds] = useState<string[]>([]);
   const [isAnonymous, setIsAnonymous] = useState(false);
 
   // Feed sections
@@ -108,6 +117,7 @@ function FeedContent() {
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
     initBackend();
+    fetchSharePeople();
   }, [user?.id, session?.access_token]);
 
   // Reload on tab change
@@ -158,6 +168,32 @@ function FeedContent() {
     }
   };
 
+  const fetchSharePeople = async () => {
+    if (!session?.access_token || !user?.id) return;
+    try {
+      const res = await fetch('/api/tree/full', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const nodes = data.nodes || [];
+
+      const byUser = new Map<string, SharePerson>();
+      for (const node of nodes) {
+        const userId = node.user_id || (node.is_self ? node.owner_id : null);
+        if (!userId || userId === user.id || byUser.has(userId)) continue;
+        byUser.set(userId, {
+          user_id: userId,
+          full_name: node.full_name || 'Relative',
+          photo_url: node.photo_url || null,
+        });
+      }
+      setSharePeople(Array.from(byUser.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
+    } catch (err) {
+      console.error('Failed to fetch share people:', err);
+    }
+  };
+
   // ─── Stream Methods ─────────────────────────────────
 
   const loadStreamPosts = () => { if (feedChannel) loadPostsFromChannel(feedChannel); };
@@ -202,6 +238,10 @@ function FeedContent() {
           post_type: createType,
           post_title: createType === 'discussion' ? createTitle.trim() : undefined,
           post_category: createCategory,
+          audience_degrees: audienceDegree,
+          audience_sides: audienceSide,
+          include_user_ids: includeUserIds,
+          exclude_user_ids: excludeUserIds,
         } as any);
       } else {
         await fetch('/api/posts/create', {
@@ -212,6 +252,10 @@ function FeedContent() {
             title: createType === 'discussion' ? createTitle.trim() : null,
             content: createContent.trim(),
             category: createCategory,
+            audience_degrees: audienceDegree,
+            audience_sides: audienceSide,
+            include_user_ids: includeUserIds,
+            exclude_user_ids: excludeUserIds,
           }),
         });
       }
@@ -219,6 +263,10 @@ function FeedContent() {
       setCreateTitle('');
       setCreateContent('');
       setCreateCategory('general');
+      setAudienceDegree(['All']);
+      setAudienceSide(['All']);
+      setIncludeUserIds([]);
+      setExcludeUserIds([]);
       setActiveTab(createType);
       if (!useStreamBackend) fetchSupabasePosts(createType);
     } catch (err) { console.error('Create failed:', err); }
@@ -717,6 +765,56 @@ function FeedContent() {
                 ))}
               </div>
             </div>
+
+            {sharePeople.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Individuals</p>
+                <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                  {sharePeople.map((person) => (
+                    <div key={person.user_id} className="rounded-lg border border-gray-200/70 bg-white/60 px-2.5 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center">
+                          {person.photo_url ? (
+                            <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Users size={12} className="text-[#1B4332]/70" />
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIncludeUserIds((prev) =>
+                              prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                            );
+                            setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                          }}
+                          className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                            includeUserIds.includes(person.user_id) ? 'bg-[#1B4332] text-white' : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          Include
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExcludeUserIds((prev) =>
+                              prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                            );
+                            setIncludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                          }}
+                          className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                            excludeUserIds.includes(person.user_id) ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          Exclude
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <button

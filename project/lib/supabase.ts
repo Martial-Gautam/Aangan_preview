@@ -15,6 +15,9 @@ export interface Profile {
   date_of_birth: string | null;
   photo_url: string | null;
   phone: string | null;
+  location_city: string | null;
+  location_state: string | null;
+  location_country: string | null;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;

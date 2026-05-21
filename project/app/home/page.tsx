@@ -9,7 +9,7 @@ import MemberDetailSheet from '@/components/MemberDetailSheet';
 import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import BottomNav from '@/components/BottomNav';
-import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X } from 'lucide-react';
+import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation } from 'lucide-react';
 import Link from 'next/link';
 
 function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
@@ -132,6 +132,17 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+interface NearbyRelative {
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  relationship_label: string;
+  degree: number;
+}
+
 // ─── Component ───────────────────────────────────────────────
 
 export default function HomePage() {
@@ -160,6 +171,11 @@ export default function HomePage() {
   const [showInstallSheet, setShowInstallSheet] = useState(false);
   const [cosmosReady, setCosmosReady] = useState(false);
   const [showCosmos, setShowCosmos] = useState(false);
+  const [showNearbySheet, setShowNearbySheet] = useState(false);
+  const [nearbyCityQuery, setNearbyCityQuery] = useState('');
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [nearbyRelatives, setNearbyRelatives] = useState<NearbyRelative[]>([]);
+  const [nearbyError, setNearbyError] = useState('');
 
   const seedInFlightRef = useRef(false);
   const bootstrapUserRef = useRef<string | null>(null);
@@ -176,6 +192,10 @@ export default function HomePage() {
     fetchSuggestions();
     fetchPendingAlerts();
   }, [user, profile, loading, session?.access_token]);
+
+  useEffect(() => {
+    setNearbyCityQuery(profile?.location_city || '');
+  }, [profile?.location_city]);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -324,6 +344,33 @@ export default function HomePage() {
       return;
     }
     setInstallHint('Use your browser menu and tap "Add to Home Screen" for the best app experience.');
+  };
+
+  const fetchNearbyRelatives = async (cityOverride?: string) => {
+    if (!session?.access_token) return;
+    const city = (cityOverride ?? nearbyCityQuery).trim();
+    const query = city ? `?city=${encodeURIComponent(city)}` : '';
+    setNearbyLoading(true);
+    setNearbyError('');
+    try {
+      const res = await fetch(`/api/relatives/around${query}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not fetch relatives by location');
+      }
+      const data = await res.json();
+      if (data.warning === 'location_fields_missing') {
+        setNearbyError('Location fields are not enabled yet. Run the latest migration first.');
+      }
+      setNearbyRelatives(data.relatives || []);
+    } catch (err) {
+      console.error('Failed to fetch nearby relatives:', err);
+      setNearbyError(err instanceof Error ? err.message : 'Failed to fetch relatives by location');
+    } finally {
+      setNearbyLoading(false);
+    }
   };
 
   // ─── Render ──────────────────────────────────────────────
@@ -499,12 +546,22 @@ export default function HomePage() {
         )}
 
         {familyCount > 0 && (
-          <div className="absolute right-4 z-20" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="absolute right-4 z-20 flex flex-col items-center gap-2" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
+            <button
+              onClick={() => {
+                setShowNearbySheet(true);
+                fetchNearbyRelatives();
+              }}
+              className="w-12 h-12 rounded-full bg-white/85 border border-white/80 backdrop-blur-xl text-[#1B4332] flex items-center justify-center shadow-lg shadow-black/10 hover:bg-white active:scale-95 transition-all"
+              aria-label="Relatives around me"
+            >
+              <Navigation size={18} />
+            </button>
             <Link
               href="/add-member"
-              className="w-14 h-14 bg-[#1B4332] rounded-full flex items-center justify-center shadow-xl shadow-[#1B4332]/30 hover:bg-[#1B4332]/90 active:scale-90 transition-all"
+              className="w-12 h-12 bg-[#1B4332] rounded-full flex items-center justify-center shadow-xl shadow-[#1B4332]/30 hover:bg-[#1B4332]/90 active:scale-90 transition-all"
             >
-              <Plus size={24} className="text-white" />
+              <Plus size={20} className="text-white" />
             </Link>
           </div>
         )}
@@ -609,6 +666,102 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Relatives Around Me Sheet */}
+      <Sheet open={showNearbySheet} onOpenChange={setShowNearbySheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Relatives Around Me</SheetTitle>
+          </SheetHeader>
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <MapPin size={20} className="text-[#1B4332]" />
+              Relatives Around Me
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Search your connected relatives by city.
+            </p>
+          </div>
+
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={nearbyCityQuery}
+                onChange={(e) => setNearbyCityQuery(e.target.value)}
+                placeholder="Enter city (e.g., Mumbai)"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-[#1B4332]/30"
+              />
+            </div>
+            <button
+              onClick={() => fetchNearbyRelatives(nearbyCityQuery)}
+              disabled={nearbyLoading}
+              className="px-4 py-2.5 rounded-xl bg-[#1B4332] text-white text-sm font-semibold hover:bg-[#1B4332]/90 disabled:opacity-60"
+            >
+              Search
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              const homeCity = profile?.location_city || '';
+              setNearbyCityQuery(homeCity);
+              fetchNearbyRelatives(homeCity);
+            }}
+            className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/12"
+          >
+            <Navigation size={13} />
+            Use My Profile City
+          </button>
+
+          {nearbyError && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mb-3">
+              {nearbyError}
+            </p>
+          )}
+
+          {nearbyLoading ? (
+            <div className="py-10 flex justify-center">
+              <Loader2 size={22} className="text-[#1B4332]/40 animate-spin" />
+            </div>
+          ) : nearbyRelatives.length === 0 ? (
+            <div className="glass-card rounded-2xl p-5 text-center">
+              <p className="text-sm text-gray-500">
+                No relatives found for this city yet.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Ask relatives to update City in their Profile.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {nearbyRelatives.map((relative) => (
+                <div key={relative.user_id} className="glass-card rounded-2xl px-3.5 py-3 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    {relative.photo_url ? (
+                      <img src={relative.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[#1B4332] font-semibold text-sm">
+                        {relative.full_name.split(' ').map((x) => x[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{relative.full_name}</p>
+                    <p className="text-xs text-[#1B4332]">{relative.relationship_label}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {[relative.city, relative.state, relative.country].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 

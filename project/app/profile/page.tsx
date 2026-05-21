@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import {
   Camera, LogOut, Check, CreditCard as Edit2, ChevronRight,
   Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle,
-  BarChart3, Bell
+  BarChart3, Bell, MapPin
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -22,6 +22,9 @@ export default function ProfilePage() {
   const [gender, setGender] = useState('');
   const [dob, setDob] = useState('');
   const [phone, setPhone] = useState('');
+  const [locationCity, setLocationCity] = useState('');
+  const [locationState, setLocationState] = useState('');
+  const [locationCountry, setLocationCountry] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [saving, setSaving] = useState(false);
@@ -61,6 +64,9 @@ export default function ProfilePage() {
     setGender(profile.gender || '');
     setDob(profile.date_of_birth || '');
     setPhone(profile.phone || '');
+    setLocationCity(profile.location_city || '');
+    setLocationState(profile.location_state || '');
+    setLocationCountry(profile.location_country || '');
     fetchFamilyCount();
     fetchFamilyMembers();
   }, [user, profile, loading]);
@@ -176,6 +182,9 @@ export default function ProfilePage() {
         gender: gender || null,
         date_of_birth: dob || null,
         phone: phone.trim() || null,
+        location_city: locationCity.trim() || null,
+        location_state: locationState.trim() || null,
+        location_country: locationCountry.trim() || null,
         photo_url: photoUrl || null,
         updated_at: new Date().toISOString(),
       }).eq('id', user.id);
@@ -424,6 +433,41 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1.5">City</label>
+                  <div className="relative">
+                    <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={locationCity}
+                      onChange={(e) => setLocationCity(e.target.value)}
+                      placeholder="e.g., Bengaluru"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1.5">State</label>
+                    <input
+                      type="text"
+                      value={locationState}
+                      onChange={(e) => setLocationState(e.target.value)}
+                      placeholder="e.g., Karnataka"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1.5">Country</label>
+                    <input
+                      type="text"
+                      value={locationCountry}
+                      onChange={(e) => setLocationCountry(e.target.value)}
+                      placeholder="e.g., India"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    />
+                  </div>
+                </div>
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -449,6 +493,11 @@ export default function ProfilePage() {
                     icon: Calendar
                   },
                   { label: 'Phone', value: profile?.phone || '—', icon: Phone },
+                  {
+                    label: 'Location',
+                    value: [profile?.location_city, profile?.location_state, profile?.location_country].filter(Boolean).join(', ') || '—',
+                    icon: MapPin,
+                  },
                 ].map(({ label, value, icon: Icon }) => (
                   <div key={label} className="flex items-center px-5 py-3.5 gap-3">
                     <Icon size={16} className="text-gray-400 flex-shrink-0" />

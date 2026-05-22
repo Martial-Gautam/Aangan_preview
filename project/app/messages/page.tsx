@@ -42,7 +42,7 @@ export default function MessagesPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
-          <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+          <Loader2 size={24} className="text-[#2A4365] animate-spin" />
         </div>
       }
     >
@@ -484,7 +484,7 @@ function MessagesContent() {
             >
               <ArrowLeft size={18} className="text-gray-600" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#2A4365] flex items-center justify-center overflow-hidden flex-shrink-0">
               {chatPartner?.photo ? (
                 <img src={chatPartner.photo} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -503,13 +503,13 @@ function MessagesContent() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 min-h-0">
             {loading ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+                <Loader2 size={24} className="text-[#2A4365] animate-spin" />
               </div>
             ) : normalizedMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#1B4332]/8 flex items-center justify-center mx-auto mb-3">
-                    <MessageCircle size={28} className="text-[#1B4332]/40" />
+                  <div className="w-16 h-16 rounded-full bg-[#2A4365]/8 flex items-center justify-center mx-auto mb-3">
+                    <MessageCircle size={28} className="text-[#2A4365]/40" />
                   </div>
                   <p className="text-sm text-gray-500">Say hello to start the conversation!</p>
                 </div>
@@ -533,7 +533,7 @@ function MessagesContent() {
                       <div className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} mb-1.5`}>
                         <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                           msg.isMine
-                            ? 'bg-[#1B4332] text-white rounded-br-md'
+                            ? 'bg-[#2A4365] text-white rounded-br-md'
                             : 'bg-white/60 backdrop-blur-md text-gray-900 border border-gray-200/30 rounded-bl-md'
                         }`}>
                           <p>{msg.text}</p>
@@ -560,12 +560,12 @@ function MessagesContent() {
               onChange={e => setNewMessage(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-2.5 rounded-2xl glass-input text-sm outline-none placeholder:text-gray-400 text-gray-900 focus:ring-1 focus:ring-[#1B4332]/20 transition-all"
+              className="flex-1 px-4 py-2.5 rounded-2xl glass-input text-sm outline-none placeholder:text-gray-400 text-gray-900 focus:ring-1 focus:ring-[#2A4365]/20 transition-all"
             />
             <button
               onClick={handleSend}
               disabled={!newMessage.trim() || sending}
-              className="w-10 h-10 rounded-xl bg-[#1B4332] flex items-center justify-center hover:bg-[#1B4332]/90 transition-colors disabled:opacity-40 active:scale-95"
+              className="w-10 h-10 rounded-xl bg-[#2A4365] flex items-center justify-center hover:bg-[#2A4365]/90 transition-colors disabled:opacity-40 active:scale-95"
             >
               {sending ? <Loader2 size={16} className="text-white animate-spin" /> : <Send size={16} className="text-white" />}
             </button>
@@ -620,12 +620,12 @@ function MessagesContent() {
         <div className="px-4 space-y-2 mt-2">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+              <Loader2 size={24} className="text-[#2A4365] animate-spin" />
             </div>
           ) : filteredConvos.length === 0 && relativeMatches.length === 0 ? (
             <div className="glass-card rounded-3xl p-8 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#1B4332]/8 flex items-center justify-center mb-4">
-                <MessageCircle size={28} className="text-[#1B4332]/40" />
+              <div className="w-16 h-16 rounded-full bg-[#2A4365]/8 flex items-center justify-center mb-4">
+                <MessageCircle size={28} className="text-[#2A4365]/40" />
               </div>
               <h3 className="font-bold text-gray-900 mb-1">
                 {normalizedQuery ? 'No matches found' : 'No messages yet'}
@@ -652,7 +652,7 @@ function MessagesContent() {
                       className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:bg-white/70 transition-colors text-left active:scale-[0.99]"
                     >
                       <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden">
+                        <div className="w-12 h-12 rounded-full bg-[#2A4365] flex items-center justify-center overflow-hidden">
                           {conv.partner_photo ? (
                             <img src={conv.partner_photo} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -660,7 +660,7 @@ function MessagesContent() {
                           )}
                         </div>
                         {conv.unread_count > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#1B4332] rounded-full border-2 border-white flex items-center justify-center">
+                          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#2A4365] rounded-full border-2 border-white flex items-center justify-center">
                             <span className="text-[9px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
                           </span>
                         )}
@@ -670,7 +670,7 @@ function MessagesContent() {
                           <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold' : 'font-semibold'} text-gray-900`}>
                             {conv.partner_name}
                           </p>
-                          <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#1B4332] font-semibold' : 'text-gray-400'}`}>
+                          <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#2A4365] font-semibold' : 'text-gray-400'}`}>
                             {formatTime(conv.last_message_time)}
                           </span>
                         </div>
@@ -695,7 +695,7 @@ function MessagesContent() {
                       disabled={resolvingRelativeId === relative.person_id}
                       className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 hover:bg-white/70 transition-colors text-left active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-[#2A4365] flex items-center justify-center overflow-hidden flex-shrink-0">
                         {relative.photo_url ? (
                           <img src={relative.photo_url} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -711,7 +711,7 @@ function MessagesContent() {
                         </p>
                       </div>
                       {resolvingRelativeId === relative.person_id && (
-                        <Loader2 size={14} className="text-[#1B4332] animate-spin flex-shrink-0" />
+                        <Loader2 size={14} className="text-[#2A4365] animate-spin flex-shrink-0" />
                       )}
                     </button>
                   ))}

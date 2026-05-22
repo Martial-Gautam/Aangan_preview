@@ -21,13 +21,13 @@ const nodeTypes = { familyNode: FamilyNode };
 
 // MiniMap color mapping
 function miniMapNodeColor(node: any): string {
-  if (node.data?.isCenterPerson) return '#1B4332';
+  if (node.data?.isCenterPerson) return '#2A4365';
   const rel = node.data?.relationshipType;
-  if (rel === 'self') return '#1B4332';
-  if (rel === 'father' || rel === 'mother') return '#1B4332';
-  if (rel === 'spouse') return '#1B4332';
-  if (rel === 'child') return '#1B4332';
-  if (rel === 'sibling') return '#1B4332';
+  if (rel === 'self') return '#2A4365';
+  if (rel === 'father' || rel === 'mother') return '#2A4365';
+  if (rel === 'spouse') return '#2A4365';
+  if (rel === 'child') return '#2A4365';
+  if (rel === 'sibling') return '#2A4365';
   if (rel === 'connection') return '#9ca3af';
   return '#9ca3af';
 }

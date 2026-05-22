@@ -103,7 +103,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
       {/* Modal */}
       <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl overflow-hidden animate-slideUp border border-white/30">
         {/* Header */}
-        <div className="relative bg-[#1B4332] px-6 pt-6 pb-8">
+        <div className="relative bg-[#2A4365] px-6 pt-6 pb-8">
           <button
             onClick={onDismiss}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -132,8 +132,8 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
         {/* Success state */}
         {success && (
           <div className="px-6 py-10 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-[#1B4332]/10 flex items-center justify-center mb-4 animate-bounceIn">
-              <Check size={32} className="text-[#1B4332]" />
+            <div className="w-16 h-16 rounded-full bg-[#2A4365]/10 flex items-center justify-center mb-4 animate-bounceIn">
+              <Check size={32} className="text-[#2A4365]" />
             </div>
             <p className="text-gray-600 text-sm text-center">
               Your identity is linked. Connection requests have been sent to confirm relationships.
@@ -165,15 +165,15 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
                   key={match.id}
                   className={`bg-white/30 backdrop-blur-md rounded-2xl border overflow-hidden transition-colors ${
                     selectedIds.includes(match.id)
-                      ? 'border-[#1B4332]/40 bg-[#1B4332]/5'
-                      : 'border-gray-200/40 hover:border-[#1B4332]/25'
+                      ? 'border-[#2A4365]/40 bg-[#2A4365]/5'
+                      : 'border-gray-200/40 hover:border-[#2A4365]/25'
                   }`}
                   onClick={() => toggleSelect(match.id)}
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-bold text-[#1B4332]">{initials}</span>
+                      <div className="w-12 h-12 rounded-full bg-[#2A4365]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-[#2A4365]">{initials}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 text-sm truncate">{match.full_name}</p>
@@ -184,7 +184,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         selectedIds.includes(match.id)
-                          ? 'bg-[#1B4332] border-[#1B4332]'
+                          ? 'bg-[#2A4365] border-[#2A4365]'
                           : 'border-gray-300'
                       }`}>
                         {selectedIds.includes(match.id) && <Check size={14} className="text-white" />}
@@ -227,7 +227,7 @@ export default function ClaimProfileModal({ matches, onClaimed, onDismiss }: Cla
             <button
               onClick={handleClaim}
               disabled={claiming || selectedIds.length === 0}
-              className="w-full bg-[#1B4332] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-[#2A4365] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#2A4365]/90 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {claiming ? (
                 <>

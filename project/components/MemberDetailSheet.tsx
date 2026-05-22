@@ -21,7 +21,7 @@ const COLOR_MAP: Record<string, string> = {
   sibling: 'bg-amber-500/15 text-amber-600',
   spouse: 'bg-pink-500/15 text-pink-600',
   child: 'bg-teal-500/15 text-teal-600',
-  connection: 'bg-[#1B4332]/10 text-[#1B4332]',
+  connection: 'bg-[#2A4365]/10 text-[#2A4365]',
   relative: 'bg-gray-100 text-gray-500',
 };
 
@@ -220,7 +220,7 @@ export default function MemberDetailSheet({
             }`}>
               <div className={`w-full h-full rounded-full flex items-center justify-center text-xl font-bold overflow-hidden ${
                 isSelf
-                  ? 'bg-gradient-to-br from-[#1B4332] to-[#2d5033]'
+                  ? 'bg-gradient-to-br from-[#2A4365] to-[#2d5033]'
                   : 'bg-white'
               }`}>
                 {person.photo_url ? (
@@ -257,7 +257,7 @@ export default function MemberDetailSheet({
 
           {/* Birthday countdown */}
           {birthdayNote && (
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#1B4332] font-medium bg-[#1B4332]/8 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-[#2A4365] font-medium bg-[#2A4365]/8 px-3 py-1.5 rounded-full">
               <Cake size={12} />
               {birthdayNote}
             </div>
@@ -266,9 +266,9 @@ export default function MemberDetailSheet({
           {/* Degree of relationship path */}
           {degreeResult && degreeResult.degree > 0 && (
             <div className="flex items-center gap-1.5 mt-2.5 text-xs text-gray-500 bg-gray-100/60 px-3 py-2 rounded-xl">
-              <Route size={12} className="text-[#1B4332] flex-shrink-0" />
+              <Route size={12} className="text-[#2A4365] flex-shrink-0" />
               <span>
-                <span className="font-semibold text-[#1B4332]">{degreeResult.label}</span>
+                <span className="font-semibold text-[#2A4365]">{degreeResult.label}</span>
                 <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'})</span>
               </span>
             </div>
@@ -290,7 +290,7 @@ export default function MemberDetailSheet({
                     }}
                     className="flex flex-col items-center gap-1.5 min-w-[60px] group"
                   >
-                    <div className="w-[50px] h-[50px] rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden flex-shrink-0 ring-2 ring-gray-100 group-hover:ring-[#1B4332]/20 transition-all">
+                    <div className="w-[50px] h-[50px] rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden flex-shrink-0 ring-2 ring-gray-100 group-hover:ring-[#2A4365]/20 transition-all">
                       {familyMember.photo_url ? (
                         <img src={familyMember.photo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -344,7 +344,7 @@ export default function MemberDetailSheet({
                   onClick={() => { onClose(); router.push(`/edit-member/${personId}`); }}
                   className="w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 hover:bg-gray-100/60 active:bg-gray-100 transition-all text-gray-900"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-[#2A4365] flex items-center justify-center flex-shrink-0">
                     <Pencil size={14} className="text-white" />
                   </div>
                   Edit Member
@@ -361,8 +361,8 @@ export default function MemberDetailSheet({
                 }}
                 className="w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 hover:bg-gray-100/60 active:bg-gray-100 transition-all text-gray-900"
               >
-                <div className="w-8 h-8 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0">
-                  <UserPlus size={14} className="text-[#1B4332]" />
+                <div className="w-8 h-8 rounded-full bg-[#2A4365]/10 flex items-center justify-center flex-shrink-0">
+                  <UserPlus size={14} className="text-[#2A4365]" />
                 </div>
                 Add Their Relative
               </button>
@@ -384,9 +384,9 @@ export default function MemberDetailSheet({
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      canMessage ? 'bg-[#1B4332]/10' : 'bg-gray-100'
+                      canMessage ? 'bg-[#2A4365]/10' : 'bg-gray-100'
                     }`}>
-                      <MessageCircle size={14} className={canMessage ? 'text-[#1B4332]' : 'text-gray-400'} />
+                      <MessageCircle size={14} className={canMessage ? 'text-[#2A4365]' : 'text-gray-400'} />
                     </div>
                     Send Message
                   </button>

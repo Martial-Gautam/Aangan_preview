@@ -57,10 +57,10 @@ interface SharePerson {
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
   'general': 'bg-gray-100 text-gray-600',
-  'family-news': 'bg-[#1B4332]/8 text-[#1B4332]',
+  'family-news': 'bg-[#2A4365]/8 text-[#2A4365]',
   'memories': 'bg-gray-100 text-gray-600',
   'question': 'bg-gray-100 text-gray-600',
-  'celebration': 'bg-[#1B4332]/8 text-[#1B4332]',
+  'celebration': 'bg-[#2A4365]/8 text-[#2A4365]',
 };
 
 // ─── Main Export ─────────────────────────────────────────────
@@ -389,7 +389,7 @@ function FeedContent() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
-        <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+        <Loader2 size={24} className="text-[#2A4365] animate-spin" />
       </div>
     );
   }
@@ -442,7 +442,7 @@ function FeedContent() {
                     onClick={() => setActiveContentType(ct.key)}
                     className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                       activeContentType === ct.key
-                        ? 'bg-[#1B4332]/8 text-[#1B4332]'
+                        ? 'bg-[#2A4365]/8 text-[#2A4365]'
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
@@ -463,7 +463,7 @@ function FeedContent() {
                   onClick={() => setCreateCategory(cat)}
                   className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-all whitespace-nowrap flex-shrink-0 ${
                     createCategory === cat
-                      ? 'bg-[#1B4332]/8 text-[#1B4332]'
+                      ? 'bg-[#2A4365]/8 text-[#2A4365]'
                       : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
@@ -524,7 +524,7 @@ function FeedContent() {
               return (
                 <div key={msg.id} className="glass-card rounded-xl overflow-hidden">
                   <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-                    <div className="w-9 h-9 rounded-full bg-[#1B4332] flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#2A4365] flex items-center justify-center overflow-hidden flex-shrink-0">
                       {authorImage ? (
                         <img src={authorImage} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -558,7 +558,7 @@ function FeedContent() {
                         <button
                           onClick={() => handleLike(msg)}
                           className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                            liked ? 'text-[#1B4332]' : 'text-gray-400 hover:text-[#1B4332]'
+                            liked ? 'text-[#2A4365]' : 'text-gray-400 hover:text-[#2A4365]'
                           }`}
                         >
                           <ArrowUp size={16} />
@@ -597,7 +597,7 @@ function FeedContent() {
         <div className="fixed bottom-20 right-4 z-30 sm:right-[calc(50%-12rem)]">
           <button
             onClick={() => { setCreateType(activeTab); setShowCreateSheet(true); }}
-            className="w-12 h-12 bg-[#1B4332] rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+            className="w-12 h-12 bg-[#2A4365] rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
           >
             <Plus size={22} className="text-white" />
           </button>
@@ -642,7 +642,7 @@ function FeedContent() {
                     onClick={() => setCreateContentType(ct.key)}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                       createContentType === ct.key
-                        ? 'bg-[#1B4332] text-white'
+                        ? 'bg-[#2A4365] text-white'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
@@ -655,7 +655,7 @@ function FeedContent() {
                 onClick={() => setCreateType(createType === 'discussion' ? 'post' : 'discussion')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   createType === 'discussion'
-                    ? 'bg-[#1B4332] text-white'
+                    ? 'bg-[#2A4365] text-white'
                     : 'bg-gray-100 text-gray-500'
                 }`}
               >
@@ -670,7 +670,7 @@ function FeedContent() {
               value={createTitle}
               onChange={e => setCreateTitle(e.target.value)}
               placeholder="Discussion title..."
-              className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#1B4332]/20 placeholder:text-gray-400"
+              className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#2A4365]/20 placeholder:text-gray-400"
             />
           )}
 
@@ -679,7 +679,7 @@ function FeedContent() {
               value={createTitle}
               onChange={e => setCreateTitle(e.target.value)}
               placeholder="Event name..."
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-sm mb-3 outline-none focus:border-[#1B4332]/30 placeholder:text-gray-400"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-sm mb-3 outline-none focus:border-[#2A4365]/30 placeholder:text-gray-400"
             />
           )}
 
@@ -694,7 +694,7 @@ function FeedContent() {
               : "What's on your mind?"
             }
             rows={3}
-            className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#1B4332]/20 placeholder:text-gray-400 resize-none"
+            className="w-full px-4 py-3 rounded-lg glass-input text-sm mb-3 outline-none focus:ring-1 focus:ring-[#2A4365]/20 placeholder:text-gray-400 resize-none"
           />
 
           {createType === 'discussion' && (
@@ -709,7 +709,7 @@ function FeedContent() {
                     onClick={() => setCreateCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
                       createCategory === cat
-                        ? 'bg-[#1B4332] text-white'
+                        ? 'bg-[#2A4365] text-white'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}
                   >
@@ -723,7 +723,7 @@ function FeedContent() {
           {/* Audience Picker */}
           <div className="mb-4">
             <p className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
-              <Users size={13} className="text-[#1B4332]" /> Share With
+              <Users size={13} className="text-[#2A4365]" /> Share With
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
@@ -737,7 +737,7 @@ function FeedContent() {
                     )}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                       audienceDegree.includes(deg)
-                        ? 'bg-[#1B4332] text-white'
+                        ? 'bg-[#2A4365] text-white'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -756,7 +756,7 @@ function FeedContent() {
                     )}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                       audienceSide.includes(side)
-                        ? 'bg-[#1B4332] text-white'
+                        ? 'bg-[#2A4365] text-white'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -773,11 +773,11 @@ function FeedContent() {
                   {sharePeople.map((person) => (
                     <div key={person.user_id} className="rounded-lg border border-gray-200/70 bg-white/60 px-2.5 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center">
                           {person.photo_url ? (
                             <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Users size={12} className="text-[#1B4332]/70" />
+                            <Users size={12} className="text-[#2A4365]/70" />
                           )}
                         </div>
                         <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
@@ -790,7 +790,7 @@ function FeedContent() {
                             setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
                           }}
                           className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
-                            includeUserIds.includes(person.user_id) ? 'bg-[#1B4332] text-white' : 'bg-gray-100 text-gray-600'
+                            includeUserIds.includes(person.user_id) ? 'bg-[#2A4365] text-white' : 'bg-gray-100 text-gray-600'
                           }`}
                         >
                           Include
@@ -820,7 +820,7 @@ function FeedContent() {
           <button
             onClick={handleCreate}
             disabled={creating || !createContent.trim() || (createType === 'discussion' && !createTitle.trim())}
-            className="w-full py-3.5 bg-[#1B4332] text-white rounded-xl text-sm font-semibold hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-[#2A4365] text-white rounded-xl text-sm font-semibold hover:bg-[#2A4365]/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {creating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             {creating ? 'Posting...' : 'Publish'}
@@ -842,7 +842,7 @@ function FeedContent() {
           <div className="flex-1 overflow-y-auto space-y-3 mb-4 min-h-0">
             {loadingReplies ? (
               <div className="flex justify-center py-8">
-                <Loader2 size={20} className="text-[#1B4332] animate-spin" />
+                <Loader2 size={20} className="text-[#2A4365] animate-spin" />
               </div>
             ) : replies.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-6">No comments yet. Be the first!</p>
@@ -853,11 +853,11 @@ function FeedContent() {
                 const rText = useStreamBackend ? reply.text : reply.content;
                 return (
                 <div key={reply.id} className="flex gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-[#1B4332]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-[#2A4365]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                     {rImage ? (
                       <img src={rImage} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-[9px] font-bold text-[#1B4332]">{getInitials(rName)}</span>
+                      <span className="text-[9px] font-bold text-[#2A4365]">{getInitials(rName)}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -884,7 +884,7 @@ function FeedContent() {
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || sendingComment}
-              className="w-9 h-9 rounded-lg bg-[#1B4332] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all"
+              className="w-9 h-9 rounded-lg bg-[#2A4365] flex items-center justify-center disabled:opacity-40 active:scale-95 transition-all"
             >
               {sendingComment ? (
                 <Loader2 size={14} className="text-white animate-spin" />

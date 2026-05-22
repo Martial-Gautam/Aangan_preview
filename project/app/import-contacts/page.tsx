@@ -172,7 +172,7 @@ export default function ImportContactsPage() {
       <div className="flex-1 p-5 max-w-lg mx-auto w-full">
         {!isSupported && contacts.length === 0 ? (
           <div className="glass-card rounded-2xl p-6 text-center">
-            <AlertCircle size={32} className="text-[#1B4332] mx-auto mb-3" />
+            <AlertCircle size={32} className="text-[#2A4365] mx-auto mb-3" />
             <h2 className="text-sm font-bold text-gray-900 mb-1">Not Supported</h2>
             <p className="text-xs text-gray-500 leading-relaxed">
               Your browser doesn't support the native Contact Picker. Please use Chrome on Android or Safari on iOS 16+.
@@ -180,8 +180,8 @@ export default function ImportContactsPage() {
           </div>
         ) : contacts.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center pt-10">
-            <div className="w-20 h-20 bg-[#1B4332]/10 rounded-full flex items-center justify-center mb-6">
-              <Users size={36} className="text-[#1B4332]" />
+            <div className="w-20 h-20 bg-[#2A4365]/10 rounded-full flex items-center justify-center mb-6">
+              <Users size={36} className="text-[#2A4365]" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Sync Address Book</h2>
             <p className="text-sm text-gray-500 text-center mb-8 max-w-xs leading-relaxed">
@@ -190,7 +190,7 @@ export default function ImportContactsPage() {
             <button
               onClick={handleImport}
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-[#1B4332] text-white font-semibold text-sm hover:bg-[#1B4332]/90 shadow-md flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-[#2A4365] text-white font-semibold text-sm hover:bg-[#2A4365]/90 shadow-md flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               {loading ? 'Reading Contacts...' : 'Select Contacts'}
@@ -245,7 +245,7 @@ export default function ImportContactsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || contacts.length === 0}
-                className="w-full max-w-lg mx-auto py-4 rounded-2xl bg-[#1B4332] text-white font-semibold text-sm hover:bg-[#1B4332]/90 shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full max-w-lg mx-auto py-4 rounded-2xl bg-[#2A4365] text-white font-semibold text-sm hover:bg-[#2A4365]/90 shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                 {saving ? 'Saving to Tree...' : `Add ${contacts.length} Members`}
@@ -299,7 +299,7 @@ function ContactCard({ contact, onRelChange, onRemove }: {
               onClick={() => onRelChange(rel)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
                 contact.relationshipType === rel 
-                  ? 'bg-[#1B4332] text-white' 
+                  ? 'bg-[#2A4365] text-white' 
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >

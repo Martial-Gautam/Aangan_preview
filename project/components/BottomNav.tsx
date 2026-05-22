@@ -54,12 +54,12 @@ export default function BottomNav() {
               prefetch={true}
               className={`relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-xl px-2.5 py-2 transition-all duration-200 active:scale-95 ${
                 active
-                  ? 'bg-[#1B4332]/12 text-[#1B4332] shadow-[inset_0_0_0_1px_rgba(27,67,50,0.22)]'
+                  ? 'bg-[#2A4365]/12 text-[#2A4365] shadow-[inset_0_0_0_1px_rgba(27,67,50,0.22)]'
                   : 'text-gray-500 hover:bg-black/5 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/6 dark:hover:text-gray-200'
               }`}
             >
               {active && (
-                <span className="absolute left-1/2 top-1 h-0.5 w-5 -translate-x-1/2 rounded-full bg-[#1B4332]" />
+                <span className="absolute left-1/2 top-1 h-0.5 w-5 -translate-x-1/2 rounded-full bg-[#2A4365]" />
               )}
               <div className="relative">
                 <Icon size={22} strokeWidth={active ? 2.2 : 1.6} />
@@ -69,7 +69,7 @@ export default function BottomNav() {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-semibold tracking-[0.01em] ${active ? 'text-[#1B4332]' : 'text-current'}`}>
+              <span className={`text-[10px] font-semibold tracking-[0.01em] ${active ? 'text-[#2A4365]' : 'text-current'}`}>
                 {label}
               </span>
             </Link>

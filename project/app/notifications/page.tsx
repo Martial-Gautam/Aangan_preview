@@ -111,7 +111,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
-        <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+        <Loader2 size={24} className="text-[#2A4365] animate-spin" />
       </div>
     );
   }
@@ -128,8 +128,8 @@ export default function NotificationsPage() {
         <div className="px-4 space-y-4">
           {isEmpty && (
             <div className="glass-card rounded-3xl p-8 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#1B4332]/8 flex items-center justify-center mb-4">
-                <Bell size={28} className="text-[#1B4332]/40" />
+              <div className="w-16 h-16 rounded-full bg-[#2A4365]/8 flex items-center justify-center mb-4">
+                <Bell size={28} className="text-[#2A4365]/40" />
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
                 No notifications yet. When someone adds you to their tree, you'll see it here.
@@ -140,12 +140,12 @@ export default function NotificationsPage() {
           {/* Connection Requests Section */}
           {(pendingRequests.length > 0 || requestsLoading) && (
             <div className="glass-card rounded-3xl overflow-hidden relative">
-              <div className="px-5 pt-4 pb-2 border-b border-gray-200/30 bg-[#1B4332]/5">
-                <h3 className="text-sm font-semibold text-[#1B4332] flex items-center gap-2">
-                  <Bell size={16} className="text-[#1B4332]" />
+              <div className="px-5 pt-4 pb-2 border-b border-gray-200/30 bg-[#2A4365]/5">
+                <h3 className="text-sm font-semibold text-[#2A4365] flex items-center gap-2">
+                  <Bell size={16} className="text-[#2A4365]" />
                   Connection Requests
                   {!requestsLoading && pendingRequests.length > 0 && (
-                    <span className="bg-[#1B4332] text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
+                    <span className="bg-[#2A4365] text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
                       {pendingRequests.length}
                     </span>
                   )}
@@ -154,17 +154,17 @@ export default function NotificationsPage() {
               <div className="divide-y divide-gray-50">
                 {requestsLoading ? (
                   <div className="py-8 flex justify-center">
-                    <Loader2 size={24} className="text-[#1B4332]/40 animate-spin" />
+                    <Loader2 size={24} className="text-[#2A4365]/40 animate-spin" />
                   </div>
                 ) : (
                   pendingRequests.map(req => (
                     <div key={req.id} className="p-4 hover:bg-white/30 transition-colors">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1B4332]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#2A4365]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {req.sender.photo_url ? (
                             <img src={req.sender.photo_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <User size={18} className="text-[#1B4332]" />
+                            <User size={18} className="text-[#2A4365]" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -175,7 +175,7 @@ export default function NotificationsPage() {
                               : 'added you to their family tree'}
                             {req.relationship && req.type !== 'suggestion' && (
                               <>
-                                {' '}as their <span className="font-semibold text-[#1B4332]">{req.relationship}</span>
+                                {' '}as their <span className="font-semibold text-[#2A4365]">{req.relationship}</span>
                               </>
                             )}.
                           </p>
@@ -187,7 +187,7 @@ export default function NotificationsPage() {
                             <button
                               onClick={() => handleConnectionResponse(req.id, 'accept')}
                               disabled={processingRequestId === req.id}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#1B4332] hover:bg-[#1B4332]/90 text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#2A4365] hover:bg-[#2A4365]/90 text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50"
                             >
                               {processingRequestId === req.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                               Connect Trees

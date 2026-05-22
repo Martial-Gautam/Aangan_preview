@@ -401,7 +401,7 @@ export default function HomePage() {
             </button>
             <Link
               href="/add-member"
-              className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center hover:bg-[#1B4332]/90 transition-all active:scale-95 shadow-lg shadow-[#1B4332]/20"
+              className="w-8 h-8 rounded-full bg-[#2A4365] flex items-center justify-center hover:bg-[#2A4365]/90 transition-all active:scale-95 shadow-lg shadow-[#2A4365]/20"
             >
               <UserPlus size={14} className="text-white" />
             </Link>
@@ -427,17 +427,17 @@ export default function HomePage() {
 
       {/* Suggestions Banner */}
       {suggestions.length > 0 && !dataLoading && (
-        <div className="bg-gradient-to-r from-[#1B4332]/8 via-white/50 to-[#1B4332]/8 backdrop-blur-lg border-b border-[#1B4332]/10 px-5 py-2.5 flex-shrink-0 cursor-pointer hover:from-[#1B4332]/12 hover:to-[#1B4332]/12 transition-all" onClick={() => setShowSuggestionsSheet(true)}>
+        <div className="bg-gradient-to-r from-[#2A4365]/8 via-white/50 to-[#2A4365]/8 backdrop-blur-lg border-b border-[#2A4365]/10 px-5 py-2.5 flex-shrink-0 cursor-pointer hover:from-[#2A4365]/12 hover:to-[#2A4365]/12 transition-all" onClick={() => setShowSuggestionsSheet(true)}>
           <div className="max-w-lg mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#1B4332]/10 flex items-center justify-center">
-                <Sparkles size={13} className="text-[#1B4332]" />
+              <div className="w-7 h-7 rounded-lg bg-[#2A4365]/10 flex items-center justify-center">
+                <Sparkles size={13} className="text-[#2A4365]" />
               </div>
               <p className="text-[13px] font-semibold text-gray-800">
                 {suggestions.length} possible {suggestions.length === 1 ? 'connection' : 'connections'}
               </p>
             </div>
-            <button className="text-[11px] font-bold text-[#1B4332] bg-[#1B4332]/8 px-3.5 py-1.5 rounded-full hover:bg-[#1B4332]/15 transition-colors">
+            <button className="text-[11px] font-bold text-[#2A4365] bg-[#2A4365]/8 px-3.5 py-1.5 rounded-full hover:bg-[#2A4365]/15 transition-colors">
               Review
             </button>
           </div>
@@ -546,7 +546,7 @@ export default function HomePage() {
               </p>
               <Link
                 href="/add-member"
-                className="bg-[#1B4332] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#1B4332]/90 transition-all flex items-center gap-2 active:scale-95"
+                className="bg-[#2A4365] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#2A4365]/90 transition-all flex items-center gap-2 active:scale-95"
               >
                 <Plus size={16} /> Add First Member
               </Link>
@@ -561,14 +561,14 @@ export default function HomePage() {
                 setShowNearbySheet(true);
                 fetchNearbyRelatives();
               }}
-              className="w-11 h-11 rounded-full bg-white/90 border border-white/60 backdrop-blur-xl text-[#1B4332] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.15)] hover:bg-white hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] active:scale-90 transition-all"
+              className="w-11 h-11 rounded-full bg-white/90 border border-white/60 backdrop-blur-xl text-[#2A4365] flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.15)] hover:bg-white hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] active:scale-90 transition-all"
               aria-label="Relatives around me"
             >
               <Navigation size={16} />
             </button>
             <Link
               href="/add-member"
-              className="w-13 h-13 bg-gradient-to-br from-[#1B4332] to-[#2d6b48] rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(27,67,50,0.4)] hover:shadow-[0_8px_28px_rgba(27,67,50,0.5)] active:scale-90 transition-all"
+              className="w-13 h-13 bg-gradient-to-br from-[#2A4365] to-[#2d6b48] rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(27,67,50,0.4)] hover:shadow-[0_8px_28px_rgba(27,67,50,0.5)] active:scale-90 transition-all"
               style={{ width: 52, height: 52 }}
             >
               <Plus size={22} className="text-white" />
@@ -616,7 +616,7 @@ export default function HomePage() {
           <div className="space-y-2">
             <button
               onClick={handleInstall}
-              className="w-full py-3.5 rounded-2xl bg-[#1B4332] hover:bg-[#1B4332]/90 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-3.5 rounded-2xl bg-[#2A4365] hover:bg-[#2A4365]/90 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
             >
               <Download size={16} />
               {isInstalled ? 'Installed' : canInstall ? 'Install Now' : 'Show Install Steps'}
@@ -642,7 +642,7 @@ export default function HomePage() {
           </div>
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Sparkles size={20} className="text-[#1B4332]" />
+              <Sparkles size={20} className="text-[#2A4365]" />
               Suggested Connections
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -653,13 +653,13 @@ export default function HomePage() {
             {suggestions.map((suggestion) => (
               <div key={suggestion.id} className="glass-card rounded-xl p-4">
                 <p className="text-sm text-gray-800 leading-relaxed mb-3">
-                  Is <span className="font-bold">{suggestion.to_person.full_name}</span> the <span className="font-semibold text-[#1B4332] capitalize">{suggestion.suggested_type}</span> of <span className="font-bold">{suggestion.from_person.full_name}</span>?
+                  Is <span className="font-bold">{suggestion.to_person.full_name}</span> the <span className="font-semibold text-[#2A4365] capitalize">{suggestion.suggested_type}</span> of <span className="font-bold">{suggestion.from_person.full_name}</span>?
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSuggestionResponse(suggestion.id, 'accept')}
                     disabled={processingSuggestionId === suggestion.id}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#1B4332] hover:bg-[#1B4332]/90 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#2A4365] hover:bg-[#2A4365]/90 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
                   >
                     {processingSuggestionId === suggestion.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                     Accept
@@ -690,7 +690,7 @@ export default function HomePage() {
           </div>
           <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <MapPin size={20} className="text-[#1B4332]" />
+              <MapPin size={20} className="text-[#2A4365]" />
               Relatives Around Me
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -705,13 +705,13 @@ export default function HomePage() {
                 value={nearbyCityQuery}
                 onChange={(e) => setNearbyCityQuery(e.target.value)}
                 placeholder="Enter city (e.g., Mumbai)"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-[#1B4332]/30"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-[#2A4365]/30"
               />
             </div>
             <button
               onClick={() => fetchNearbyRelatives(nearbyCityQuery)}
               disabled={nearbyLoading}
-              className="px-4 py-2.5 rounded-xl bg-[#1B4332] text-white text-sm font-semibold hover:bg-[#1B4332]/90 disabled:opacity-60"
+              className="px-4 py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90 disabled:opacity-60"
             >
               Search
             </button>
@@ -723,7 +723,7 @@ export default function HomePage() {
               setNearbyCityQuery(homeCity);
               fetchNearbyRelatives(homeCity);
             }}
-            className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/12"
+            className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#2A4365]/8 text-[#2A4365] hover:bg-[#2A4365]/12"
           >
             <Navigation size={13} />
             Use My Profile City
@@ -737,7 +737,7 @@ export default function HomePage() {
 
           {nearbyLoading ? (
             <div className="py-10 flex justify-center">
-              <Loader2 size={22} className="text-[#1B4332]/40 animate-spin" />
+              <Loader2 size={22} className="text-[#2A4365]/40 animate-spin" />
             </div>
           ) : nearbyRelatives.length === 0 ? (
             <div className="glass-card rounded-2xl p-5 text-center">
@@ -752,18 +752,18 @@ export default function HomePage() {
             <div className="space-y-2">
               {nearbyRelatives.map((relative) => (
                 <div key={relative.user_id} className="glass-card rounded-2xl px-3.5 py-3 flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center flex-shrink-0">
                     {relative.photo_url ? (
                       <img src={relative.photo_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-[#1B4332] font-semibold text-sm">
+                      <span className="text-[#2A4365] font-semibold text-sm">
                         {relative.full_name.split(' ').map((x) => x[0]).join('').slice(0, 2).toUpperCase()}
                       </span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-gray-900 truncate">{relative.full_name}</p>
-                    <p className="text-xs text-[#1B4332]">{relative.relationship_label}</p>
+                    <p className="text-xs text-[#2A4365]">{relative.relationship_label}</p>
                     <p className="text-xs text-gray-500 truncate">
                       {[relative.city, relative.state, relative.country].filter(Boolean).join(', ')}
                     </p>

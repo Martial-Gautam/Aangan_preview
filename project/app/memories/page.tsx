@@ -420,7 +420,7 @@ export default function MemoriesPage() {
                 return (
                   <div className="glass-card rounded-2xl p-4">
                     <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <CalendarDays size={16} className="text-[#1B4332]" />
+                      <CalendarDays size={16} className="text-[#2A4365]" />
                       {monthName}
                     </h3>
                     <div className="grid grid-cols-7 gap-0.5 text-center">
@@ -436,15 +436,15 @@ export default function MemoriesPage() {
                             key={day}
                             className={`relative w-8 h-8 mx-auto flex items-center justify-center rounded-full text-xs font-medium transition-all ${
                               isToday
-                                ? 'bg-[#1B4332] text-white font-bold shadow-md'
+                                ? 'bg-[#2A4365] text-white font-bold shadow-md'
                                 : hasMemory
-                                ? 'bg-[#1B4332]/10 text-[#1B4332] font-semibold'
+                                ? 'bg-[#2A4365]/10 text-[#2A4365] font-semibold'
                                 : 'text-gray-600'
                             }`}
                           >
                             {day}
                             {hasMemory && !isToday && (
-                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#1B4332]" />
+                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#2A4365]" />
                             )}
                           </div>
                         );
@@ -457,13 +457,13 @@ export default function MemoriesPage() {
               {/* ── Upcoming Moments Bar ── */}
               <div className="glass-card rounded-2xl p-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <Sparkles size={14} className="text-[#1B4332]" />
+                  <Sparkles size={14} className="text-[#2A4365]" />
                   Upcoming Moments
                 </h3>
                 <div className="space-y-2">
                   {memoryCards.length > 0 ? (
                     <p className="text-xs text-gray-500">
-                        <span className="font-semibold text-[#1B4332]">{memoryCards.length}</span> {memoryCards.length === 1 ? 'memory' : 'memories'} captured so far
+                        <span className="font-semibold text-[#2A4365]">{memoryCards.length}</span> {memoryCards.length === 1 ? 'memory' : 'memories'} captured so far
                     </p>
                   ) : null}
                   <p className="text-xs text-gray-500">
@@ -486,7 +486,7 @@ export default function MemoriesPage() {
                 className="w-full text-left glass-card rounded-2xl p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#1B4332]/10 text-[#1B4332] flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-[#2A4365]/10 text-[#2A4365] flex items-center justify-center">
                     <Camera size={20} />
                   </div>
                   <div>
@@ -506,7 +506,7 @@ export default function MemoriesPage() {
                 className="w-full text-left glass-card rounded-2xl p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#1B4332]/10 text-[#1B4332] flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-[#2A4365]/10 text-[#2A4365] flex items-center justify-center">
                     <Sparkles size={20} />
                   </div>
                   <div>
@@ -525,7 +525,7 @@ export default function MemoriesPage() {
                 className="w-full text-left glass-card rounded-2xl p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-[#1B4332]/10 text-[#1B4332] flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-[#2A4365]/10 text-[#2A4365] flex items-center justify-center">
                     <QrCode size={20} />
                   </div>
                   <div>
@@ -548,7 +548,7 @@ export default function MemoriesPage() {
                     if (joinError) setJoinError('');
                   }}
                   placeholder="Enter album code"
-                  className="mt-2 w-full rounded-xl glass-input px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 focus:ring-[#1B4332]/20"
+                  className="mt-2 w-full rounded-xl glass-input px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:ring-1 focus:ring-[#2A4365]/20"
                 />
               </div>
 
@@ -557,7 +557,7 @@ export default function MemoriesPage() {
                 <button
                   type="button"
                   onClick={() => setJoinError(QR_PLACEHOLDER)}
-                  className="mt-2 w-full rounded-xl border border-dashed border-gray-300 bg-white/50 backdrop-blur-md px-3 py-5 text-[#1B4332] flex items-center justify-center gap-2"
+                  className="mt-2 w-full rounded-xl border border-dashed border-gray-300 bg-white/50 backdrop-blur-md px-3 py-5 text-[#2A4365] flex items-center justify-center gap-2"
                 >
                   <ScanLine size={18} />
                   <span className="text-sm font-medium">Scan album QR code</span>
@@ -573,7 +573,7 @@ export default function MemoriesPage() {
               <button
                 type="button"
                 onClick={handleJoinAlbum}
-                className="w-full py-2.5 rounded-xl bg-[#1B4332] text-white text-sm font-semibold hover:bg-[#1B4332]/90"
+                className="w-full py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90"
               >
                 Continue
               </button>
@@ -594,7 +594,7 @@ export default function MemoriesPage() {
                     setAlbumTypeFilter(newType);
                     setActiveCategory(newType === 'memory' ? 'family_trip' : 'birthday');
                   }}
-                  className="text-xs font-semibold text-[#1B4332] bg-[#1B4332]/8 px-3 py-1.5 rounded-full"
+                  className="text-xs font-semibold text-[#2A4365] bg-[#2A4365]/8 px-3 py-1.5 rounded-full"
                 >
                   Switch to {albumTypeFilter === 'memory' ? 'Events' : 'Memories'}
                 </button>
@@ -609,10 +609,10 @@ export default function MemoriesPage() {
                       key={category.key}
                       onClick={() => setActiveCategory(category.key)}
                       className={`${category.cardClass} relative rounded-2xl p-3 text-left transition ${
-                        active ? 'ring-2 ring-[#1B4332]/25 border-[#1B4332]/30' : ''
+                        active ? 'ring-2 ring-[#2A4365]/25 border-[#2A4365]/30' : ''
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-white/60 backdrop-blur-md border border-white/30 text-[#1B4332] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-white/60 backdrop-blur-md border border-white/30 text-[#2A4365] flex items-center justify-center">
                         <Icon size={16} />
                       </div>
                       <p className="mt-3 text-sm font-bold text-gray-900">{category.label}</p>
@@ -631,7 +631,7 @@ export default function MemoriesPage() {
                   <button
                     type="button"
                     onClick={() => setShowCreate(true)}
-                    className="w-9 h-9 rounded-full bg-[#1B4332] text-white flex items-center justify-center shadow-md"
+                    className="w-9 h-9 rounded-full bg-[#2A4365] text-white flex items-center justify-center shadow-md"
                   >
                     <ImagePlus size={17} />
                   </button>
@@ -639,7 +639,7 @@ export default function MemoriesPage() {
 
                 {loadingMemories ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 size={22} className="text-[#1B4332] animate-spin" />
+                    <Loader2 size={22} className="text-[#2A4365] animate-spin" />
                   </div>
                 ) : filteredMemories.length === 0 ? (
                   <div className="text-center py-7 px-3 rounded-xl border border-dashed border-gray-300 bg-white/40 backdrop-blur-md">
@@ -685,17 +685,17 @@ export default function MemoriesPage() {
                     value={eventTitle}
                     onChange={(e) => setEventTitle(e.target.value)}
                     placeholder="Memory title"
-                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none focus:ring-1 focus:ring-[#1B4332]/20"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none focus:ring-1 focus:ring-[#2A4365]/20"
                   />
                   <textarea
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Caption (optional)"
                     rows={2}
-                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none resize-none focus:ring-1 focus:ring-[#1B4332]/20"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none resize-none focus:ring-1 focus:ring-[#2A4365]/20"
                   />
                   <label className="w-full rounded-xl border border-dashed border-gray-300 px-3.5 py-3 text-sm text-gray-500 flex items-center gap-2 cursor-pointer hover:bg-white/40">
-                    <UploadCloud size={16} className="text-[#1B4332]" />
+                    <UploadCloud size={16} className="text-[#2A4365]" />
                     {photo ? photo.name : 'Upload memory photo'}
                     <input
                       type="file"
@@ -709,7 +709,7 @@ export default function MemoriesPage() {
                   {/* Audience Picker */}
                   <div className="pt-1">
                     <p className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-1.5">
-                      <Users size={13} className="text-[#1B4332]" /> Share With
+                      <Users size={13} className="text-[#2A4365]" /> Share With
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {/* Column 1: Degree */}
@@ -724,7 +724,7 @@ export default function MemoriesPage() {
                             )}
                             className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                               audienceDegree.includes(deg)
-                                ? 'bg-[#1B4332] text-white shadow-sm'
+                                ? 'bg-[#2A4365] text-white shadow-sm'
                                 : 'glass-input text-gray-900 hover:bg-white/60'
                             }`}
                           >
@@ -744,7 +744,7 @@ export default function MemoriesPage() {
                             )}
                             className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                               audienceSide.includes(side)
-                                ? 'bg-[#1B4332] text-white shadow-sm'
+                                ? 'bg-[#2A4365] text-white shadow-sm'
                                 : 'glass-input text-gray-900 hover:bg-white/60'
                             }`}
                           >
@@ -760,11 +760,11 @@ export default function MemoriesPage() {
                           {sharePeople.map((person) => (
                             <div key={person.user_id} className="rounded-lg border border-gray-200/60 bg-white/55 px-2.5 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-[#1B4332]/10 overflow-hidden flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center">
                                   {person.photo_url ? (
                                     <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
                                   ) : (
-                                    <Users size={12} className="text-[#1B4332]/70" />
+                                    <Users size={12} className="text-[#2A4365]/70" />
                                   )}
                                 </div>
                                 <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
@@ -777,7 +777,7 @@ export default function MemoriesPage() {
                                     setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
                                   }}
                                   className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
-                                    includeUserIds.includes(person.user_id) ? 'bg-[#1B4332] text-white' : 'bg-gray-100 text-gray-600'
+                                    includeUserIds.includes(person.user_id) ? 'bg-[#2A4365] text-white' : 'bg-gray-100 text-gray-600'
                                   }`}
                                 >
                                   Include
@@ -817,7 +817,7 @@ export default function MemoriesPage() {
                 <button
                   onClick={handleCreateMemory}
                   disabled={uploading}
-                  className="flex-1 py-2.5 rounded-xl bg-[#1B4332] text-white text-sm font-semibold hover:bg-[#1B4332]/90 disabled:opacity-50 active:scale-[0.98] transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90 disabled:opacity-50 active:scale-[0.98] transition-all"
                 >
                   {uploading ? 'Saving...' : 'Share Memory'}
                 </button>

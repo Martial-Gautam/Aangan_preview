@@ -11,12 +11,12 @@ import { useFamilyStore } from '@/lib/family-store';
 const COLOR_MAP: Record<string, {
   ring: string; bg: string; text: string; badge: string; badgeText: string; cardBg: string;
 }> = {
-  self:       { ring: 'ring-[#1B4332]', bg: 'bg-gradient-to-br from-[#1B4332] to-[#2d5033]', text: 'text-white', badge: 'bg-[#1B4332]', badgeText: 'text-white', cardBg: 'bg-[#1B4332]/5' },
-  father:     { ring: 'ring-[#1B4332]/60', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#1B4332]/10', badgeText: 'text-[#1B4332]', cardBg: 'bg-[#1B4332]/4' },
-  mother:     { ring: 'ring-[#1B4332]/60', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#1B4332]/10', badgeText: 'text-[#1B4332]', cardBg: 'bg-[#1B4332]/4' },
-  sibling:    { ring: 'ring-[#1B4332]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#1B4332]/10', badgeText: 'text-[#1B4332]', cardBg: 'bg-[#1B4332]/4' },
-  spouse:     { ring: 'ring-[#1B4332]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#1B4332]/10', badgeText: 'text-[#1B4332]', cardBg: 'bg-[#1B4332]/4' },
-  child:      { ring: 'ring-[#1B4332]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#1B4332]/10', badgeText: 'text-[#1B4332]', cardBg: 'bg-[#1B4332]/4' },
+  self:       { ring: 'ring-[#2A4365]', bg: 'bg-gradient-to-br from-[#2A4365] to-[#2d5033]', text: 'text-white', badge: 'bg-[#2A4365]', badgeText: 'text-white', cardBg: 'bg-[#2A4365]/5' },
+  father:     { ring: 'ring-[#2A4365]/60', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#2A4365]/10', badgeText: 'text-[#2A4365]', cardBg: 'bg-[#2A4365]/4' },
+  mother:     { ring: 'ring-[#2A4365]/60', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#2A4365]/10', badgeText: 'text-[#2A4365]', cardBg: 'bg-[#2A4365]/4' },
+  sibling:    { ring: 'ring-[#2A4365]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#2A4365]/10', badgeText: 'text-[#2A4365]', cardBg: 'bg-[#2A4365]/4' },
+  spouse:     { ring: 'ring-[#2A4365]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#2A4365]/10', badgeText: 'text-[#2A4365]', cardBg: 'bg-[#2A4365]/4' },
+  child:      { ring: 'ring-[#2A4365]/40', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-600', badge: 'bg-[#2A4365]/10', badgeText: 'text-[#2A4365]', cardBg: 'bg-[#2A4365]/4' },
   connection: { ring: 'ring-gray-300', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-500', badge: 'bg-gray-100', badgeText: 'text-gray-500', cardBg: 'bg-gray-100/50' },
   relative:   { ring: 'ring-gray-200', bg: 'bg-gradient-to-br from-gray-50 to-gray-100', text: 'text-gray-500', badge: 'bg-gray-100', badgeText: 'text-gray-500', cardBg: 'bg-gray-100/30' },
 };
@@ -75,7 +75,7 @@ function FamilyNode({ data }: NodeProps) {
   const isDimmed = isSearchActive && nodeData.isHighlighted === false;
 
   const highlightRing = isSearchActive && nodeData.isHighlighted
-    ? 'ring-2 ring-[#1B4332] ring-offset-2 ring-offset-white'
+    ? 'ring-2 ring-[#2A4365] ring-offset-2 ring-offset-white'
     : '';
 
   const isCentered = nodeData.isCenterPerson;
@@ -100,7 +100,7 @@ function FamilyNode({ data }: NodeProps) {
 
         {/* Center person FOCUS badge */}
         {isCentered && (
-          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#1B4332] text-white text-[7px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md z-10 tracking-wider">
+          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#2A4365] text-white text-[7px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md z-10 tracking-wider">
             ● FOCUS
           </div>
         )}
@@ -110,7 +110,7 @@ function FamilyNode({ data }: NodeProps) {
           <div
             className={`w-12 h-12 rounded-full ring-2 ${colors.ring} flex items-center justify-center text-sm font-bold overflow-hidden shadow-md ${
               nodeData.isSelf
-                ? `${colors.bg} shadow-[#1B4332]/25`
+                ? `${colors.bg} shadow-[#2A4365]/25`
                 : `${colors.bg} shadow-black/8`
             }`}
           >
@@ -123,7 +123,7 @@ function FamilyNode({ data }: NodeProps) {
 
           {/* Self glow pulse */}
           {nodeData.isSelf && (
-            <div className="absolute inset-0 rounded-full ring-2 ring-[#1B4332]/30 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="absolute inset-0 rounded-full ring-2 ring-[#2A4365]/30 animate-ping" style={{ animationDuration: '3s' }} />
           )}
 
           {/* Linked user indicator */}
@@ -142,7 +142,7 @@ function FamilyNode({ data }: NodeProps) {
               e.stopPropagation();
               setQuickAddTarget(nodeData.personId);
             }}
-            className="absolute -bottom-1 -left-1 w-4.5 h-4.5 bg-[#1B4332] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:scale-110 z-10"
+            className="absolute -bottom-1 -left-1 w-4.5 h-4.5 bg-[#2A4365] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:scale-110 z-10"
           >
             <Plus size={9} className="text-white" strokeWidth={3} />
           </button>

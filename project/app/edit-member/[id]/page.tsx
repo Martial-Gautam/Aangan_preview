@@ -168,7 +168,7 @@ export default function EditMemberPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={24} className="text-[#1B4332] animate-spin" />
+          <Loader2 size={24} className="text-[#2A4365] animate-spin" />
           <p className="text-sm text-gray-500">Loading member...</p>
         </div>
       </div>
@@ -192,7 +192,7 @@ export default function EditMemberPage() {
           {relationshipType && (
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Relationship</h3>
-              <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-[#1B4332] bg-[#1B4332]/5">
+              <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-[#2A4365] bg-[#2A4365]/5">
                 <span className="text-2xl">
                   {relationshipType === 'father' ? '👨' :
                    relationshipType === 'mother' ? '👩' :
@@ -200,7 +200,7 @@ export default function EditMemberPage() {
                    relationshipType === 'spouse' ? '💑' : '👶'}
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-[#1B4332]">
+                  <p className="text-sm font-semibold text-[#2A4365]">
                     {RELATIONSHIP_LABELS[relationshipType] || relationshipType}
                   </p>
                   <p className="text-xs text-gray-400">Cannot be changed</p>
@@ -215,14 +215,14 @@ export default function EditMemberPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#1B4332]/25 bg-[#1B4332]/5 flex flex-col items-center justify-center hover:border-[#1B4332]/50 hover:bg-[#1B4332]/10 transition-all active:scale-95 overflow-hidden flex-shrink-0"
+                className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#2A4365]/25 bg-[#2A4365]/5 flex flex-col items-center justify-center hover:border-[#2A4365]/50 hover:bg-[#2A4365]/10 transition-all active:scale-95 overflow-hidden flex-shrink-0"
               >
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <>
-                    <Camera size={20} className="text-[#1B4332]/50 mb-1" />
-                    <span className="text-xs text-[#1B4332]">Add</span>
+                    <Camera size={20} className="text-[#2A4365]/50 mb-1" />
+                    <span className="text-xs text-[#2A4365]">Add</span>
                   </>
                 )}
               </button>
@@ -244,7 +244,7 @@ export default function EditMemberPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter their name"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-300"
               />
             </div>
           </div>
@@ -259,8 +259,8 @@ export default function EditMemberPage() {
                   onClick={() => setGender(gender === g.value ? '' : g.value)}
                   className={`py-2.5 rounded-xl border-2 text-sm font-medium transition-all active:scale-95 ${
                     gender === g.value
-                      ? 'border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]'
-                      : 'border-gray-200/40 text-gray-500 hover:border-[#1B4332]/30'
+                      ? 'border-[#2A4365] bg-[#2A4365]/5 text-[#2A4365]'
+                      : 'border-gray-200/40 text-gray-500 hover:border-[#2A4365]/30'
                   }`}
                 >
                   {g.label}
@@ -277,7 +277,7 @@ export default function EditMemberPage() {
               value={dob}
               onChange={(e) => setDob(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all text-gray-700"
+              className="w-full px-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all text-gray-700"
             />
           </div>
 
@@ -295,7 +295,7 @@ export default function EditMemberPage() {
                   value={memberEmail}
                   onChange={(e) => setMemberEmail(e.target.value)}
                   placeholder="Their email address"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
               <div className="relative">
@@ -305,7 +305,7 @@ export default function EditMemberPage() {
                   value={memberPhone}
                   onChange={(e) => setMemberPhone(e.target.value)}
                   placeholder="Their phone number"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-300"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-300"
                 />
               </div>
             </div>
@@ -322,8 +322,8 @@ export default function EditMemberPage() {
             disabled={!isValid || saving || success}
             className={`w-full py-4 rounded-2xl font-semibold text-base transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
               success
-                ? 'bg-[#1B4332] shadow-[#1B4332]/20 text-white'
-                : 'bg-[#1B4332] shadow-[#1B4332]/20 text-white hover:bg-[#1B4332]/90 active:scale-[0.98]'
+                ? 'bg-[#2A4365] shadow-[#2A4365]/20 text-white'
+                : 'bg-[#2A4365] shadow-[#2A4365]/20 text-white hover:bg-[#2A4365]/90 active:scale-[0.98]'
             }`}
           >
             {success ? <><Check size={18} /> Updated successfully!</> : saving ? 'Saving...' : 'Save Changes'}

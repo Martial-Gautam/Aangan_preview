@@ -313,7 +313,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setEditing(!editing)}
               className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-all ${
-                editing ? 'bg-gray-100 text-gray-500' : 'bg-[#1B4332]/8 text-[#1B4332] hover:bg-[#1B4332]/12'
+                editing ? 'bg-gray-100 text-gray-500' : 'bg-[#2A4365]/8 text-[#2A4365] hover:bg-[#2A4365]/12'
               }`}
             >
               <Edit2 size={14} />
@@ -323,17 +323,17 @@ export default function ProfilePage() {
 
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#1B4332]/10 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#2A4365]/10 flex items-center justify-center">
                 {displayPhoto ? (
                   <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-[#1B4332]">{initials}</span>
+                  <span className="text-3xl font-bold text-[#2A4365]">{initials}</span>
                 )}
               </div>
               {editing && (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#1B4332] rounded-full flex items-center justify-center shadow-md hover:bg-[#1B4332]/90 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-[#2A4365] rounded-full flex items-center justify-center shadow-md hover:bg-[#2A4365]/90 transition-colors"
                 >
                   <Camera size={14} className="text-white" />
                 </button>
@@ -355,14 +355,14 @@ export default function ProfilePage() {
               className="glass-card rounded-xl p-4 text-center hover:bg-white/70 transition-all active:scale-[0.98] cursor-pointer"
             >
               <div className="flex justify-center mb-1">
-                <Users size={20} className="text-[#1B4332]" />
+                <Users size={20} className="text-[#2A4365]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{familyCount}</p>
               <p className="text-xs text-gray-500">Family Members</p>
             </button>
             <div className="glass-card rounded-xl p-4 text-center">
               <div className="flex justify-center mb-1">
-                <Calendar size={20} className="text-[#1B4332]" />
+                <Calendar size={20} className="text-[#2A4365]" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {profile?.date_of_birth
@@ -388,7 +388,7 @@ export default function ProfilePage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -401,8 +401,8 @@ export default function ProfilePage() {
                         onClick={() => setGender(gender === g ? '' : g)}
                         className={`py-2.5 rounded-lg border-2 text-xs font-medium capitalize transition-all ${
                           gender === g
-                            ? 'border-[#1B4332] bg-[#1B4332]/5 text-[#1B4332]'
-                            : 'border-gray-200 text-gray-500 hover:border-[#1B4332]/30'
+                            ? 'border-[#2A4365] bg-[#2A4365]/5 text-[#2A4365]'
+                            : 'border-gray-200 text-gray-500 hover:border-[#2A4365]/30'
                         }`}
                       >
                         {g}
@@ -417,7 +417,7 @@ export default function ProfilePage() {
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all text-gray-900"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all text-gray-900"
                   />
                 </div>
                 <div>
@@ -429,7 +429,7 @@ export default function ProfilePage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Your phone number"
-                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                       value={locationCity}
                       onChange={(e) => setLocationCity(e.target.value)}
                       placeholder="e.g., Bengaluru"
-                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="w-full pl-9 pr-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -454,7 +454,7 @@ export default function ProfilePage() {
                       value={locationState}
                       onChange={(e) => setLocationState(e.target.value)}
                       placeholder="e.g., Karnataka"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -464,7 +464,7 @@ export default function ProfilePage() {
                       value={locationCountry}
                       onChange={(e) => setLocationCountry(e.target.value)}
                       placeholder="e.g., India"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -473,8 +473,8 @@ export default function ProfilePage() {
                   disabled={saving}
                   className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                     saved
-                      ? 'bg-[#1B4332] text-white'
-                      : 'bg-[#1B4332] text-white hover:bg-[#1B4332]/90 active:scale-[0.98]'
+                      ? 'bg-[#2A4365] text-white'
+                      : 'bg-[#2A4365] text-white hover:bg-[#2A4365]/90 active:scale-[0.98]'
                   } disabled:opacity-60`}
                 >
                   {saved ? <><Check size={16} /> Saved!</> : saving ? 'Saving...' : 'Save Changes'}
@@ -523,7 +523,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleClaimCheck}
                 disabled={claimChecking}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border-2 border-[#1B4332]/20 bg-[#1B4332]/5 text-[#1B4332] text-sm font-semibold hover:bg-[#1B4332]/10 active:scale-[0.98] transition-all disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border-2 border-[#2A4365]/20 bg-[#2A4365]/5 text-[#2A4365] text-sm font-semibold hover:bg-[#2A4365]/10 active:scale-[0.98] transition-all disabled:opacity-60"
               >
                 {claimChecking ? (
                   <>
@@ -562,8 +562,8 @@ export default function ProfilePage() {
                 onClick={() => router.push('/stats')}
                 className="w-full flex items-center py-2.5 gap-3 hover:bg-gray-50 rounded-lg transition-colors px-1"
               >
-                <div className="w-8 h-8 rounded-full bg-[#1B4332]/8 flex items-center justify-center flex-shrink-0">
-                  <BarChart3 size={14} className="text-[#1B4332]" />
+                <div className="w-8 h-8 rounded-full bg-[#2A4365]/8 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 size={14} className="text-[#2A4365]" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-gray-800">Tree Statistics</p>
@@ -650,7 +650,7 @@ export default function ProfilePage() {
                     <p className="text-sm font-semibold text-gray-800 truncate">{member.full_name}</p>
                     <p className="text-xs text-gray-400 capitalize">{member.relationship_type}</p>
                     {member.user_id && (
-                      <p className="text-[11px] text-[#1B4332]">Linked profile</p>
+                      <p className="text-[11px] text-[#2A4365]">Linked profile</p>
                     )}
                   </div>
                   <button

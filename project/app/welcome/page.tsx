@@ -82,8 +82,8 @@ export default function WelcomePage() {
             </button>
 
             <div className="mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-[#1B4332]/10 border border-[#1B4332]/15 flex items-center justify-center mb-4 shadow-sm">
-                <TreePine size={24} className="text-[#1B4332]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#2A4365]/10 border border-[#2A4365]/15 flex items-center justify-center mb-4 shadow-sm">
+                <TreePine size={24} className="text-[#2A4365]" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'signup' ? 'Join your Aangan' : 'Welcome back'}
@@ -104,7 +104,7 @@ export default function WelcomePage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default function WelcomePage() {
                     required
                     minLength={6}
                     placeholder="Min. 6 characters"
-                    className="w-full pl-10 pr-11 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1B4332]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    className="w-full pl-10 pr-11 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
                   />
                   <button
                     type="button"
@@ -141,7 +141,7 @@ export default function WelcomePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#1B4332] text-white py-4 rounded-2xl font-semibold text-base hover:bg-[#1B4332]/90 active:scale-[0.98] transition-all shadow-lg shadow-[#1B4332]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full bg-[#2A4365] text-white py-4 rounded-2xl font-semibold text-base hover:bg-[#2A4365]/90 active:scale-[0.98] transition-all shadow-lg shadow-[#2A4365]/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               >
                 {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : 'Sign In'}
               </button>
@@ -151,7 +151,7 @@ export default function WelcomePage() {
               {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
               <button
                 onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}
-                className="text-[#1B4332] font-semibold hover:text-[#1B4332]/80"
+                className="text-[#2A4365] font-semibold hover:text-[#2A4365]/80"
               >
                 {mode === 'signup' ? 'Sign in' : 'Sign up'}
               </button>
@@ -174,7 +174,7 @@ export default function WelcomePage() {
       >
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TreePine size={20} className={`transition-colors ${scrolled ? 'text-[#1B4332]' : 'text-white'}`} />
+            <TreePine size={20} className={`transition-colors ${scrolled ? 'text-[#2A4365]' : 'text-white'}`} />
             <span className={`font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
               Aangan
             </span>
@@ -182,13 +182,13 @@ export default function WelcomePage() {
           <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <button
               onClick={() => setMode('signin')}
-              className="text-sm font-semibold text-gray-500 hover:text-[#1B4332] px-3 py-2 rounded-xl transition-colors"
+              className="text-sm font-semibold text-gray-500 hover:text-[#2A4365] px-3 py-2 rounded-xl transition-colors"
             >
               Sign In
             </button>
             <button
               onClick={() => setMode('signup')}
-              className="text-sm font-semibold bg-[#1B4332] text-white px-4 py-2 rounded-xl hover:bg-[#1B4332]/90 transition-all shadow-sm"
+              className="text-sm font-semibold bg-[#2A4365] text-white px-4 py-2 rounded-xl hover:bg-[#2A4365]/90 transition-all shadow-sm"
             >
               Get Started
             </button>
@@ -199,7 +199,7 @@ export default function WelcomePage() {
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
         {/* Background gradient — deep forest */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1B4332] via-[#1a3320] to-[#0d1f13]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2A4365] via-[#1a3320] to-[#0d1f13]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(201,166,107,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.15),transparent_50%)]" />
 
@@ -236,7 +236,7 @@ export default function WelcomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <button
               onClick={() => setMode('signup')}
-              className="w-full sm:w-auto bg-white text-[#1B4332] px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 active:scale-[0.97] transition-all shadow-xl shadow-black/15 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-white text-[#2A4365] px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 active:scale-[0.97] transition-all shadow-xl shadow-black/15 flex items-center justify-center gap-2"
             >
               Get Started Free <ArrowRight size={18} />
             </button>
@@ -258,7 +258,7 @@ export default function WelcomePage() {
       {/* The Challenge */}
       <section className="py-20 px-6" style={{ background: 'transparent' }}>
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <p className="text-[#1B4332] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
+          <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Records are scattered, offline<br />and hard to access</h2>
           <p className="text-gray-500 max-w-xl mx-auto leading-relaxed">
             Social media prioritizes friends over family. There&apos;s no platform to automatically map family trees, ancestry, and relationships in one secure, living space.
@@ -275,8 +275,8 @@ export default function WelcomePage() {
             { icon: Heart, title: 'Fear of Judgement', desc: 'Hesitation to share sensitive family news publicly.' },
           ].map((item) => (
             <div key={item.title} className="glass-card rounded-2xl p-5 hover:bg-white/70 hover:shadow-lg transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-[#1B4332]/8 flex items-center justify-center mb-3 group-hover:bg-[#1B4332]/15 transition-colors">
-                <item.icon size={18} className="text-[#1B4332]" />
+              <div className="w-10 h-10 rounded-xl bg-[#2A4365]/8 flex items-center justify-center mb-3 group-hover:bg-[#2A4365]/15 transition-colors">
+                <item.icon size={18} className="text-[#2A4365]" />
               </div>
               <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
               <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
@@ -288,7 +288,7 @@ export default function WelcomePage() {
       {/* Core Features */}
       <section id="features" className="py-20 px-6" style={{ background: 'transparent' }}>
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <p className="text-[#1B4332] text-xs font-semibold uppercase tracking-[0.15em] mb-2">All Challenges, One Answer</p>
+          <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">All Challenges, One Answer</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Core Features</h2>
           <p className="text-gray-500 max-w-lg mx-auto leading-relaxed">
             Everything your family needs in one private, beautiful space.
@@ -297,15 +297,15 @@ export default function WelcomePage() {
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
-            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Aangan auto-maps your relatives and degrees of relations.', gradient: 'from-[#1B4332] to-[#2d5033]' },
-            { icon: Shield, title: 'Privacy Controls', desc: 'Share posts, events, and announcements only up to the degree you choose.', gradient: 'from-[#1B4332] to-[#2d5033]' },
-            { icon: MapPin, title: 'Find Relatives Nearby', desc: 'Discover family in new cities or events — never feel alone.', gradient: 'from-[#1B4332] to-[#2d5033]' },
-            { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-[#1B4332] to-[#2d5033]' },
-            { icon: Image, title: 'Family-First Media Sharing', desc: 'Shared gallery where everyone uploads photos and videos from events.', gradient: 'from-[#1B4332] to-[#2d5033]' },
-            { icon: Sparkles, title: 'Ancestor Mapping', desc: 'Over time, trace your ancestry — see generations of your lineage mapped out.', gradient: 'from-[#1B4332] to-[#2d5033]' },
+            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Aangan auto-maps your relatives and degrees of relations.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: Shield, title: 'Privacy Controls', desc: 'Share posts, events, and announcements only up to the degree you choose.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: MapPin, title: 'Find Relatives Nearby', desc: 'Discover family in new cities or events — never feel alone.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: Image, title: 'Family-First Media Sharing', desc: 'Shared gallery where everyone uploads photos and videos from events.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: Sparkles, title: 'Ancestor Mapping', desc: 'Over time, trace your ancestry — see generations of your lineage mapped out.', gradient: 'from-[#2A4365] to-[#2d5033]' },
           ].map((item) => (
             <div key={item.title} className="glass-card rounded-3xl p-6 hover:shadow-xl transition-all group">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-[#1B4332]/15 group-hover:scale-105 transition-transform`}>
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-[#2A4365]/15 group-hover:scale-105 transition-transform`}>
                 <item.icon size={22} className="text-white" />
               </div>
               <h3 className="font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
@@ -316,7 +316,7 @@ export default function WelcomePage() {
       </section>
 
       {/* Vision */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[#1B4332] via-[#1a3320] to-[#0d1f13] relative overflow-hidden">
+      <section className="py-20 px-6 bg-gradient-to-br from-[#2A4365] via-[#1a3320] to-[#0d1f13] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(201,166,107,0.1),transparent_50%)]" />
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <Globe size={40} className="text-white/30 mx-auto mb-6" />
@@ -333,7 +333,7 @@ export default function WelcomePage() {
       {/* Opportunity / Stats */}
       <section className="py-20 px-6" style={{ background: 'transparent' }}>
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <p className="text-[#1B4332] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Opportunity</p>
+          <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Opportunity</p>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">A massive, untapped market</h2>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -344,7 +344,7 @@ export default function WelcomePage() {
             { stat: '∞', label: 'Family Events', sub: 'multi-billion dollar ecosystem' },
           ].map((item) => (
             <div key={item.label} className="glass-card rounded-2xl p-5 text-center">
-              <p className="text-3xl font-bold text-[#1B4332] mb-1">{item.stat}</p>
+              <p className="text-3xl font-bold text-[#2A4365] mb-1">{item.stat}</p>
               <p className="text-sm font-semibold text-gray-900">{item.label}</p>
               <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
             </div>
@@ -355,8 +355,8 @@ export default function WelcomePage() {
       {/* Final CTA */}
       <section className="py-20 px-6" style={{ background: 'transparent' }}>
         <div className="max-w-lg mx-auto text-center">
-          <div className="w-16 h-16 rounded-3xl bg-[#1B4332]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <TreePine size={32} className="text-[#1B4332]" />
+          <div className="w-16 h-16 rounded-3xl bg-[#2A4365]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <TreePine size={32} className="text-[#2A4365]" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
             Your Aangan awaits
@@ -367,13 +367,13 @@ export default function WelcomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => setMode('signup')}
-              className="w-full sm:w-auto bg-[#1B4332] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#1B4332]/90 active:scale-[0.97] transition-all shadow-xl shadow-[#1B4332]/20 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#2A4365] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#2A4365]/90 active:scale-[0.97] transition-all shadow-xl shadow-[#2A4365]/20 flex items-center justify-center gap-2"
             >
               Get Started Free <ArrowRight size={18} />
             </button>
             <button
               onClick={() => setMode('signin')}
-              className="w-full sm:w-auto border-2 border-gray-300 text-gray-500 px-8 py-4 rounded-2xl font-semibold text-base hover:border-[#1B4332]/40 hover:text-[#1B4332] active:scale-[0.97] transition-all"
+              className="w-full sm:w-auto border-2 border-gray-300 text-gray-500 px-8 py-4 rounded-2xl font-semibold text-base hover:border-[#2A4365]/40 hover:text-[#2A4365] active:scale-[0.97] transition-all"
             >
               Sign In
             </button>
@@ -385,7 +385,7 @@ export default function WelcomePage() {
       <footer className="py-8 px-6 border-t border-gray-200/30" style={{ background: 'transparent' }}>
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <TreePine size={16} className="text-[#1B4332]" />
+            <TreePine size={16} className="text-[#2A4365]" />
             <span className="text-sm font-semibold text-gray-900">Aangan</span>
             <span className="text-xs text-gray-500">— The Digital Courtyard</span>
           </div>

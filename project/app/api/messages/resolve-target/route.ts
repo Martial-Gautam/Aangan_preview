@@ -4,6 +4,56 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+function normalizeEmail(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const cleaned = value.trim().toLowerCase();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+function normalizePhone(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+async function findAuthUserIdByEmail(supabaseAdmin: any, email: string, excludeUserId: string) {
+  const target = normalizeEmail(email);
+  if (!target) return null;
+
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) break;
+
+    const matched = (data?.users || []).find((u: any) => {
+      if (!u.id || u.id === excludeUserId) return false;
+      return normalizeEmail(u.email) === target;
+    });
+
+    if (matched?.id) return matched.id;
+
+    if (!data?.users || data.users.length < 1000) break;
+  }
+
+  return null;
+}
+
+async function findProfileUserIdByPhone(supabaseAdmin: any, rawPhone: string, excludeUserId: string) {
+  const target = normalizePhone(rawPhone);
+  if (!target) return null;
+
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, phone')
+    .neq('id', excludeUserId)
+    .not('phone', 'is', null)
+    .limit(5000);
+
+  const typedProfiles = (profiles || []) as Array<{ id: string; phone: string | null }>;
+  const match = typedProfiles.find((profile) => normalizePhone(profile.phone) === target);
+  return match?.id || null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -15,7 +65,10 @@ export async function GET(req: NextRequest) {
     const supabaseUser = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseUser.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -38,48 +91,108 @@ export async function GET(req: NextRequest) {
     }
 
     let targetUserId: string | null = person.user_id || null;
-    let source: 'people_user_id' | 'connection_request' | 'email_match' | 'phone_match' | 'user_connection' | null =
-      targetUserId ? 'people_user_id' : null;
+    let source:
+      | 'people_user_id'
+      | 'connection_request'
+      | 'email_match'
+      | 'phone_match'
+      | 'user_connection'
+      | null = targetUserId ? 'people_user_id' : null;
 
-    // Step 1: Check connection_requests in BOTH directions
+    type RequestRow = {
+      to_user_id: string | null;
+      receiver_id: string | null;
+      from_user_id: string | null;
+      sender_id: string | null;
+      receiver_email: string | null;
+      receiver_phone: string | null;
+      created_at: string;
+    };
+
+    // Step 1: Check connection_requests in both modern + legacy fields.
+    let latestOutbound: RequestRow | null = null;
+
     if (!targetUserId) {
-      // Check requests FROM current user about this person
-      const { data: outbound } = await supabaseAdmin
-        .from('connection_requests')
-        .select('to_user_id')
-        .eq('from_user_id', user.id)
-        .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
-        .not('to_user_id', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const [outboundModern, outboundLegacy] = await Promise.all([
+        supabaseAdmin
+          .from('connection_requests')
+          .select('to_user_id,receiver_id,receiver_email,receiver_phone,created_at')
+          .eq('from_user_id', user.id)
+          .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabaseAdmin
+          .from('connection_requests')
+          .select('to_user_id,receiver_id,receiver_email,receiver_phone,created_at')
+          .eq('sender_id', user.id)
+          .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
-      if (outbound?.to_user_id) {
-        targetUserId = outbound.to_user_id;
+      const outboundCandidates = [outboundModern.data, outboundLegacy.data].filter(Boolean) as RequestRow[];
+      latestOutbound = outboundCandidates.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0] || null;
+
+      const outboundTarget = latestOutbound?.to_user_id || latestOutbound?.receiver_id || null;
+      if (outboundTarget && outboundTarget !== user.id) {
+        targetUserId = outboundTarget;
         source = 'connection_request';
       }
     }
 
-    if (!targetUserId) {
-      // Check requests TO current user about this person
-      const { data: inbound } = await supabaseAdmin
-        .from('connection_requests')
-        .select('from_user_id')
-        .eq('to_user_id', user.id)
-        .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
-        .not('from_user_id', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    if (!targetUserId && latestOutbound?.receiver_email) {
+      const matchedByEmail = await findAuthUserIdByEmail(supabaseAdmin, latestOutbound.receiver_email, user.id);
+      if (matchedByEmail) {
+        targetUserId = matchedByEmail;
+        source = 'email_match';
+      }
+    }
 
-      if (inbound?.from_user_id) {
-        targetUserId = inbound.from_user_id;
+    if (!targetUserId && latestOutbound?.receiver_phone) {
+      const matchedByPhone = await findProfileUserIdByPhone(supabaseAdmin, latestOutbound.receiver_phone, user.id);
+      if (matchedByPhone) {
+        targetUserId = matchedByPhone;
+        source = 'phone_match';
+      }
+    }
+
+    if (!targetUserId) {
+      const [inboundModern, inboundLegacy] = await Promise.all([
+        supabaseAdmin
+          .from('connection_requests')
+          .select('from_user_id,sender_id,created_at')
+          .eq('to_user_id', user.id)
+          .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabaseAdmin
+          .from('connection_requests')
+          .select('from_user_id,sender_id,created_at')
+          .eq('receiver_id', user.id)
+          .or(`person_id.eq.${personId},linked_person_id.eq.${personId}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const inboundCandidates = [inboundModern.data, inboundLegacy.data].filter(Boolean) as RequestRow[];
+      const latestInbound = inboundCandidates.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0] || null;
+
+      const inboundTarget = latestInbound?.from_user_id || latestInbound?.sender_id || null;
+      if (inboundTarget && inboundTarget !== user.id) {
+        targetUserId = inboundTarget;
         source = 'connection_request';
       }
     }
 
-    // Step 2: Check user_connections — find any user connected to current user
-    // who owns a person record matching this personId
+    // Step 2: Check user_connections ownership
     if (!targetUserId) {
       const { data: connections } = await supabaseAdmin
         .from('user_connections')
@@ -87,21 +200,17 @@ export async function GET(req: NextRequest) {
         .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
 
       if (connections && connections.length > 0) {
-        const connectedUserIds = connections.map(c =>
-          c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1
-        ).filter(Boolean);
+        const connectedUserIds = connections
+          .map((c) => (c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1))
+          .filter(Boolean);
 
-        // Check if any connected user owns a self-person whose name matches
-        // or if the person record's owner is a connected user
         if (connectedUserIds.length > 0 && person.owner_id !== user.id) {
-          // Person is in someone else's tree — check if owner is connected
           if (connectedUserIds.includes(person.owner_id)) {
             targetUserId = person.owner_id;
             source = 'user_connection';
           }
         }
 
-        // Also check if any connected user has claimed this person
         if (!targetUserId) {
           const { data: claimedCheck } = await supabaseAdmin
             .from('people')
@@ -118,32 +227,20 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Step 3: Fallback email match against auth users.
+    // Step 3: Fallback email match.
     if (!targetUserId && person.email) {
-      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-      const matchedUser = (usersPage?.users || []).find(
-        (u) =>
-          u.id !== user.id &&
-          u.email &&
-          u.email.toLowerCase() === person.email!.trim().toLowerCase()
-      );
-      if (matchedUser?.id) {
-        targetUserId = matchedUser.id;
+      const matchedByEmail = await findAuthUserIdByEmail(supabaseAdmin, person.email, user.id);
+      if (matchedByEmail) {
+        targetUserId = matchedByEmail;
         source = 'email_match';
       }
     }
 
-    // Step 4: Fallback phone match against profile records.
+    // Step 4: Fallback phone match (normalized).
     if (!targetUserId && person.phone_number) {
-      const { data: profileMatch } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('phone', person.phone_number)
-        .neq('id', user.id)
-        .maybeSingle();
-
-      if (profileMatch?.id) {
-        targetUserId = profileMatch.id;
+      const matchedByPhone = await findProfileUserIdByPhone(supabaseAdmin, person.phone_number, user.id);
+      if (matchedByPhone) {
+        targetUserId = matchedByPhone;
         source = 'phone_match';
       }
     }

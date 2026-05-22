@@ -159,7 +159,7 @@ export default function MergeSuggestionModal({
                 </p>
                 {person?.user_id && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#2A4365] bg-[#2A4365]/8 px-2 py-0.5 rounded-full">
-                    <Users size={9} /> Aangan user
+                    <Users size={9} /> Familiar user
                   </span>
                 )}
               </div>

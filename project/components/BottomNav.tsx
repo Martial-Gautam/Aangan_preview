@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { TreePine, Newspaper, Images, MessageCircle, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
+import { warmStreamConnection } from '@/lib/stream-client';
 
 const navItems = [
   { href: '/home', label: 'Family', icon: TreePine },
@@ -16,8 +18,16 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { session } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const cachedUnread = readSessionCache<number>('nav:unread-count', 45_000);
+    if (cachedUnread !== null) {
+      setUnreadCount(cachedUnread);
+    }
+  }, []);
 
   useEffect(() => {
     if (!session?.access_token) return;
@@ -32,6 +42,7 @@ export default function BottomNav() {
             (sum: number, c: any) => sum + (c.unread_count || 0), 0
           );
           setUnreadCount(total);
+          writeSessionCache('nav:unread-count', total);
         }
       } catch (error) {
         console.error('Failed to fetch unread count:', error);
@@ -39,6 +50,32 @@ export default function BottomNav() {
     };
     fetchUnread();
   }, [session]);
+
+  useEffect(() => {
+    navItems.forEach(({ href }) => router.prefetch(href));
+  }, [router]);
+
+  useEffect(() => {
+    if (!session?.access_token || typeof window === 'undefined') return;
+    if (sessionStorage.getItem('familiar-nav-warm-v1') === '1') return;
+    sessionStorage.setItem('familiar-nav-warm-v1', '1');
+
+    const warm = () => {
+      const headers = { Authorization: `Bearer ${session.access_token}` };
+      void fetch('/api/tree/full', { headers, cache: 'no-store' }).catch(() => {});
+      void fetch('/api/messages/conversations', { headers, cache: 'no-store' }).catch(() => {});
+      void fetch('/api/posts/list?type=post', { headers, cache: 'no-store' }).catch(() => {});
+      void import('@/components/FamilyCosmos').catch(() => {});
+      warmStreamConnection(session.access_token);
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(warm);
+      return;
+    }
+    const timer = setTimeout(warm, 600);
+    return () => clearTimeout(timer);
+  }, [session?.access_token]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav">
@@ -52,6 +89,8 @@ export default function BottomNav() {
               key={href}
               href={href}
               prefetch={true}
+              onMouseEnter={() => router.prefetch(href)}
+              onTouchStart={() => router.prefetch(href)}
               className={`relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-xl px-2.5 py-2 transition-all duration-200 active:scale-95 ${
                 active
                   ? 'bg-[#2A4365]/12 text-[#2A4365] shadow-[inset_0_0_0_1px_rgba(27,67,50,0.22)]'

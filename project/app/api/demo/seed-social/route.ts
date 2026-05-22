@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const demoMessages = [
       'Hi! This is your demo conversation.',
       'Once your family members link their accounts, real messages will appear here.',
-      'Install Aangan for an even smoother messaging experience.',
+      'Install Familiar for an even smoother messaging experience.',
     ];
 
     let seededPosts = 0;

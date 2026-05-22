@@ -208,7 +208,7 @@ export default function ImportContactsPage() {
             {existingUsers.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
-                  Already on Aangan ({existingUsers.length})
+                  Already on Familiar ({existingUsers.length})
                 </h3>
                 <div className="space-y-3">
                   {existingUsers.map(c => (
@@ -226,7 +226,7 @@ export default function ImportContactsPage() {
             {newUsers.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
-                  Not on Aangan Yet ({newUsers.length})
+                  Not on Familiar Yet ({newUsers.length})
                 </h3>
                 <div className="space-y-3">
                   {newUsers.map(c => (

@@ -1,18 +1,28 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
 import { useFamilyStore } from '@/lib/family-store';
+import BrandLogo from '@/components/BrandLogo';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
 import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import BottomNav from '@/components/BottomNav';
-import { Plus, TreePine, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation } from 'lucide-react';
+import { Plus, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation } from 'lucide-react';
 import Link from 'next/link';
 
 function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
+  const uid = useId().replace(/:/g, '');
+  const pathRoot = `${uid}-path-root`;
+  const pathLeftMajor = `${uid}-path-left-major`;
+  const pathRightMajor = `${uid}-path-right-major`;
+  const pathLeftOuter = `${uid}-path-left-outer`;
+  const pathLeftInner = `${uid}-path-left-inner`;
+  const pathRightInner = `${uid}-path-right-inner`;
+  const pathRightOuter = `${uid}-path-right-outer`;
+
   return (
     <div className="absolute inset-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #060b16 0%, #0a1628 50%, #0d0f18 100%)' }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,122,82,0.16),transparent_42%),radial-gradient(circle_at_82%_28%,rgba(27,67,50,0.22),transparent_48%),radial-gradient(circle_at_50%_85%,rgba(122,138,125,0.12),transparent_55%)]" />
@@ -29,39 +39,188 @@ function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
       )}
 
       <div className="absolute inset-0 flex items-center justify-center px-6">
-        <div className="relative w-full max-w-[320px] h-[360px]">
-          <div className="absolute left-[16%] top-[24%] w-[24%] h-px skeleton opacity-50 -rotate-[26deg]" />
-          <div className="absolute left-[47%] top-[24%] w-[24%] h-px skeleton opacity-50 rotate-[24deg]" />
-          <div className="absolute left-[30%] top-[42%] w-[38%] h-px skeleton opacity-40" />
-          <div className="absolute left-[26%] top-[59%] w-[20%] h-px skeleton opacity-40 -rotate-[22deg]" />
-          <div className="absolute left-[55%] top-[58%] w-[20%] h-px skeleton opacity-40 rotate-[22deg]" />
+        <div className="relative w-full max-w-[330px] h-[380px]">
+          <svg viewBox="0 0 340 380" className="w-full h-full" aria-hidden="true">
+            <defs>
+              <linearGradient id={`${uid}-branch-stroke`} x1="0%" y1="10%" x2="100%" y2="90%">
+                <stop offset="0%" stopColor="#8fd2ff" stopOpacity="0.8" />
+                <stop offset="55%" stopColor="#8ef0c8" stopOpacity="0.78" />
+                <stop offset="100%" stopColor="#ffe3a1" stopOpacity="0.72" />
+              </linearGradient>
+              <radialGradient id={`${uid}-node-core`} cx="50%" cy="50%" r="60%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.94" />
+                <stop offset="65%" stopColor="#cff8e9" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#8fd2ff" stopOpacity="0.3" />
+              </radialGradient>
+              <filter id={`${uid}-soft-glow`} x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="2.3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id={`${uid}-energy-glow`} x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="1.8" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-          <div className="absolute left-1/2 top-[19%] -translate-x-1/2 flex flex-col items-center gap-2">
-            <div className="skeleton w-16 h-16 rounded-full ring-2 ring-white/15" />
-            <div className="skeleton w-20 h-3 rounded-full" />
-          </div>
+            <g stroke="#bde8ff" strokeOpacity="0.14" fill="none">
+              <ellipse cx="170" cy="194" rx="116" ry="52" transform="rotate(-10 170 194)" />
+              <ellipse cx="170" cy="194" rx="146" ry="66" transform="rotate(7 170 194)" />
+              <ellipse cx="170" cy="194" rx="176" ry="80" transform="rotate(-2 170 194)" />
+            </g>
 
-          <div className="absolute left-[12%] top-[33%] flex flex-col items-center gap-1.5">
-            <div className="skeleton w-11 h-11 rounded-full" />
-            <div className="skeleton w-14 h-2.5 rounded-full" />
-          </div>
-          <div className="absolute right-[12%] top-[33%] flex flex-col items-center gap-1.5">
-            <div className="skeleton w-11 h-11 rounded-full" />
-            <div className="skeleton w-14 h-2.5 rounded-full" />
-          </div>
+            <g transform="translate(170 194)">
+              <g>
+                <animateTransform
+                  attributeName="transform"
+                  type="scale"
+                  values="0.9;1;1.03;1"
+                  dur="5.4s"
+                  repeatCount="indefinite"
+                />
+                <g transform="translate(-170 -194)" stroke={`url(#${uid}-branch-stroke)`} fill="none" strokeLinecap="round" filter={`url(#${uid}-soft-glow)`}>
+                  <path
+                    id={pathRoot}
+                    d="M170 98 C170 112 170 126 170 142"
+                    strokeWidth="3.4"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="0s" dur="0.45s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathLeftMajor}
+                    d="M170 142 C152 154 134 170 112 190"
+                    strokeWidth="3.1"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="0.36s" dur="0.62s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathRightMajor}
+                    d="M170 142 C188 154 206 170 228 190"
+                    strokeWidth="3.1"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="0.36s" dur="0.62s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathLeftOuter}
+                    d="M112 190 C96 214 85 236 76 264"
+                    strokeWidth="2.8"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="0.9s" dur="0.7s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathLeftInner}
+                    d="M112 190 C128 220 144 246 156 276"
+                    strokeWidth="2.8"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="1.02s" dur="0.7s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathRightInner}
+                    d="M228 190 C212 220 196 246 184 276"
+                    strokeWidth="2.8"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="1.02s" dur="0.7s" fill="freeze" />
+                  </path>
+                  <path
+                    id={pathRightOuter}
+                    d="M228 190 C244 214 255 236 264 264"
+                    strokeWidth="2.8"
+                    pathLength={1}
+                    strokeDasharray="1"
+                    strokeDashoffset="1"
+                  >
+                    <animate attributeName="stroke-dashoffset" from="1" to="0" begin="0.9s" dur="0.7s" fill="freeze" />
+                  </path>
+                </g>
+              </g>
+            </g>
 
-          <div className="absolute left-[28%] top-[56%] flex flex-col items-center gap-1.5">
-            <div className="skeleton w-10 h-10 rounded-full" />
-            <div className="skeleton w-12 h-2.5 rounded-full" />
-          </div>
-          <div className="absolute right-[28%] top-[56%] flex flex-col items-center gap-1.5">
-            <div className="skeleton w-10 h-10 rounded-full" />
-            <div className="skeleton w-12 h-2.5 rounded-full" />
-          </div>
+            <g fill={`url(#${uid}-node-core)`} filter={`url(#${uid}-soft-glow)`}>
+              <circle cx="170" cy="98" r="6">
+                <animate attributeName="opacity" values="0.35;1;0.82;1" dur="2.6s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="170" cy="142" r="7.5">
+                <animate attributeName="opacity" values="0.55;1;0.84;1" dur="2.4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="112" cy="190" r="6.3" />
+              <circle cx="228" cy="190" r="6.3" />
+              <circle cx="76" cy="264" r="5.6" />
+              <circle cx="156" cy="276" r="5.6" />
+              <circle cx="184" cy="276" r="5.6" />
+              <circle cx="264" cy="264" r="5.6" />
+            </g>
 
-          <div className="absolute left-1/2 top-[71%] -translate-x-1/2 flex flex-col items-center gap-1.5">
-            <div className="skeleton w-9 h-9 rounded-full" />
-            <div className="skeleton w-11 h-2 rounded-full" />
+            <g filter={`url(#${uid}-energy-glow)`} fill="#fff4c2">
+              <circle r="3.1">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathRoot}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.9">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.18s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.18s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathLeftMajor}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.9">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.18s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.18s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathRightMajor}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.6">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.44s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.44s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathLeftOuter}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.6">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.52s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.52s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathLeftInner}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.6">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.52s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.52s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathRightInner}`} />
+                </animateMotion>
+              </circle>
+              <circle r="2.6">
+                <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" begin="0.44s" repeatCount="indefinite" />
+                <animateMotion dur="2.2s" begin="0.44s" repeatCount="indefinite">
+                  <mpath xlinkHref={`#${pathRightOuter}`} />
+                </animateMotion>
+              </circle>
+            </g>
+          </svg>
+
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-6 text-[11px] font-medium tracking-wide text-white/55">
+            Building family cosmos...
           </div>
         </div>
       </div>
@@ -384,7 +543,7 @@ export default function HomePage() {
       <div className="glass-header px-5 pt-12 pb-3.5 z-10 flex-shrink-0">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="text-[9px] text-gray-400/80 font-bold uppercase tracking-[0.2em]">Aangan</p>
+            <p className="text-[10px] text-gray-500/85 font-bold uppercase tracking-[0.2em]">Familiar</p>
             <h1 className="text-[17px] font-extrabold text-gray-900 mt-0.5 tracking-tight">
               {profile?.full_name?.split(' ')[0]}&apos;s Family
             </h1>
@@ -538,7 +697,7 @@ export default function HomePage() {
           <div className="h-full flex items-center justify-center px-6">
             <div className="glass-card rounded-2xl p-8 flex flex-col items-center text-center max-w-xs w-full">
               <div className="w-16 h-16 rounded-full bg-gray-100/60 flex items-center justify-center mb-5">
-                <TreePine size={28} className="text-gray-400" />
+                <BrandLogo size={30} />
               </div>
               <h3 className="font-semibold text-gray-900 text-lg mb-2">Your tree is empty</h3>
               <p className="text-gray-500 text-sm mb-6 leading-relaxed">
@@ -597,15 +756,15 @@ export default function HomePage() {
       <Sheet open={showInstallSheet} onOpenChange={setShowInstallSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh]">
           <SheetHeader className="sr-only">
-            <SheetTitle>Install Aangan</SheetTitle>
+            <SheetTitle>Install Familiar</SheetTitle>
           </SheetHeader>
           <div className="flex justify-center mb-4">
             <div className="w-10 h-1 bg-gray-200 rounded-full" />
           </div>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Install Aangan for the best experience</h2>
+            <h2 className="text-xl font-bold text-gray-900">Install Familiar for the best experience</h2>
             <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-              Aangan works better when downloaded. Install the app for a smoother, faster family and messaging experience.
+              Familiar works better when downloaded. Install the app for a smoother, faster family and messaging experience.
             </p>
             {!canInstall && !isInstalled && (
               <p className="text-xs text-gray-400 mt-2">

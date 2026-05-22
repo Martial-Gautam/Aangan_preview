@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
+import { getConnectedStreamClient } from '@/lib/stream-client';
+import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -53,6 +55,9 @@ interface SharePerson {
   full_name: string;
   photo_url: string | null;
 }
+
+const FEED_CACHE_TTL_MS = 90_000;
+const feedPostsCacheKey = (type: PostType) => `feed:posts:${type}`;
 
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
@@ -129,26 +134,17 @@ function FeedContent() {
 
   const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
 
+  useEffect(() => {
+    const cachedPosts = readSessionCache<any[]>(feedPostsCacheKey(activeTab), FEED_CACHE_TTL_MS);
+    if (cachedPosts && cachedPosts.length > 0) {
+      setPosts(cachedPosts);
+      setLoadingPosts(false);
+    }
+  }, [activeTab]);
+
   const initBackend = async () => {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
-      if (!apiKey) throw new Error('No key');
-
-      const res = await fetch('/api/stream/token', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session!.access_token}` },
-      });
-      if (!res.ok) throw new Error('Token failed');
-
-      const { token, userId, userName, userImage } = await res.json();
-      const client = StreamChat.getInstance(apiKey);
-      const alreadyConnectedUserId = (client as any).userID as string | undefined;
-      if (!alreadyConnectedUserId) {
-        await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
-      } else if (alreadyConnectedUserId !== userId) {
-        await client.disconnectUser();
-        await client.connectUser({ id: userId, name: userName, image: userImage || undefined }, token);
-      }
+      const { client, userId } = await getConnectedStreamClient(session!.access_token);
       setStreamClient(client);
 
       const channel = client.channel('messaging', 'family-feed', {
@@ -199,11 +195,13 @@ function FeedContent() {
   const loadStreamPosts = () => { if (feedChannel) loadPostsFromChannel(feedChannel); };
 
   const loadPostsFromChannel = async (channel: StreamChannel) => {
-    setLoadingPosts(true);
+    if (posts.length === 0) setLoadingPosts(true);
     try {
       const all = channel.state.messages || [];
       const filtered = all.filter((m: any) => (m.post_type || 'post') === activeTab && !m.parent_id);
-      setPosts([...filtered].reverse());
+      const next = [...filtered].reverse();
+      setPosts(next);
+      writeSessionCache(feedPostsCacheKey(activeTab), next);
     } catch { setPosts([]); }
     finally { setLoadingPosts(false); }
   };
@@ -212,14 +210,21 @@ function FeedContent() {
 
   const fetchSupabasePosts = async (type: PostType) => {
     if (!session?.access_token) return;
-    setLoadingPosts(true);
+    const cached = readSessionCache<any[]>(feedPostsCacheKey(type), FEED_CACHE_TTL_MS);
+    if (cached && cached.length > 0 && posts.length === 0) {
+      setPosts(cached);
+    } else if (posts.length === 0) {
+      setLoadingPosts(true);
+    }
     try {
       const res = await fetch(`/api/posts/list?type=${type}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setPosts(data.posts || []);
+        const nextPosts = data.posts || [];
+        setPosts(nextPosts);
+        writeSessionCache(feedPostsCacheKey(type), nextPosts);
       } else { setPosts([]); }
     } catch { setPosts([]); }
     finally { setLoadingPosts(false); }

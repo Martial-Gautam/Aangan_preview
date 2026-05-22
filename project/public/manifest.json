@@ -1,6 +1,6 @@
 {
-  "name": "Aangan — Your Family Tree",
-  "short_name": "Aangan",
+  "name": "Familiar — Your Family Tree",
+  "short_name": "Familiar",
   "description": "Connect with your family. Build your tree. Cherish your roots.",
   "start_url": "/home",
   "scope": "/",
@@ -41,7 +41,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Aangan Family Tree"
+      "label": "Familiar Family Tree"
     }
   ],
   "categories": ["social", "lifestyle"],

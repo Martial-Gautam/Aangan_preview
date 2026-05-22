@@ -7,6 +7,8 @@ import BottomNav from '@/components/BottomNav';
 import { ArrowLeft, Send, Search, MessageCircle, Loader2 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
+import { getConnectedStreamClient } from '@/lib/stream-client';
+import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -34,6 +36,11 @@ interface RelativeCandidate {
   photo_url: string | null;
   user_id: string | null;
 }
+
+const CONVERSATIONS_CACHE_KEY = 'messages:conversations';
+const RELATIVES_CACHE_KEY = 'messages:relatives';
+const CONVERSATIONS_CACHE_TTL_MS = 60_000;
+const RELATIVES_CACHE_TTL_MS = 180_000;
 
 // ─── Main Export ─────────────────────────────────────────────
 
@@ -88,6 +95,26 @@ function MessagesContent() {
   }, [authLoading, user]);
 
   // ─── Try Stream, fallback to Supabase ───────────────
+
+  useEffect(() => {
+    if (chatPartnerId) return;
+    const cachedConversations = readSessionCache<Conversation[]>(
+      CONVERSATIONS_CACHE_KEY,
+      CONVERSATIONS_CACHE_TTL_MS
+    );
+    if (cachedConversations && cachedConversations.length > 0) {
+      setConversations(cachedConversations);
+      setLoading(false);
+    }
+
+    const cachedRelatives = readSessionCache<RelativeCandidate[]>(
+      RELATIVES_CACHE_KEY,
+      RELATIVES_CACHE_TTL_MS
+    );
+    if (cachedRelatives && cachedRelatives.length > 0) {
+      setRelatives(cachedRelatives);
+    }
+  }, [chatPartnerId]);
 
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
@@ -145,32 +172,7 @@ function MessagesContent() {
 
   const initStream = async () => {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
-      if (!apiKey) throw new Error('No Stream API key');
-
-      const res = await fetch('/api/stream/token', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session!.access_token}` },
-      });
-
-      if (!res.ok) throw new Error(`Token failed: ${res.status}`);
-
-      const { token, userId, userName, userImage } = await res.json();
-      const client = StreamChat.getInstance(apiKey);
-      const alreadyConnectedUserId = (client as any).userID as string | undefined;
-      if (!alreadyConnectedUserId) {
-        await client.connectUser(
-          { id: userId, name: userName, image: userImage || undefined },
-          token
-        );
-      } else if (alreadyConnectedUserId !== userId) {
-        await client.disconnectUser();
-        await client.connectUser(
-          { id: userId, name: userName, image: userImage || undefined },
-          token
-        );
-      }
-
+      const { client } = await getConnectedStreamClient(session!.access_token);
       setStreamClient(client);
       setStreamReady(true);
       setUseStream(true);
@@ -186,7 +188,7 @@ function MessagesContent() {
 
   const loadStreamChannels = async () => {
     if (!streamClient || !user) return;
-    setLoading(true);
+    if (conversations.length === 0) setLoading(true);
     try {
       const filter = { type: 'messaging' as const, members: { $in: [user.id] } };
       const sort = [{ last_message_at: -1 as const }];
@@ -210,6 +212,7 @@ function MessagesContent() {
       })
       .filter((c): c is Conversation => Boolean(c));
       setConversations(convos);
+      writeSessionCache(CONVERSATIONS_CACHE_KEY, convos);
     } catch { setConversations([]); }
     finally { setLoading(false); }
   };
@@ -260,14 +263,16 @@ function MessagesContent() {
 
   const fetchSupabaseConversations = async () => {
     if (!session?.access_token || !user?.id) return;
-    setLoading(true);
+    if (conversations.length === 0) setLoading(true);
     try {
       const res = await fetch('/api/messages/conversations', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setConversations(data.conversations || []);
+        const nextConversations = data.conversations || [];
+        setConversations(nextConversations);
+        writeSessionCache(CONVERSATIONS_CACHE_KEY, nextConversations);
       } else { setConversations([]); }
     } catch { setConversations([]); }
     finally { setLoading(false); }
@@ -306,6 +311,7 @@ function MessagesContent() {
         .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
       setRelatives(family);
+      writeSessionCache(RELATIVES_CACHE_KEY, family);
     } catch (err) {
       console.error('Failed to fetch relatives for search:', err);
       setRelatives([]);
@@ -437,7 +443,12 @@ function MessagesContent() {
 
   // ─── Loading State ──────────────────────────────────
 
-  if (authLoading || (!streamReady && useStream)) {
+  const waitingForBackendBootstrap =
+    !streamReady &&
+    useStream &&
+    (chatPartnerId ? messages.length === 0 : conversations.length === 0);
+
+  if (authLoading || waitingForBackendBootstrap) {
     return (
       <div className="min-h-screen" style={{ background: 'transparent' }}>
         <div className="max-w-sm mx-auto">

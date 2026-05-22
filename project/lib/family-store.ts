@@ -62,7 +62,8 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
   setFocusHops: (n) => set({ focusHops: Math.max(1, Math.min(5, n)) }),
 
   fetchFamily: async (userId, accessToken) => {
-    set({ dataLoading: true, error: null });
+    const hasLoadedTree = get().people.length > 0 && Boolean(get().selfPerson);
+    set({ dataLoading: hasLoadedTree ? false : true, error: null });
     try {
       let token = accessToken;
 

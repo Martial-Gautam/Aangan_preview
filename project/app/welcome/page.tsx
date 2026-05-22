@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import BrandLogo from '@/components/BrandLogo';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Users, Shield,
   MapPin, Send, Image, Heart, ChevronDown, Sparkles, Globe
@@ -20,6 +21,7 @@ export default function WelcomePage() {
   const [error, setError] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const revealMaskRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,6 +69,52 @@ export default function WelcomePage() {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const updateRevealPosition = (clientX: number, clientY: number) => {
+    const heroEl = heroRef.current;
+    const revealEl = revealMaskRef.current;
+    if (!heroEl || !revealEl) return;
+
+    const rect = heroEl.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+
+    revealEl.style.setProperty('--mx', `${x}px`);
+    revealEl.style.setProperty('--my', `${y}px`);
+  };
+
+  const handleHeroPointerEnter = () => {
+    const revealEl = revealMaskRef.current;
+    if (!revealEl) return;
+    revealEl.style.setProperty('--reveal-strength', '0.95');
+  };
+
+  const handleHeroPointerLeave = () => {
+    const revealEl = revealMaskRef.current;
+    if (!revealEl) return;
+    revealEl.style.setProperty('--reveal-strength', '0.62');
+  };
+
+  const handleHeroMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    updateRevealPosition(event.clientX, event.clientY);
+  };
+
+  const handleHeroTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    updateRevealPosition(touch.clientX, touch.clientY);
+    const revealEl = revealMaskRef.current;
+    if (revealEl) revealEl.style.setProperty('--reveal-strength', '0.9');
+  };
+
+  useEffect(() => {
+    const heroEl = heroRef.current;
+    const revealEl = revealMaskRef.current;
+    if (!heroEl || !revealEl) return;
+    const rect = heroEl.getBoundingClientRect();
+    revealEl.style.setProperty('--mx', `${rect.width * 0.5}px`);
+    revealEl.style.setProperty('--my', `${rect.height * 0.52}px`);
+  }, []);
+
   // --- Auth form screen ---
   if (mode !== 'landing') {
     return (
@@ -83,10 +131,13 @@ export default function WelcomePage() {
 
             <div className="mb-8">
               <div className="w-12 h-12 rounded-2xl bg-[#2A4365]/10 border border-[#2A4365]/15 flex items-center justify-center mb-4 shadow-sm">
-                <TreePine size={24} className="text-[#2A4365]" />
+                <BrandLogo size={26} />
               </div>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.16em] mb-1">
+                Formerly &quot;Aangan&quot;
+              </p>
               <h2 className="text-2xl font-bold text-gray-900">
-                {mode === 'signup' ? 'Join your Aangan' : 'Welcome back'}
+                {mode === 'signup' ? 'Join Familiar' : 'Welcome back'}
               </h2>
               <p className="text-gray-500 mt-1 text-sm">
                 {mode === 'signup' ? 'Start building your family tree today' : 'Sign in to your digital courtyard'}
@@ -174,10 +225,15 @@ export default function WelcomePage() {
       >
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TreePine size={20} className={`transition-colors ${scrolled ? 'text-[#2A4365]' : 'text-white'}`} />
-            <span className={`font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
-              Aangan
-            </span>
+            <BrandLogo size={20} />
+            <div className="leading-tight">
+              <span className={`block font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
+                Familiar
+              </span>
+              <span className={`block text-[9px] font-semibold uppercase tracking-[0.15em] transition-colors ${scrolled ? 'text-gray-500' : 'text-white/65'}`}>
+                Formerly &quot;Aangan&quot;
+              </span>
+            </div>
           </div>
           <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <button
@@ -197,11 +253,119 @@ export default function WelcomePage() {
       </header>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+      <section
+        ref={heroRef}
+        className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden"
+        onMouseMove={handleHeroMouseMove}
+        onMouseEnter={handleHeroPointerEnter}
+        onMouseLeave={handleHeroPointerLeave}
+        onTouchMove={handleHeroTouchMove}
+      >
         {/* Background gradient — deep forest */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#2A4365] via-[#1a3320] to-[#0d1f13]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(201,166,107,0.15),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
+          <div
+            ref={revealMaskRef}
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{
+              opacity: 'var(--reveal-strength,0.62)',
+              WebkitMaskImage:
+                'radial-gradient(260px 260px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 34%, rgba(0,0,0,0.45) 54%, transparent 74%)',
+              maskImage:
+                'radial-gradient(260px 260px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 34%, rgba(0,0,0,0.45) 54%, transparent 74%)',
+            }}
+          >
+            <svg viewBox="0 0 1800 980" className="w-full h-full">
+              <defs>
+                <linearGradient id="cosmosStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffb08f" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#ff7f63" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#ffd6a8" stopOpacity="0.75" />
+                </linearGradient>
+                <linearGradient id="cosmosStrokeDim" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#9ad0ff" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="#ffe8b7" stopOpacity="0.45" />
+                </linearGradient>
+                <filter id="softGlow">
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <symbol id="nodePerson" viewBox="0 0 24 24">
+                  <circle cx="12" cy="6.6" r="3.9" fill="#f8fcff" fillOpacity="0.95" />
+                  <path d="M3.8 20.6C3.8 16.1 7.2 13.4 12 13.4C16.8 13.4 20.2 16.1 20.2 20.6V22H3.8V20.6Z" fill="#f3fbff" fillOpacity="0.92" />
+                </symbol>
+              </defs>
+
+              <g filter="url(#softGlow)">
+                <path d="M900 560 L700 410 L520 290 L350 215 L200 170" stroke="url(#cosmosStroke)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                <path d="M900 560 L1100 410 L1280 300 L1450 220 L1600 176" stroke="url(#cosmosStroke)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                <path d="M700 410 L860 312 L1100 410" stroke="url(#cosmosStrokeDim)" strokeWidth="3.8" strokeLinecap="round" fill="none" />
+                <path d="M900 560 L850 680 L750 790 L640 860" stroke="url(#cosmosStrokeDim)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                <path d="M900 560 L1010 700 L1140 790 L1260 860" stroke="url(#cosmosStrokeDim)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                <path d="M520 290 L650 350 L860 312" stroke="url(#cosmosStrokeDim)" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+                <path d="M1280 300 L1160 348 L860 312" stroke="url(#cosmosStrokeDim)" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+
+                <ellipse cx="900" cy="560" rx="470" ry="220" transform="rotate(-14 900 560)" stroke="#ffd0b2" strokeOpacity="0.23" strokeWidth="1.9" fill="none" />
+                <ellipse cx="900" cy="560" rx="560" ry="250" transform="rotate(9 900 560)" stroke="#c6e5ff" strokeOpacity="0.18" strokeWidth="1.6" fill="none" />
+                <ellipse cx="900" cy="560" rx="690" ry="290" transform="rotate(-3 900 560)" stroke="#ffddb8" strokeOpacity="0.12" strokeWidth="1.4" fill="none" />
+                <ellipse cx="900" cy="560" rx="770" ry="210" transform="rotate(21 900 560)" stroke="#a7d7ff" strokeOpacity="0.1" strokeWidth="1.2" fill="none" />
+
+                <circle cx="770" cy="468" r="5.5" fill="#ffffff" fillOpacity="0.78" />
+                <circle cx="1038" cy="488" r="5.5" fill="#ffffff" fillOpacity="0.74" />
+                <circle cx="835" cy="702" r="4.5" fill="#d9efff" fillOpacity="0.72" />
+                <circle cx="972" cy="690" r="4.5" fill="#ffe8c7" fillOpacity="0.72" />
+
+                <g opacity="0.92">
+                  <use href="#nodePerson" x="892" y="552" width="28" height="28" />
+                </g>
+                <g opacity="0.9">
+                  <use href="#nodePerson" x="692" y="402" width="28" height="28" />
+                </g>
+                <g opacity="0.9">
+                  <use href="#nodePerson" x="1092" y="402" width="28" height="28" />
+                </g>
+                <g opacity="0.88">
+                  <use href="#nodePerson" x="852" y="304" width="28" height="28" />
+                </g>
+                <g opacity="0.84">
+                  <use href="#nodePerson" x="512" y="282" width="28" height="28" />
+                </g>
+                <g opacity="0.84">
+                  <use href="#nodePerson" x="1272" y="292" width="28" height="28" />
+                </g>
+                <g opacity="0.8">
+                  <use href="#nodePerson" x="342" y="207" width="28" height="28" />
+                </g>
+                <g opacity="0.8">
+                  <use href="#nodePerson" x="1442" y="212" width="28" height="28" />
+                </g>
+                <g opacity="0.78">
+                  <use href="#nodePerson" x="192" y="162" width="28" height="28" />
+                </g>
+                <g opacity="0.78">
+                  <use href="#nodePerson" x="1592" y="168" width="28" height="28" />
+                </g>
+                <g opacity="0.82">
+                  <use href="#nodePerson" x="742" y="782" width="28" height="28" />
+                </g>
+                <g opacity="0.82">
+                  <use href="#nodePerson" x="1132" y="782" width="28" height="28" />
+                </g>
+                <g opacity="0.75">
+                  <use href="#nodePerson" x="632" y="852" width="28" height="28" />
+                </g>
+                <g opacity="0.75">
+                  <use href="#nodePerson" x="1252" y="852" width="28" height="28" />
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
 
         {/* Floating decorative nodes */}
         <div className="absolute top-20 left-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center animate-pulse">
@@ -219,7 +383,7 @@ export default function WelcomePage() {
 
         <div className="relative z-10 text-center max-w-lg mx-auto">
           <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <TreePine size={40} className="text-white/80" />
+            <BrandLogo size={50} />
           </div>
 
           <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.2em] mb-3">The Digital Courtyard</p>
@@ -297,7 +461,7 @@ export default function WelcomePage() {
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
           {[
-            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Aangan auto-maps your relatives and degrees of relations.', gradient: 'from-[#2A4365] to-[#2d5033]' },
+            { icon: TreePine, title: 'Universal Family Tree', desc: 'Add yourself once — Familiar auto-maps your relatives and degrees of relations.', gradient: 'from-[#2A4365] to-[#2d5033]' },
             { icon: Shield, title: 'Privacy Controls', desc: 'Share posts, events, and announcements only up to the degree you choose.', gradient: 'from-[#2A4365] to-[#2d5033]' },
             { icon: MapPin, title: 'Find Relatives Nearby', desc: 'Discover family in new cities or events — never feel alone.', gradient: 'from-[#2A4365] to-[#2d5033]' },
             { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-[#2A4365] to-[#2d5033]' },
@@ -356,10 +520,10 @@ export default function WelcomePage() {
       <section className="py-20 px-6" style={{ background: 'transparent' }}>
         <div className="max-w-lg mx-auto text-center">
           <div className="w-16 h-16 rounded-3xl bg-[#2A4365]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <TreePine size={32} className="text-[#2A4365]" />
+            <BrandLogo size={38} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Your Aangan awaits
+            Your Familiar awaits
           </h2>
           <p className="text-gray-500 mb-8 leading-relaxed">
             A place where every relation matters. Start building your family&apos;s living tree today.
@@ -385,8 +549,8 @@ export default function WelcomePage() {
       <footer className="py-8 px-6 border-t border-gray-200/30" style={{ background: 'transparent' }}>
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <TreePine size={16} className="text-[#2A4365]" />
-            <span className="text-sm font-semibold text-gray-900">Aangan</span>
+            <BrandLogo size={16} />
+            <span className="text-sm font-semibold text-gray-900">Familiar</span>
             <span className="text-xs text-gray-500">— The Digital Courtyard</span>
           </div>
           <p className="text-xs text-gray-500">

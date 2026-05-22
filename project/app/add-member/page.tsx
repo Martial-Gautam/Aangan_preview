@@ -245,7 +245,7 @@ export default function AddMemberPage() {
           <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Contact Info (optional)</h3>
             <p className="text-xs text-gray-400 mb-3">
-              If they join Aangan, they can claim this profile automatically
+              If they join Familiar, they can claim this profile automatically
             </p>
             <div className="space-y-3">
               <div className="relative">

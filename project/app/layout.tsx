@@ -14,13 +14,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Aangan — Your Family Tree',
+  title: 'Familiar — Your Family Tree',
   description: 'Connect with your family. Build your tree. Cherish your roots.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Aangan',
+    title: 'Familiar',
   },
 };
 

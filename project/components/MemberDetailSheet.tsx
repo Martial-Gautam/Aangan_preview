@@ -250,7 +250,7 @@ export default function MemberDetailSheet({
             </span>
             {isLinked && (
               <span className="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
-                <LinkIcon size={10} /> Aangan member
+                <LinkIcon size={10} /> Familiar member
               </span>
             )}
           </div>
@@ -392,7 +392,7 @@ export default function MemberDetailSheet({
                   </button>
                   {!canMessage && !resolvingTarget && (
                     <p className="text-[10px] text-gray-400 text-center px-4 pb-2 -mt-1">
-                      No linked Aangan account found yet
+                      No linked Familiar account found yet
                     </p>
                   )}
                 </>

@@ -488,8 +488,12 @@ export default function WelcomePage() {
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: 'easeOut', delay: index * 0.05 }}
+              animate={{ opacity: 1, y: [0, -6, 0] }}
+              transition={{
+                opacity: { duration: 0.45, ease: 'easeOut', delay: index * 0.05 },
+                y: { duration: 7 + index * 0.4, repeat: Infinity, ease: 'easeInOut', delay: 0.6 + index * 0.12 },
+              }}
+              whileHover={{ y: -10, scale: 1.02 }}
               className="glass-card rounded-2xl p-5 hover:bg-white/70 hover:shadow-lg transition-all group"
             >
               <div className="w-10 h-10 rounded-xl bg-[#2A4365]/8 flex items-center justify-center mb-3 group-hover:bg-[#2A4365]/15 transition-colors">
@@ -524,8 +528,12 @@ export default function WelcomePage() {
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.05 + index * 0.06 }}
+              animate={{ opacity: 1, y: [0, -7, 0] }}
+              transition={{
+                opacity: { duration: 0.5, ease: 'easeOut', delay: 0.05 + index * 0.06 },
+                y: { duration: 7.6 + index * 0.35, repeat: Infinity, ease: 'easeInOut', delay: 0.7 + index * 0.1 },
+              }}
+              whileHover={{ y: -10, scale: 1.02 }}
               className="glass-card rounded-3xl p-6 hover:shadow-xl transition-all group"
             >
               <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-[#2A4365]/15 group-hover:scale-105 transition-transform`}>
@@ -569,8 +577,12 @@ export default function WelcomePage() {
             <motion.div
               key={item.label}
               initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.04 + index * 0.05 }}
+              animate={{ opacity: 1, y: [0, -5, 0] }}
+              transition={{
+                opacity: { duration: 0.4, ease: 'easeOut', delay: 0.04 + index * 0.05 },
+                y: { duration: 6.6 + index * 0.3, repeat: Infinity, ease: 'easeInOut', delay: 0.55 + index * 0.1 },
+              }}
+              whileHover={{ y: -8, scale: 1.02 }}
               className="glass-card rounded-2xl p-5 text-center"
             >
               <p className="text-3xl font-bold text-[#2A4365] mb-1">{item.stat}</p>

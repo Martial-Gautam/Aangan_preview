@@ -127,10 +127,10 @@ export default function StatsPage() {
               <ArrowLeft size={18} className="text-gray-600" />
             </button>
             <div>
-              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">
+              <p className="brand-wordmark text-[10px] text-gray-400 uppercase">
                 Familiar
               </p>
-              <h1 className="text-lg font-bold text-gray-900">Tree Statistics</h1>
+              <h1 className="screen-title text-lg text-gray-900">Tree Statistics</h1>
             </div>
           </div>
         </div>

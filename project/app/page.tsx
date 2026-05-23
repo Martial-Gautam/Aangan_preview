@@ -26,7 +26,7 @@ export default function RootPage() {
         <div className="w-14 h-14 rounded-2xl bg-[#2A4365]/10 border border-[#2A4365]/15 flex items-center justify-center animate-pulse">
           <BrandLogo size={34} priority />
         </div>
-        <p className="text-sm text-gray-500 tracking-wide">Familiar</p>
+        <p className="brand-wordmark text-sm text-gray-500">Familiar</p>
       </div>
     </div>
   );

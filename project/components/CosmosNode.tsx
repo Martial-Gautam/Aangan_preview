@@ -288,7 +288,7 @@ export default function CosmosNode({
               {/* Name */}
               <div style={{
                 fontSize: 13,
-                fontWeight: 700,
+                fontWeight: 500,
                 color: '#ffffff',
                 textAlign: 'center',
                 maxWidth: 100,
@@ -304,8 +304,8 @@ export default function CosmosNode({
 
               {/* Relationship badge — frosted glass */}
               <div style={{
-                fontSize: 9,
-                fontWeight: 700,
+                fontSize: 12,
+                fontWeight: 400,
                 color: '#ffffff',
                 background: `${color}cc`,
                 padding: '2px 8px',
@@ -341,7 +341,7 @@ export default function CosmosNode({
             }}>
               <div style={{
                 fontSize: 10,
-                fontWeight: 700,
+                fontWeight: 500,
                 color: '#ffffff',
                 textShadow: '0 1px 4px rgba(0,0,0,0.7)',
                 textAlign: 'center',

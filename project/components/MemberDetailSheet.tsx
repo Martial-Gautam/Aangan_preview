@@ -245,7 +245,7 @@ export default function MemberDetailSheet({
 
           {/* Badges */}
           <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
-            <span className={`text-xs font-bold px-3 py-1 rounded-full ${badgeColor}`}>
+            <span className={`meta-text px-3 py-1 rounded-full ${badgeColor}`}>
               {label}
             </span>
             {isLinked && (
@@ -265,10 +265,10 @@ export default function MemberDetailSheet({
 
           {/* Degree of relationship path */}
           {degreeResult && degreeResult.degree > 0 && (
-            <div className="flex items-center gap-1.5 mt-2.5 text-xs text-gray-500 bg-gray-100/60 px-3 py-2 rounded-xl">
+            <div className="meta-text flex items-center gap-1.5 mt-2.5 text-gray-500 bg-gray-100/60 px-3 py-2 rounded-xl">
               <Route size={12} className="text-[#2A4365] flex-shrink-0" />
               <span>
-                <span className="font-semibold text-[#2A4365]">{degreeResult.label}</span>
+                <span className="font-medium text-[#2A4365]">{degreeResult.label}</span>
                 <span className="text-gray-400 ml-1">({degreeResult.degree} {degreeResult.degree === 1 ? 'hop' : 'hops'})</span>
               </span>
             </div>
@@ -300,7 +300,7 @@ export default function MemberDetailSheet({
                     <span className="text-[10px] font-semibold text-gray-700 truncate max-w-[60px] text-center">
                       {familyMember.full_name.split(' ')[0]}
                     </span>
-                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">
+                    <span className="meta-text text-gray-400 uppercase tracking-wider">
                       {relType}
                     </span>
                   </button>

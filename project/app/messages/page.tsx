@@ -536,20 +536,20 @@ function MessagesContent() {
                     <div key={msg.id}>
                       {showDate && msg.created_at && (
                         <div className="flex justify-center my-3">
-                          <span className="text-[10px] font-semibold text-gray-400 bg-white/60 backdrop-blur-md px-3 py-1 rounded-full border border-gray-200/30">
+                          <span className="meta-text text-gray-400 bg-white/60 backdrop-blur-md px-3 py-1 rounded-full border border-gray-200/30">
                             {getDateLabel(msg.created_at)}
                           </span>
                         </div>
                       )}
                       <div className={`flex ${msg.isMine ? 'justify-end' : 'justify-start'} mb-1.5`}>
-                        <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm ${
                           msg.isMine
                             ? 'bg-[#2A4365] text-white rounded-br-md'
                             : 'bg-white/60 backdrop-blur-md text-gray-900 border border-gray-200/30 rounded-bl-md'
                         }`}>
-                          <p>{msg.text}</p>
+                          <p className="chat-message">{msg.text}</p>
                           {msg.created_at && (
-                            <p className={`text-[9px] mt-1 ${msg.isMine ? 'text-white/50' : 'text-gray-400'} text-right`}>
+                            <p className={`meta-text mt-1 ${msg.isMine ? 'text-white/50' : 'text-gray-400'} text-right`}>
                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           )}
@@ -605,7 +605,7 @@ function MessagesContent() {
       <div className="max-w-sm mx-auto">
         {/* Header */}
         <div className="glass-header px-6 pt-12 pb-4">
-          <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+          <h1 className="screen-title text-xl text-gray-900">Messages</h1>
           <p className="text-xs text-gray-400 mt-0.5">
             Chat with your family members
           </p>
@@ -681,7 +681,7 @@ function MessagesContent() {
                           <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-bold' : 'font-semibold'} text-gray-900`}>
                             {conv.partner_name}
                           </p>
-                          <span className={`text-[10px] flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#2A4365] font-semibold' : 'text-gray-400'}`}>
+                          <span className={`meta-text flex-shrink-0 ml-2 ${conv.unread_count > 0 ? 'text-[#2A4365]' : 'text-gray-400'}`}>
                             {formatTime(conv.last_message_time)}
                           </span>
                         </div>

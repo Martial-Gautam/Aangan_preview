@@ -543,8 +543,8 @@ export default function HomePage() {
       <div className="glass-header px-5 pt-12 pb-3.5 z-10 flex-shrink-0">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="text-[10px] text-gray-500/85 font-bold uppercase tracking-[0.2em]">Familiar</p>
-            <h1 className="text-[17px] font-extrabold text-gray-900 mt-0.5 tracking-tight">
+            <p className="brand-wordmark text-[10px] text-gray-500/85 uppercase">Familiar</p>
+            <h1 className="screen-title text-[17px] text-gray-900 mt-0.5">
               {profile?.full_name?.split(' ')[0]}&apos;s Family
             </h1>
           </div>

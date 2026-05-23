@@ -122,7 +122,7 @@ export default function NotificationsPage() {
     <div className="min-h-screen pb-24" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         <div className="glass-header px-6 pt-12 pb-6">
-          <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="screen-title text-xl text-gray-900">Notifications</h1>
         </div>
 
         <div className="px-4 space-y-4">
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
                               </>
                             )}.
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="meta-text text-gray-400 mt-1">
                             {new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </p>
                           

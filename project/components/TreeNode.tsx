@@ -55,13 +55,13 @@ export default function TreeNode({ nodeData }: TreeNodeProps) {
       </div>
 
       {/* Name */}
-      <p className="mt-1.5 text-xs font-semibold text-gray-800 text-center leading-tight max-w-[110px] truncate">
+      <p className="family-tree-label mt-1.5 text-xs text-gray-800 text-center leading-tight max-w-[110px] truncate">
         {name}
       </p>
 
       {/* Relationship badge */}
       <span
-        className={`mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+        className={`meta-text mt-1 px-2 py-0.5 rounded-full ${
           isSelf ? 'bg-[#2A4365]/10 text-[#2A4365]' : colors.badge
         }`}
       >

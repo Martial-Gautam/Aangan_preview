@@ -407,7 +407,7 @@ function FeedContent() {
         {/* Header */}
         <div className="glass-header px-5 pt-12 pb-3">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-gray-900">Feed</h1>
+            <h1 className="screen-title text-xl text-gray-900">Feed</h1>
           </div>
 
           {/* Two-Section Tabs */}
@@ -538,7 +538,7 @@ function FeedContent() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{authorName}</p>
-                      <p className="text-[10px] text-gray-400">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
+                      <p className="meta-text text-gray-400">{msg.created_at ? formatTime(msg.created_at) : ''}</p>
                     </div>
                     {feedSection === 'community' && postCategory && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[postCategory] || CATEGORY_COLORS.general}`}>
@@ -555,7 +555,7 @@ function FeedContent() {
                     {postTitle && (
                       <h3 className="text-base font-semibold text-gray-900 mb-1.5">{postTitle}</h3>
                     )}
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{postText}</p>
+                    <p className="feed-post-text text-sm text-gray-700 whitespace-pre-wrap">{postText}</p>
                   </div>
                   <div className="flex items-center border-t border-gray-50 px-4 py-2.5">
                     {feedSection === 'community' ? (

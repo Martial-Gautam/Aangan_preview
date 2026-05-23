@@ -149,17 +149,17 @@ function FamilyNode({ data }: NodeProps) {
         </div>
 
         {/* Name */}
-        <p className="mt-1.5 text-[10px] font-semibold text-gray-900 text-center leading-tight line-clamp-2 max-w-full px-0.5">
+        <p className="family-tree-label mt-1.5 text-[11px] text-gray-900 text-center leading-tight line-clamp-2 max-w-full px-0.5">
           {nodeData.name}
         </p>
 
         {/* Age */}
         {age !== null && (
-          <p className="text-[8px] text-gray-400 font-medium mt-0.5">{age} yrs</p>
+          <p className="meta-text text-gray-400 mt-0.5">{age} yrs</p>
         )}
 
         {/* Relationship badge */}
-        <span className={`mt-1 text-[8px] font-bold px-2 py-[2px] rounded-full tracking-wide uppercase ${colors.badge} ${colors.badgeText}`}>
+        <span className={`meta-text mt-1 px-2 py-[2px] rounded-full tracking-wide uppercase ${colors.badge} ${colors.badgeText}`}>
           {label}
         </span>
       </div>

@@ -51,6 +51,8 @@
     --accent-veranda: #2A9D8F;
     --accent-lineage: #00B4D8;
     --gradient-brand: linear-gradient(135deg, #2A4365, #FF9F1C);
+    --font-brand: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
 }
 
@@ -65,7 +67,7 @@
 
   body {
     @apply text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: #F8F9FA;
@@ -573,4 +575,50 @@ div[style*="transform: translate3d"] {
     color: #8a9dbe !important;
     -webkit-text-fill-color: #8a9dbe !important;
   }
+}
+
+/* ─── Typography System ─── */
+.brand-wordmark {
+  font-family: var(--font-brand);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.screen-title {
+  font-family: var(--font-brand);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.chat-message,
+.feed-post-text {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.family-tree-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.meta-text {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+button,
+[role='button'],
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+button.font-bold,
+button.font-semibold {
+  font-weight: 500 !important;
 }

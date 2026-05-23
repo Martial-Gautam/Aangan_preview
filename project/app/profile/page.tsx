@@ -309,7 +309,7 @@ export default function ProfilePage() {
       <div className="max-w-sm mx-auto">
         <div className="glass-header px-6 pt-12 pb-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+            <h1 className="screen-title text-xl text-gray-900">Profile</h1>
             <button
               onClick={() => setEditing(!editing)}
               className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-all ${

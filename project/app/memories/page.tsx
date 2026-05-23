@@ -382,7 +382,7 @@ export default function MemoriesPage() {
               </button>
             )}
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Shared Memory</h1>
+              <h1 className="screen-title text-xl text-gray-900">Shared Memory</h1>
               <p className="text-xs text-gray-400 mt-0.5">
                 {mode === 'choose' && 'Capture and organize family moments'}
                 {mode === 'join' && 'Join an existing shared album'}

@@ -227,7 +227,7 @@ export default function WelcomePage() {
           <div className="flex items-center gap-2">
             <BrandLogo size={20} />
             <div className="leading-tight">
-              <span className={`block font-bold text-lg tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
+              <span className={`brand-wordmark block text-lg transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
                 Familiar
               </span>
               <span className={`block text-[9px] font-semibold uppercase tracking-[0.15em] transition-colors ${scrolled ? 'text-gray-500' : 'text-white/65'}`}>
@@ -550,7 +550,7 @@ export default function WelcomePage() {
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <BrandLogo size={16} />
-            <span className="text-sm font-semibold text-gray-900">Familiar</span>
+            <span className="brand-wordmark text-sm text-gray-900">Familiar</span>
             <span className="text-xs text-gray-500">— The Digital Courtyard</span>
           </div>
           <p className="text-xs text-gray-500">

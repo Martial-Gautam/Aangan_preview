@@ -217,3 +217,176 @@ div[style*="transform: translate3d"] {
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
+
+/* Class-based dark theme support (for next-themes / manual dark mode) */
+:is(html.dark, body.dark, [data-theme='dark']) .glass-card {
+  background: rgba(18, 22, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) body,
+body.dark,
+html.dark body {
+  background: #0B0F19;
+  color: #edf3ff;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .glass-header {
+  background: rgba(11, 15, 25, 0.92);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .glass-nav {
+  background: rgba(11, 15, 25, 0.97);
+  backdrop-filter: blur(26px) saturate(165%);
+  -webkit-backdrop-filter: blur(26px) saturate(165%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.36);
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .glass-input {
+  background: rgba(30, 36, 50, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL DARK-MODE CONTRAST FIX
+   Covers both OS-level (prefers-color-scheme) AND class-based
+   (html.dark / body.dark / [data-theme='dark']) dark modes.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* --- Text colors ------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  .text-gray-900 { color: #f4f7ff !important; }
+  .text-gray-800 { color: #e8edf9 !important; }
+  .text-gray-700 { color: #dce3f2 !important; }
+  .text-gray-600 { color: #c8d2e6 !important; }
+  .text-gray-500 { color: #b5c1d8 !important; }
+  .text-gray-400 { color: #9aa9c4 !important; }
+  .text-gray-300 { color: #8d9fbd !important; }
+  .text-gray-200 { color: #cdd6e8 !important; }
+  .text-gray-100 { color: #e0e7f3 !important; }
+
+  /* Slate variants (used by some Tailwind components) */
+  .text-slate-900 { color: #f4f7ff !important; }
+  .text-slate-800 { color: #e8edf9 !important; }
+  .text-slate-700 { color: #dce3f2 !important; }
+  .text-slate-600 { color: #c8d2e6 !important; }
+  .text-slate-500 { color: #b5c1d8 !important; }
+
+  /* Hardcoded inline-style-like text colors used in components */
+  .text-\[\#1E293B\] { color: #f4f7ff !important; }
+  .text-\[\#334155\] { color: #e0e7f3 !important; }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-900 { color: #f4f7ff !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-800 { color: #e8edf9 !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-700 { color: #dce3f2 !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-600 { color: #c8d2e6 !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-500 { color: #b5c1d8 !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-400 { color: #9aa9c4 !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .text-gray-300 { color: #8d9fbd !important; }
+
+/* --- Background colors ------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  .bg-white { background-color: hsl(222 35% 11%) !important; }
+  .bg-gray-50 { background-color: hsl(222 30% 12%) !important; }
+  .bg-gray-100 { background-color: hsl(222 28% 14%) !important; }
+  .bg-gray-200 { background-color: hsl(222 25% 17%) !important; }
+  .bg-gray-900 { background-color: hsl(222 35% 11%) !important; }
+  .bg-slate-50 { background-color: hsl(222 30% 12%) !important; }
+  .bg-slate-100 { background-color: hsl(222 28% 14%) !important; }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .bg-white { background-color: hsl(222 35% 11%) !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .bg-gray-50 { background-color: hsl(222 30% 12%) !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .bg-gray-100 { background-color: hsl(222 28% 14%) !important; }
+
+/* --- Border colors ---------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .border-gray-100 { border-color: rgba(255, 255, 255, 0.08) !important; }
+  .border-gray-200 { border-color: rgba(255, 255, 255, 0.1) !important; }
+  .border-gray-300 { border-color: rgba(255, 255, 255, 0.12) !important; }
+  .border-gray-400 { border-color: rgba(255, 255, 255, 0.15) !important; }
+  .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.08) !important; }
+  .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.1) !important; }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .border-gray-100 { border-color: rgba(255, 255, 255, 0.08) !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .border-gray-200 { border-color: rgba(255, 255, 255, 0.1) !important; }
+:is(html.dark, body.dark, [data-theme='dark']) .border-gray-300 { border-color: rgba(255, 255, 255, 0.12) !important; }
+
+/* --- Placeholder colors ----------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .placeholder\:text-gray-400::placeholder { color: #8ea0bf !important; }
+  .placeholder\:text-gray-500::placeholder { color: #9bb0d0 !important; }
+  input::placeholder,
+  textarea::placeholder { color: #90a2c1 !important; }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .placeholder\:text-gray-400::placeholder { color: #8ea0bf; }
+:is(html.dark, body.dark, [data-theme='dark']) .placeholder\:text-gray-500::placeholder { color: #9bb0d0; }
+
+/* --- Input & textarea text -------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  input,
+  textarea,
+  select,
+  .glass-input input,
+  .glass-input textarea,
+  .glass-input select {
+    color: #edf3ff !important;
+    -webkit-text-fill-color: #edf3ff;
+    caret-color: #edf3ff;
+  }
+
+  input::placeholder,
+  textarea::placeholder,
+  .glass-input input::placeholder,
+  .glass-input textarea::placeholder {
+    color: #90a2c1 !important;
+    -webkit-text-fill-color: #90a2c1;
+  }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) input,
+:is(html.dark, body.dark, [data-theme='dark']) textarea,
+:is(html.dark, body.dark, [data-theme='dark']) .glass-input input,
+:is(html.dark, body.dark, [data-theme='dark']) .glass-input textarea {
+  color: #edf3ff !important;
+  -webkit-text-fill-color: #edf3ff;
+  caret-color: #edf3ff;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) input::placeholder,
+:is(html.dark, body.dark, [data-theme='dark']) textarea::placeholder,
+:is(html.dark, body.dark, [data-theme='dark']) .glass-input input::placeholder,
+:is(html.dark, body.dark, [data-theme='dark']) .glass-input textarea::placeholder {
+  color: #90a2c1 !important;
+}
+
+/* --- Ring / focus colors ---------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .ring-gray-200 { --tw-ring-color: rgba(255, 255, 255, 0.12) !important; }
+  .ring-gray-300 { --tw-ring-color: rgba(255, 255, 255, 0.15) !important; }
+}
+
+/* --- Shadow softening ------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .shadow-sm,
+  .shadow,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl {
+    --tw-shadow-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* --- Hover state backgrounds ------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  .hover\:bg-gray-50:hover { background-color: hsl(222 30% 15%) !important; }
+  .hover\:bg-gray-100:hover { background-color: hsl(222 28% 17%) !important; }
+  .hover\:bg-white:hover { background-color: hsl(222 30% 15%) !important; }
+}

@@ -123,7 +123,7 @@ export default function WelcomePage() {
           <div className="w-full max-w-sm mx-auto">
             <button
               onClick={() => { setMode('landing'); setError(''); }}
-              className="flex items-center gap-2 text-gray-500 mb-8 text-sm hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 mb-8 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/70 dark:bg-white/8 border border-gray-200/70 dark:border-white/15 rounded-xl px-3.5 py-2 hover:bg-white dark:hover:bg-white/12 transition-colors"
             >
               <ArrowRight size={16} className="rotate-180" />
               Back
@@ -136,17 +136,17 @@ export default function WelcomePage() {
               <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.16em] mb-1">
                 Formerly &quot;Aangan&quot;
               </p>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {mode === 'signup' ? 'Join Familiar' : 'Welcome back'}
               </h2>
-              <p className="text-gray-500 mt-1 text-sm">
+              <p className="text-gray-500 dark:text-gray-300 mt-1 text-sm">
                 {mode === 'signup' ? 'Start building your family tree today' : 'Sign in to your digital courtyard'}
               </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-900 block mb-1.5">Email</label>
+                <label className="text-sm font-medium text-gray-900 dark:text-gray-100 block mb-1.5">Email</label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -155,13 +155,13 @@ export default function WelcomePage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    className="w-full pl-10 pr-4 py-3.5 rounded-xl glass-input text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400 dark:placeholder:text-gray-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900 block mb-1.5">Password</label>
+                <label className="text-sm font-medium text-gray-900 dark:text-gray-100 block mb-1.5">Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -171,12 +171,12 @@ export default function WelcomePage() {
                     required
                     minLength={6}
                     placeholder="Min. 6 characters"
-                    className="w-full pl-10 pr-11 py-3.5 rounded-xl glass-input text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400"
+                    className="w-full pl-10 pr-11 py-3.5 rounded-xl glass-input text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2A4365]/40 focus:border-transparent transition-all placeholder:text-gray-400 dark:placeholder:text-gray-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -198,11 +198,11 @@ export default function WelcomePage() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-300 mt-6">
               {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
               <button
                 onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}
-                className="text-[#2A4365] font-semibold hover:text-[#2A4365]/80"
+                className="text-[#2A4365] dark:text-[#7ea7e0] font-semibold hover:text-[#2A4365]/80 dark:hover:text-[#9fc0ef]"
               >
                 {mode === 'signup' ? 'Sign in' : 'Sign up'}
               </button>

@@ -4,12 +4,28 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
+import { motion } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Users, Shield,
   MapPin, Send, Image, Heart, ChevronDown, Sparkles, Globe
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
+
+const heroStagger = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.12,
+    },
+  },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -118,7 +134,13 @@ export default function WelcomePage() {
   // --- Auth form screen ---
   if (mode !== 'landing') {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'transparent' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="min-h-screen flex flex-col"
+        style={{ background: 'transparent' }}
+      >
         <div className="flex-1 flex flex-col justify-center px-6 py-12">
           <div className="w-full max-w-sm mx-auto">
             <button
@@ -209,7 +231,7 @@ export default function WelcomePage() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -368,36 +390,61 @@ export default function WelcomePage() {
         </div>
 
         {/* Floating decorative nodes */}
-        <div className="absolute top-20 left-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center animate-pulse">
+        <motion.div
+          className="absolute top-20 left-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          animate={{ y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
           <span className="text-white/50 text-xs font-bold">P</span>
-        </div>
-        <div className="absolute top-32 right-12 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center" style={{ animationDelay: '1s' }}>
+        </motion.div>
+        <motion.div
+          className="absolute top-32 right-12 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          style={{ animationDelay: '1s' }}
+          animate={{ y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] }}
+          transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+        >
           <span className="text-white/50 text-xs font-bold">M</span>
-        </div>
-        <div className="absolute bottom-40 left-16 w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center" style={{ animationDelay: '2s' }}>
+        </motion.div>
+        <motion.div
+          className="absolute bottom-40 left-16 w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          style={{ animationDelay: '2s' }}
+          animate={{ y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] }}
+          transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
+        >
           <span className="text-white/50 text-xs font-bold">S</span>
-        </div>
-        <div className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+        </motion.div>
+        <motion.div
+          className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          animate={{ y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] }}
+          transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+        >
           <span className="text-white/50 text-xs font-bold">C</span>
-        </div>
+        </motion.div>
 
-        <div className="relative z-10 text-center max-w-lg mx-auto">
-          <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
+        <motion.div
+          variants={heroStagger}
+          initial="hidden"
+          animate="show"
+          className="relative z-10 text-center max-w-lg mx-auto"
+        >
+          <motion.div variants={fadeUp} className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
             <BrandLogo size={50} />
-          </div>
+          </motion.div>
 
-          <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.2em] mb-3">The Digital Courtyard</p>
+          <motion.p variants={fadeUp} className="text-white/60 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
+            The Digital Courtyard
+          </motion.p>
 
-          <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4 tracking-tight">
+          <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4 tracking-tight">
             Where Family Stories<br />
             <span className="text-white/80">Meet & Grow</span>
-          </h1>
+          </motion.h1>
 
-          <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
+          <motion.p variants={fadeUp} className="text-white/70 text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
             A social platform centered on the Universal Family Tree — mapping connections, discovering relatives, and cherishing memories together.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <button
               onClick={() => setMode('signup')}
               className="w-full sm:w-auto bg-white text-[#2A4365] px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 active:scale-[0.97] transition-all shadow-xl shadow-black/15 flex items-center justify-center gap-2"
@@ -410,8 +457,8 @@ export default function WelcomePage() {
             >
               I have an account
             </button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Scroll indicator */}
         <button onClick={scrollToFeatures} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 hover:text-white/70 transition-colors animate-bounce">
@@ -437,14 +484,20 @@ export default function WelcomePage() {
             { icon: Send, title: 'Event Disorganization', desc: 'Invitations and event photos scattered across apps.' },
             { icon: MapPin, title: 'Hard to Find Relatives', desc: 'Difficulty discovering relatives in new places.' },
             { icon: Heart, title: 'Fear of Judgement', desc: 'Hesitation to share sensitive family news publicly.' },
-          ].map((item) => (
-            <div key={item.title} className="glass-card rounded-2xl p-5 hover:bg-white/70 hover:shadow-lg transition-all group">
+          ].map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: 'easeOut', delay: index * 0.05 }}
+              className="glass-card rounded-2xl p-5 hover:bg-white/70 hover:shadow-lg transition-all group"
+            >
               <div className="w-10 h-10 rounded-xl bg-[#2A4365]/8 flex items-center justify-center mb-3 group-hover:bg-[#2A4365]/15 transition-colors">
                 <item.icon size={18} className="text-[#2A4365]" />
               </div>
               <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
               <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -467,14 +520,20 @@ export default function WelcomePage() {
             { icon: Send, title: 'One-Tap Invitations', desc: 'Invite entire family groups to weddings, functions, or gatherings instantly.', gradient: 'from-[#2A4365] to-[#2d5033]' },
             { icon: Image, title: 'Family-First Media Sharing', desc: 'Shared gallery where everyone uploads photos and videos from events.', gradient: 'from-[#2A4365] to-[#2d5033]' },
             { icon: Sparkles, title: 'Ancestor Mapping', desc: 'Over time, trace your ancestry — see generations of your lineage mapped out.', gradient: 'from-[#2A4365] to-[#2d5033]' },
-          ].map((item) => (
-            <div key={item.title} className="glass-card rounded-3xl p-6 hover:shadow-xl transition-all group">
+          ].map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.05 + index * 0.06 }}
+              className="glass-card rounded-3xl p-6 hover:shadow-xl transition-all group"
+            >
               <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-lg shadow-[#2A4365]/15 group-hover:scale-105 transition-transform`}>
                 <item.icon size={22} className="text-white" />
               </div>
               <h3 className="font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -506,12 +565,18 @@ export default function WelcomePage() {
             { stat: '80%', label: 'Social Interactions', sub: 'are among family & friends' },
             { stat: '$8B+', label: 'Ancestry Market', sub: 'expected by 2030' },
             { stat: '∞', label: 'Family Events', sub: 'multi-billion dollar ecosystem' },
-          ].map((item) => (
-            <div key={item.label} className="glass-card rounded-2xl p-5 text-center">
+          ].map((item, index) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.04 + index * 0.05 }}
+              className="glass-card rounded-2xl p-5 text-center"
+            >
               <p className="text-3xl font-bold text-[#2A4365] mb-1">{item.stat}</p>
               <p className="text-sm font-semibold text-gray-900">{item.label}</p>
               <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { TreePine, Newspaper, Images, MessageCircle, User } from 'lucide-react';
@@ -19,7 +20,8 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
+  const queryClient = useQueryClient();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -61,10 +63,65 @@ export default function BottomNav() {
     sessionStorage.setItem('familiar-nav-warm-v1', '1');
 
     const warm = () => {
+      const userId = user?.id;
       const headers = { Authorization: `Bearer ${session.access_token}` };
+      if (userId) {
+        void queryClient.prefetchQuery({
+          queryKey: ['feed', userId, 'post'],
+          queryFn: async () => {
+            const res = await fetch('/api/posts/list?type=post', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.posts || [];
+          },
+        });
+        void queryClient.prefetchQuery({
+          queryKey: ['feed', userId, 'discussion'],
+          queryFn: async () => {
+            const res = await fetch('/api/posts/list?type=discussion', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.posts || [];
+          },
+        });
+        void queryClient.prefetchQuery({
+          queryKey: ['messages', 'conversations', userId],
+          queryFn: async () => {
+            const res = await fetch('/api/messages/conversations', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.conversations || [];
+          },
+        });
+        void queryClient.prefetchQuery({
+          queryKey: ['memories', userId],
+          queryFn: async () => {
+            const res = await fetch('/api/posts/list?type=post&category=memories', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.posts || [];
+          },
+        });
+        void queryClient.prefetchQuery({
+          queryKey: ['notifications', 'pending', userId],
+          queryFn: async () => {
+            const res = await fetch('/api/connections/pending', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.requests || [];
+          },
+        });
+        void queryClient.prefetchQuery({
+          queryKey: ['notifications', 'suggestions', userId],
+          queryFn: async () => {
+            const res = await fetch('/api/connections/suggestions', { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.suggestions || [];
+          },
+        });
+      }
       void fetch('/api/tree/full', { headers, cache: 'no-store' }).catch(() => {});
-      void fetch('/api/messages/conversations', { headers, cache: 'no-store' }).catch(() => {});
-      void fetch('/api/posts/list?type=post', { headers, cache: 'no-store' }).catch(() => {});
       void import('@/components/FamilyCosmos').catch(() => {});
       warmStreamConnection(session.access_token);
     };
@@ -75,7 +132,7 @@ export default function BottomNav() {
     }
     const timer = setTimeout(warm, 600);
     return () => clearTimeout(timer);
-  }, [session?.access_token]);
+  }, [queryClient, session?.access_token, user?.id]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-nav">

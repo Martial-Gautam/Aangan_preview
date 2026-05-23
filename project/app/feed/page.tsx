@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -13,7 +14,6 @@ import {
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
 import { getConnectedStreamClient } from '@/lib/stream-client';
-import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -56,9 +56,6 @@ interface SharePerson {
   photo_url: string | null;
 }
 
-const FEED_CACHE_TTL_MS = 90_000;
-const feedPostsCacheKey = (type: PostType) => `feed:posts:${type}`;
-
 const CATEGORIES = ['general', 'family-news', 'memories', 'question', 'celebration'];
 const CATEGORY_COLORS: Record<string, string> = {
   'general': 'bg-gray-100 text-gray-600',
@@ -79,12 +76,29 @@ export default function FeedPage() {
 function FeedContent() {
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [useStreamBackend, setUseStreamBackend] = useState(true);
 
   const [feedChannel, setFeedChannel] = useState<StreamChannel | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<PostType>('post');
   const [loadingPosts, setLoadingPosts] = useState(true);
+
+  const getFeedCacheKey = (type: PostType) => ['feed', user?.id, type];
+  const activeFeedCacheKey = useMemo(() => getFeedCacheKey(activeTab), [activeTab, user?.id]);
+
+  const setPostsWithCache = (next: any[], type: PostType = activeTab) => {
+    setPosts(next);
+    queryClient.setQueryData(getFeedCacheKey(type), next);
+  };
+
+  const updatePostsWithCache = (updater: (prev: any[]) => any[]) => {
+    setPosts((prev) => {
+      const next = updater(prev);
+      queryClient.setQueryData(activeFeedCacheKey, next);
+      return next;
+    });
+  };
 
   // Create form
   const [showCreateSheet, setShowCreateSheet] = useState(false);
@@ -135,12 +149,12 @@ function FeedContent() {
   const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
 
   useEffect(() => {
-    const cachedPosts = readSessionCache<any[]>(feedPostsCacheKey(activeTab), FEED_CACHE_TTL_MS);
+    const cachedPosts = queryClient.getQueryData<any[]>(activeFeedCacheKey);
     if (cachedPosts && cachedPosts.length > 0) {
       setPosts(cachedPosts);
       setLoadingPosts(false);
     }
-  }, [activeTab]);
+  }, [activeFeedCacheKey, queryClient]);
 
   const initBackend = async () => {
     try {
@@ -200,8 +214,7 @@ function FeedContent() {
       const all = channel.state.messages || [];
       const filtered = all.filter((m: any) => (m.post_type || 'post') === activeTab && !m.parent_id);
       const next = [...filtered].reverse();
-      setPosts(next);
-      writeSessionCache(feedPostsCacheKey(activeTab), next);
+      setPostsWithCache(next);
     } catch { setPosts([]); }
     finally { setLoadingPosts(false); }
   };
@@ -210,7 +223,8 @@ function FeedContent() {
 
   const fetchSupabasePosts = async (type: PostType) => {
     if (!session?.access_token) return;
-    const cached = readSessionCache<any[]>(feedPostsCacheKey(type), FEED_CACHE_TTL_MS);
+    const cacheKey = getFeedCacheKey(type);
+    const cached = queryClient.getQueryData<any[]>(cacheKey);
     if (cached && cached.length > 0 && posts.length === 0) {
       setPosts(cached);
     } else if (posts.length === 0) {
@@ -223,8 +237,7 @@ function FeedContent() {
       if (res.ok) {
         const data = await res.json();
         const nextPosts = data.posts || [];
-        setPosts(nextPosts);
-        writeSessionCache(feedPostsCacheKey(type), nextPosts);
+        setPostsWithCache(nextPosts, type);
       } else { setPosts([]); }
     } catch { setPosts([]); }
     finally { setLoadingPosts(false); }
@@ -290,7 +303,7 @@ function FeedContent() {
       } catch {}
     } else {
       // Optimistic update
-      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.liked_by_me ? p.likes_count - 1 : p.likes_count + 1 } : p));
+      updatePostsWithCache(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.liked_by_me ? p.likes_count - 1 : p.likes_count + 1 } : p));
       try {
         await fetch('/api/posts/like', {
           method: 'POST',
@@ -338,7 +351,7 @@ function FeedContent() {
         if (res.ok) {
           const d = await res.json();
           setReplies(prev => [...prev, { ...d.comment, author: { full_name: 'You', photo_url: null } }]);
-          setPosts(prev => prev.map(p => p.id === selectedMessage.id ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
+          updatePostsWithCache(prev => prev.map(p => p.id === selectedMessage.id ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
         }
       }
       setNewComment('');
@@ -360,7 +373,7 @@ function FeedContent() {
           body: JSON.stringify({ post_id: postId }),
         });
       }
-      setPosts(prev => prev.filter(p => p.id !== postId));
+      updatePostsWithCache(prev => prev.filter(p => p.id !== postId));
     } catch (err) { console.error('Delete failed:', err); }
   };
 

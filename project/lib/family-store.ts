@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { supabase } from './supabase';
 import type { Person, Relationship } from './tree-to-flow';
 
@@ -52,8 +53,10 @@ const initialState = {
   focusHops: 3,
 };
 
-export const useFamilyStore = create<FamilyState>((set, get) => ({
-  ...initialState,
+export const useFamilyStore = create<FamilyState>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
   setSelectedPerson: (id) => set({ selectedPersonId: id }),
   setSearchQuery: (q) => set({ searchQuery: q }),
@@ -169,5 +172,21 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     }));
   },
 
-  reset: () => set(initialState),
-}));
+      reset: () => set(initialState),
+    }),
+    {
+      name: 'familiar-family-cache',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        people: state.people,
+        relationships: state.relationships,
+        selfPerson: state.selfPerson,
+        selfPersonId: state.selfPersonId,
+        familyCount: state.familyCount,
+        centerPersonId: state.centerPersonId,
+        centerKey: state.centerKey,
+        focusHops: state.focusHops,
+      }),
+    }
+  )
+);

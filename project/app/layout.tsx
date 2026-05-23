@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import { QueryProvider } from '@/lib/query-provider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -35,10 +36,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>
-        <AuthProvider>
-          <ServiceWorkerRegister />
-          {children}
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ServiceWorkerRegister />
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

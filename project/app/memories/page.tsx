@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
-import { supabase } from '@/lib/supabase';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import {
   ArrowLeft,
@@ -139,9 +139,6 @@ export default function MemoriesPage() {
   const { user, session, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [memories, setMemories] = useState<MemoryPost[]>([]);
-  const [loadingMemories, setLoadingMemories] = useState(true);
-
   const [mode, setMode] = useState<AlbumMode>('choose');
   const [albumTypeFilter, setAlbumTypeFilter] = useState<'memory' | 'event'>('memory');
   const [activeCategory, setActiveCategory] = useState<AlbumCategoryKey>('family_trip');
@@ -157,7 +154,6 @@ export default function MemoriesPage() {
   const [joinError, setJoinError] = useState('');
   const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
   const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
-  const [sharePeople, setSharePeople] = useState<SharePerson[]>([]);
   const [includeUserIds, setIncludeUserIds] = useState<string[]>([]);
   const [excludeUserIds, setExcludeUserIds] = useState<string[]>([]);
 
@@ -167,9 +163,49 @@ export default function MemoriesPage() {
       router.replace('/welcome');
       return;
     }
-    fetchMemories();
-    fetchSharePeople();
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
+
+  const memoriesQueryKey = ['memories', user?.id];
+  const sharePeopleQueryKey = ['share-people', user?.id];
+
+  const { data: memories = [], isLoading: loadingMemories, refetch: refetchMemories } = useQuery<MemoryPost[]>({
+    queryKey: memoriesQueryKey,
+    enabled: Boolean(session?.access_token && user?.id),
+    queryFn: async () => {
+      const res = await fetch('/api/posts/list?type=post&category=memories', {
+        headers: { Authorization: `Bearer ${session!.access_token}` },
+      });
+      if (!res.ok) return [] as MemoryPost[];
+      const data = await res.json();
+      return (data.posts || []) as MemoryPost[];
+    },
+  });
+
+  const { data: sharePeople = [] } = useQuery<SharePerson[]>({
+    queryKey: sharePeopleQueryKey,
+    enabled: Boolean(session?.access_token && user?.id),
+    queryFn: async () => {
+      const res = await fetch('/api/tree/full', {
+        headers: { Authorization: `Bearer ${session!.access_token}` },
+      });
+      if (!res.ok) return [] as SharePerson[];
+      const data = await res.json();
+      const nodes = data.nodes || [];
+
+      const byUser = new Map<string, SharePerson>();
+      for (const node of nodes) {
+        const userId = node.user_id || (node.is_self ? node.owner_id : null);
+        if (!userId || userId === user?.id || byUser.has(userId)) continue;
+        byUser.set(userId, {
+          user_id: userId,
+          full_name: node.full_name || 'Relative',
+          photo_url: node.photo_url || null,
+        });
+      }
+
+      return Array.from(byUser.values()).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    },
+  });
 
   useEffect(() => {
     if (previewUrl) {
@@ -178,56 +214,11 @@ export default function MemoriesPage() {
     return undefined;
   }, [previewUrl]);
 
-  const fetchMemories = async () => {
-    if (!session?.access_token) return;
-    setLoadingMemories(true);
-    try {
-      const res = await fetch('/api/posts/list?type=post&category=memories', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMemories(data.posts || []);
-      } else {
-        setMemories([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch memories:', err);
-      setMemories([]);
-    } finally {
-      setLoadingMemories(false);
-    }
-  };
-
-  const fetchSharePeople = async () => {
-    if (!session?.access_token || !user?.id) return;
-    try {
-      const res = await fetch('/api/tree/full', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const nodes = data.nodes || [];
-      const byUser = new Map<string, SharePerson>();
-      for (const node of nodes) {
-        const userId = node.user_id || (node.is_self ? node.owner_id : null);
-        if (!userId || userId === user.id || byUser.has(userId)) continue;
-        byUser.set(userId, {
-          user_id: userId,
-          full_name: node.full_name || 'Relative',
-          photo_url: node.photo_url || null,
-        });
-      }
-      setSharePeople(Array.from(byUser.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
-    } catch (err) {
-      console.error('Failed to fetch share people:', err);
-    }
-  };
 
   const memoryCards = useMemo(
     () =>
       memories
-        .map((m) => {
+        .map((m: MemoryPost) => {
           const parsed = parseMemoryContent(m.content);
           if (!parsed) return null;
           const parsedTitle = parseMemoryTitle(m.title);
@@ -344,7 +335,7 @@ export default function MemoriesPage() {
 
       setShowCreate(false);
       resetForm();
-      await fetchMemories();
+      await refetchMemories();
       setMode('albums');
     } catch (err) {
       console.error('Failed to create memory:', err);
@@ -757,7 +748,7 @@ export default function MemoriesPage() {
                       <div className="mt-3 space-y-2">
                         <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Individuals</p>
                         <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                          {sharePeople.map((person) => (
+                          {sharePeople.map((person: SharePerson) => (
                             <div key={person.user_id} className="rounded-lg border border-gray-200/60 bg-white/55 px-2.5 py-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center">

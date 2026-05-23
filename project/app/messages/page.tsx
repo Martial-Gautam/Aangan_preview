@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { ArrowLeft, Send, Search, MessageCircle, Loader2 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
 import { getConnectedStreamClient } from '@/lib/stream-client';
-import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -37,10 +37,6 @@ interface RelativeCandidate {
   user_id: string | null;
 }
 
-const CONVERSATIONS_CACHE_KEY = 'messages:conversations';
-const RELATIVES_CACHE_KEY = 'messages:relatives';
-const CONVERSATIONS_CACHE_TTL_MS = 60_000;
-const RELATIVES_CACHE_TTL_MS = 180_000;
 
 // ─── Main Export ─────────────────────────────────────────────
 
@@ -62,11 +58,15 @@ export default function MessagesPage() {
 
 function MessagesContent() {
   const { user, session, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatPartnerId = searchParams.get('to');
   const chatPartnerNameParam = searchParams.get('name');
   const chatPartnerPhotoParam = searchParams.get('photo');
+
+  const conversationsCacheKey = useMemo(() => ['messages', 'conversations', user?.id], [user?.id]);
+  const relativesCacheKey = useMemo(() => ['messages', 'relatives', user?.id], [user?.id]);
 
   // Stream state
   const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
@@ -98,23 +98,17 @@ function MessagesContent() {
 
   useEffect(() => {
     if (chatPartnerId) return;
-    const cachedConversations = readSessionCache<Conversation[]>(
-      CONVERSATIONS_CACHE_KEY,
-      CONVERSATIONS_CACHE_TTL_MS
-    );
+    const cachedConversations = queryClient.getQueryData<Conversation[]>(conversationsCacheKey);
     if (cachedConversations && cachedConversations.length > 0) {
       setConversations(cachedConversations);
       setLoading(false);
     }
 
-    const cachedRelatives = readSessionCache<RelativeCandidate[]>(
-      RELATIVES_CACHE_KEY,
-      RELATIVES_CACHE_TTL_MS
-    );
+    const cachedRelatives = queryClient.getQueryData<RelativeCandidate[]>(relativesCacheKey);
     if (cachedRelatives && cachedRelatives.length > 0) {
       setRelatives(cachedRelatives);
     }
-  }, [chatPartnerId]);
+  }, [chatPartnerId, conversationsCacheKey, queryClient, relativesCacheKey]);
 
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
@@ -212,7 +206,7 @@ function MessagesContent() {
       })
       .filter((c): c is Conversation => Boolean(c));
       setConversations(convos);
-      writeSessionCache(CONVERSATIONS_CACHE_KEY, convos);
+      queryClient.setQueryData(conversationsCacheKey, convos);
     } catch { setConversations([]); }
     finally { setLoading(false); }
   };
@@ -272,7 +266,7 @@ function MessagesContent() {
         const data = await res.json();
         const nextConversations = data.conversations || [];
         setConversations(nextConversations);
-        writeSessionCache(CONVERSATIONS_CACHE_KEY, nextConversations);
+        queryClient.setQueryData(conversationsCacheKey, nextConversations);
       } else { setConversations([]); }
     } catch { setConversations([]); }
     finally { setLoading(false); }
@@ -311,7 +305,7 @@ function MessagesContent() {
         .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
       setRelatives(family);
-      writeSessionCache(RELATIVES_CACHE_KEY, family);
+      queryClient.setQueryData(relativesCacheKey, family);
     } catch (err) {
       console.error('Failed to fetch relatives for search:', err);
       setRelatives([]);

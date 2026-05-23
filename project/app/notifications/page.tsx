@@ -1,46 +1,52 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { Bell, Loader2, User, CheckCircle2, XCircle, Users, UserPlus } from 'lucide-react';
 
+type PendingRequest = {
+  id: string;
+  sender: { full_name: string; photo_url: string | null };
+  created_at: string;
+  relationship?: string | null;
+  type?: string;
+};
+
+type Suggestion = {
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
+  reason?: string | null;
+  mutual_connection?: string | null;
+};
+
 export default function NotificationsPage() {
   const { user, session, loading } = useAuth();
+  const queryClient = useQueryClient();
   
   // Connection Requests state
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
   // Suggestions state
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [sendingRequestId, setSendingRequestId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (loading || !session?.access_token) return;
-    fetchPendingRequests();
-    fetchSuggestions();
-  }, [loading, session]);
+  const pendingRequestsKey = ['notifications', 'pending', user?.id];
+  const suggestionsKey = ['notifications', 'suggestions', user?.id];
 
-  const fetchPendingRequests = async () => {
-    if (!session?.access_token) return;
-    setRequestsLoading(true);
-    try {
+  const { data: pendingRequests = [], isLoading: requestsLoading } = useQuery<PendingRequest[]>({
+    queryKey: pendingRequestsKey,
+    enabled: Boolean(session?.access_token && user?.id),
+    queryFn: async () => {
       const res = await fetch('/api/connections/pending', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
+        headers: { Authorization: `Bearer ${session!.access_token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setPendingRequests(data.requests || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch requests', err);
-    } finally {
-      setRequestsLoading(false);
-    }
-  };
+      if (!res.ok) return [] as any[];
+      const data = await res.json();
+      return data.requests || [];
+    },
+  });
 
   const handleConnectionResponse = async (requestId: string, action: 'accept' | 'reject') => {
     if (!session?.access_token) return;
@@ -55,7 +61,9 @@ export default function NotificationsPage() {
         body: JSON.stringify({ request_id: requestId, action })
       });
       if (res.ok) {
-        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+        queryClient.setQueryData(pendingRequestsKey, (prev: any[] | undefined) =>
+          (prev || []).filter((r) => r.id !== requestId)
+        );
       }
     } catch (err) {
       console.error('Failed to respond to request', err);
@@ -64,23 +72,18 @@ export default function NotificationsPage() {
     }
   };
 
-  const fetchSuggestions = async () => {
-    if (!session?.access_token) return;
-    setSuggestionsLoading(true);
-    try {
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery<Suggestion[]>({
+    queryKey: suggestionsKey,
+    enabled: Boolean(session?.access_token && user?.id),
+    queryFn: async () => {
       const res = await fetch('/api/connections/suggestions', {
-        headers: { Authorization: `Bearer ${session.access_token}` }
+        headers: { Authorization: `Bearer ${session!.access_token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setSuggestions(data.suggestions || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch suggestions', err);
-    } finally {
-      setSuggestionsLoading(false);
-    }
-  };
+      if (!res.ok) return [] as any[];
+      const data = await res.json();
+      return data.suggestions || [];
+    },
+  });
 
   const handleSendConnection = async (userId: string) => {
     if (!session?.access_token) return;
@@ -96,9 +99,11 @@ export default function NotificationsPage() {
       });
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
-        setSuggestions(prev => prev.filter(s => s.user_id !== userId));
+        queryClient.setQueryData(suggestionsKey, (prev: any[] | undefined) =>
+          (prev || []).filter((s) => s.user_id !== userId)
+        );
         if (data?.merged) {
-          fetchPendingRequests();
+          queryClient.invalidateQueries({ queryKey: pendingRequestsKey });
         }
       }
     } catch (err) {
@@ -157,7 +162,7 @@ export default function NotificationsPage() {
                     <Loader2 size={24} className="text-[#2A4365]/40 animate-spin" />
                   </div>
                 ) : (
-                  pendingRequests.map(req => (
+                  pendingRequests.map((req: PendingRequest) => (
                     <div key={req.id} className="p-4 hover:bg-white/30 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#2A4365]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -224,7 +229,7 @@ export default function NotificationsPage() {
                     <Loader2 size={24} className="text-gray-300 animate-spin" />
                   </div>
                 ) : (
-                  suggestions.map(s => (
+                  suggestions.map((s: Suggestion) => (
                     <div key={s.user_id} className="p-4 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {s.photo_url ? (

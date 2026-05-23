@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth-context';
 import { useFamilyStore } from '@/lib/family-store';
 import BrandLogo from '@/components/BrandLogo';
@@ -24,7 +25,13 @@ function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
   const pathRightOuter = `${uid}-path-right-outer`;
 
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #060b16 0%, #0a1628 50%, #0d0f18 100%)' }}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="absolute inset-0 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #060b16 0%, #0a1628 50%, #0d0f18 100%)' }}
+    >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,122,82,0.16),transparent_42%),radial-gradient(circle_at_82%_28%,rgba(27,67,50,0.22),transparent_48%),radial-gradient(circle_at_50%_85%,rgba(122,138,125,0.12),transparent_55%)]" />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e17]/70 via-[#0a0e17]/80 to-[#0a0e17]/95" />
 
@@ -240,13 +247,19 @@ function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
       <div className="absolute right-4 z-20" style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="skeleton w-14 h-14 rounded-full" />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function FamilyPageSkeleton() {
   return (
-    <div className="h-screen flex justify-center animate-pageEnter" style={{ background: 'transparent' }}>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="h-screen flex justify-center animate-pageEnter"
+      style={{ background: 'transparent' }}
+    >
       <div className="h-full w-full max-w-sm flex flex-col relative overflow-hidden">
         <div className="glass-header px-5 pt-12 pb-4 flex-shrink-0">
           <div className="flex items-center justify-between max-w-lg mx-auto">
@@ -275,7 +288,7 @@ function FamilyPageSkeleton() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

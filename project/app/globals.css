@@ -609,6 +609,102 @@ div[style*="transform: translate3d"] {
   line-height: 1.45;
 }
 
+/* ─── Welcome Page Typography & Contrast ─── */
+.welcome-page {
+  font-family: var(--font-body);
+  color: #1e293b;
+}
+
+.welcome-page h1,
+.welcome-page h2,
+.welcome-page h3,
+.welcome-page .welcome-heading {
+  font-family: var(--font-brand);
+  letter-spacing: -0.02em;
+}
+
+.welcome-page .brand-wordmark {
+  font-family: var(--font-brand);
+}
+
+.welcome-page .welcome-primary-cta {
+  background-color: #ffffff !important;
+  color: #16314d !important;
+}
+
+.welcome-page .welcome-primary-cta:hover {
+  background-color: #fff6df !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .welcome-page {
+    color: #edf3ff;
+  }
+
+  .welcome-page .bg-white,
+  .welcome-page .bg-\[\#f7f9fb\] {
+    background-color: #0f1726 !important;
+  }
+
+  .welcome-page .text-gray-950,
+  .welcome-page .text-gray-900 {
+    color: #f4f7ff !important;
+  }
+
+  .welcome-page .text-gray-700,
+  .welcome-page .text-gray-600 {
+    color: #c8d3e8 !important;
+  }
+
+  .welcome-page .text-gray-500 {
+    color: #9ba9c4 !important;
+  }
+
+  .welcome-page .border-gray-200,
+  .welcome-page .border-gray-300 {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .welcome-page .hover\:bg-white:hover {
+    background-color: #172033 !important;
+  }
+
+  .welcome-page .welcome-primary-cta,
+  .welcome-page .welcome-primary-cta:hover {
+    background-color: #ffffff !important;
+    color: #16314d !important;
+  }
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page {
+  color: #edf3ff;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .bg-white,
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .bg-\[\#f7f9fb\] {
+  background-color: #0f1726 !important;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .text-gray-950,
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .text-gray-900 {
+  color: #f4f7ff !important;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .text-gray-700,
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .text-gray-600 {
+  color: #c8d3e8 !important;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .text-gray-500 {
+  color: #9ba9c4 !important;
+}
+
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .welcome-primary-cta,
+:is(html.dark, body.dark, [data-theme='dark']) .welcome-page .welcome-primary-cta:hover {
+  background-color: #ffffff !important;
+  color: #16314d !important;
+}
+
 button,
 [role='button'],
 input[type='button'],

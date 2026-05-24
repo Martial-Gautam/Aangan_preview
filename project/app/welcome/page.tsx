@@ -182,18 +182,24 @@ export default function WelcomePage() {
   };
 
   useEffect(() => {
-    let idleId: number | null = null;
-    if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(() => setShowDeferred(true));
+    let idleId: number | ReturnType<typeof setTimeout> | null = null;
+    const globalWithIdle = globalThis as typeof globalThis & {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+
+    if (globalWithIdle.requestIdleCallback) {
+      idleId = globalWithIdle.requestIdleCallback(() => setShowDeferred(true));
     } else {
-      idleId = window.setTimeout(() => setShowDeferred(true), 800);
+      idleId = setTimeout(() => setShowDeferred(true), 800);
     }
+
     return () => {
       if (idleId === null) return;
-      if ('cancelIdleCallback' in window) {
-        window.cancelIdleCallback(idleId);
+      if (globalWithIdle.cancelIdleCallback && typeof idleId === 'number') {
+        globalWithIdle.cancelIdleCallback(idleId);
       } else {
-        window.clearTimeout(idleId);
+        clearTimeout(idleId as ReturnType<typeof setTimeout>);
       }
     };
   }, []);

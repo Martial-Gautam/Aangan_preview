@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState, useRef } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
+import DeferredLandingSections from '@/components/welcome/DeferredLandingSections';
 import { motion } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield,
@@ -12,8 +12,6 @@ import {
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
-
-const DeferredLandingSections = dynamic(() => import('@/components/welcome/DeferredLandingSections'));
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -116,7 +114,7 @@ export default function WelcomePage() {
   const handleHeroPointerEnter = () => {
     const revealEl = revealMaskRef.current;
     if (!revealEl) return;
-    measureHeroRect();
+    if (!heroRectRef.current) measureHeroRect();
     revealEl.style.setProperty('--reveal-strength', '0.46');
   };
 
@@ -127,32 +125,18 @@ export default function WelcomePage() {
   };
 
   const handleHeroMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    if (!heroRectRef.current) measureHeroRect();
     scheduleRevealUpdate(event.clientX, event.clientY);
   };
 
   const handleHeroTouchMove = (event: React.TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     if (!touch) return;
+    if (!heroRectRef.current) measureHeroRect();
     scheduleRevealUpdate(touch.clientX, touch.clientY);
     const revealEl = revealMaskRef.current;
     if (revealEl) revealEl.style.setProperty('--reveal-strength', '0.42');
   };
-
-  useEffect(() => {
-    const revealEl = revealMaskRef.current;
-    if (!revealEl) return;
-    measureHeroRect();
-    const rect = heroRectRef.current;
-    if (!rect) return;
-    revealEl.style.setProperty('--mx', `${rect.width * 0.5}px`);
-    revealEl.style.setProperty('--my', `${rect.height * 0.52}px`);
-  }, [measureHeroRect]);
-
-  useEffect(() => {
-    const handleResize = () => measureHeroRect();
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
-  }, [measureHeroRect]);
 
   useEffect(() => {
     return () => {

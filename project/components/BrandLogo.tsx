@@ -13,6 +13,8 @@ export default function BrandLogo({
   alt = 'Familiar logo',
   priority = false,
 }: BrandLogoProps) {
+  const src = size <= 72 ? '/icons/familiar-icon-192.webp' : '/brand/familiar-logo.webp';
+
   return (
     <div
       className={`relative shrink-0 ${className}`}
@@ -20,7 +22,7 @@ export default function BrandLogo({
       aria-hidden={alt ? undefined : true}
     >
       <Image
-        src="/brand/familiar-logo.webp"
+        src={src}
         alt={alt}
         fill
         priority={priority}

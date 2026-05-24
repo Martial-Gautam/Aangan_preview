@@ -28,6 +28,7 @@ export default function WelcomePage() {
   const [error, setError] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showDeferred, setShowDeferred] = useState(false);
+  const [enableMotion, setEnableMotion] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const revealMaskRef = useRef<HTMLDivElement>(null);
   const heroRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
@@ -42,6 +43,11 @@ export default function WelcomePage() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setEnableMotion(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -360,8 +366,8 @@ export default function WelcomePage() {
         <motion.div
           className="absolute inset-0 z-[1] pointer-events-none opacity-65"
           aria-hidden="true"
-          animate={{ scale: [1, 1.018, 1], opacity: [0.46, 0.58, 0.5] }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          animate={enableMotion ? { scale: [1, 1.018, 1], opacity: [0.46, 0.58, 0.5] } : false}
+          transition={enableMotion ? { duration: 16, repeat: Infinity, ease: 'easeInOut' } : undefined}
         >
           <svg viewBox="0 0 1800 980" className="w-full h-full object-cover">
             <defs>
@@ -403,8 +409,8 @@ export default function WelcomePage() {
               ].map(([cx, cy, r], index) => (
                 <motion.g
                   key={`${cx}-${cy}`}
-                  animate={{ y: [0, index % 2 === 0 ? -8 : 7, 0], opacity: [0.75, 1, 0.78] }}
-                  transition={{ duration: 5.8 + index * 0.18, repeat: Infinity, ease: 'easeInOut', delay: index * 0.08 }}
+                  animate={enableMotion ? { y: [0, index % 2 === 0 ? -8 : 7, 0], opacity: [0.75, 1, 0.78] } : false}
+                  transition={enableMotion ? { duration: 5.8 + index * 0.18, repeat: Infinity, ease: 'easeInOut', delay: index * 0.08 } : undefined}
                 >
                   <circle cx={cx} cy={cy} r={r + 8} fill="#ffffff" fillOpacity="0.08" />
                   <circle cx={cx} cy={cy} r={r} fill="#f8fcff" fillOpacity="0.9" />
@@ -437,31 +443,31 @@ export default function WelcomePage() {
         {/* Floating family cues */}
         <motion.div
           className="absolute z-[3] top-24 left-7 w-10 h-10 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={{ y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          animate={enableMotion ? { y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] } : false}
+          transition={enableMotion ? { duration: 6, repeat: Infinity, ease: 'easeInOut' } : undefined}
         >
           <TreePine size={16} className="text-white/75" />
         </motion.div>
         <motion.div
           className="absolute z-[3] top-32 right-12 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           style={{ animationDelay: '1s' }}
-          animate={{ y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] }}
-          transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+          animate={enableMotion ? { y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] } : false}
+          transition={enableMotion ? { duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 } : undefined}
         >
           <MessageCircle size={15} className="text-white/75" />
         </motion.div>
         <motion.div
           className="absolute z-[3] bottom-40 left-14 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           style={{ animationDelay: '2s' }}
-          animate={{ y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] }}
-          transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
+          animate={enableMotion ? { y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] } : false}
+          transition={enableMotion ? { duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 } : undefined}
         >
           <CalendarDays size={15} className="text-white/75" />
         </motion.div>
         <motion.div
           className="absolute z-[3] bottom-32 right-8 w-11 h-11 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={{ y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] }}
-          transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+          animate={enableMotion ? { y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] } : false}
+          transition={enableMotion ? { duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 } : undefined}
         >
           <Network size={17} className="text-white/75" />
         </motion.div>
@@ -516,13 +522,13 @@ export default function WelcomePage() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 24, rotate: 1.5 }}
-            animate={{ opacity: 1, y: [0, -10, 0], rotate: [1.5, -0.8, 1.5] }}
-            transition={{
+            initial={enableMotion ? { opacity: 0, y: 24, rotate: 1.5 } : false}
+            animate={enableMotion ? { opacity: 1, y: [0, -10, 0], rotate: [1.5, -0.8, 1.5] } : { opacity: 1, y: 0, rotate: 1.5 }}
+            transition={enableMotion ? {
               opacity: { duration: 0.65, ease: 'easeOut', delay: 0.35 },
               y: { duration: 7.8, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
               rotate: { duration: 9.4, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
-            }}
+            } : { duration: 0 }}
             className="hidden sm:block justify-self-center w-full max-w-[390px]"
           >
             <div className="rounded-[2rem] border border-white/24 bg-white/[0.14] p-3 shadow-2xl shadow-black/28 backdrop-blur-2xl">

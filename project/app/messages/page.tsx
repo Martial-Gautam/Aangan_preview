@@ -10,6 +10,9 @@ import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
 import { getConnectedStreamClient } from '@/lib/stream-client';
 
+const MESSAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const MESSAGE_CACHE_PREFIX = 'aangan:messages:';
+
 // ─── Types ───────────────────────────────────────────────────
 
 interface Conversation {
@@ -30,11 +33,38 @@ interface Message {
   created_at: string;
 }
 
+type ChatMessage = Message | any;
+
 interface RelativeCandidate {
   person_id: string;
   full_name: string;
   photo_url: string | null;
   user_id: string | null;
+}
+
+function readPersistentCache<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(MESSAGE_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { ts: number; data: T };
+    if (!parsed?.ts || Date.now() - parsed.ts > MESSAGE_CACHE_MAX_AGE_MS) {
+      localStorage.removeItem(MESSAGE_CACHE_PREFIX + key);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistentCache<T>(key: string, data: T) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(MESSAGE_CACHE_PREFIX + key, JSON.stringify({ ts: Date.now(), data }));
+  } catch {
+    // Ignore quota/private-mode errors. TanStack memory cache still covers this session.
+  }
 }
 
 
@@ -67,6 +97,10 @@ function MessagesContent() {
 
   const conversationsCacheKey = useMemo(() => ['messages', 'conversations', user?.id], [user?.id]);
   const relativesCacheKey = useMemo(() => ['messages', 'relatives', user?.id], [user?.id]);
+  const threadCacheKey = useMemo(
+    () => ['messages', 'thread', user?.id, chatPartnerId],
+    [user?.id, chatPartnerId]
+  );
 
   // Stream state
   const [streamClient, setStreamClient] = useState<StreamChat | null>(null);
@@ -75,7 +109,7 @@ function MessagesContent() {
 
   // Shared state
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeChannel, setActiveChannel] = useState<StreamChannel | null>(null);
   const [chatPartner, setChatPartner] = useState<{ name: string; photo: string | null } | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -88,6 +122,76 @@ function MessagesContent() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const streamMessageUnsubscribeRef = useRef<(() => void) | null>(null);
+  const hasHydratedVisibleCacheRef = useRef(false);
+
+  const conversationsStorageKey = user?.id ? `conversations:${user.id}` : null;
+  const relativesStorageKey = user?.id ? `relatives:${user.id}` : null;
+  const threadStorageKey = user?.id && chatPartnerId ? `thread:${user.id}:${chatPartnerId}` : null;
+
+  const mergeConversations = (primary: Conversation[], secondary: Conversation[]) => {
+    const map = new Map<string, Conversation>();
+    for (const conv of [...secondary, ...primary]) {
+      const existing = map.get(conv.partner_id);
+      if (!existing) {
+        map.set(conv.partner_id, conv);
+        continue;
+      }
+
+      const existingTime = new Date(existing.last_message_time).getTime();
+      const nextTime = new Date(conv.last_message_time).getTime();
+      map.set(conv.partner_id, {
+        ...existing,
+        ...conv,
+        unread_count: Math.max(existing.unread_count || 0, conv.unread_count || 0),
+        last_message: nextTime >= existingTime ? conv.last_message : existing.last_message,
+        last_message_time: nextTime >= existingTime ? conv.last_message_time : existing.last_message_time,
+      });
+    }
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime()
+    );
+  };
+
+  const cacheConversations = (next: Conversation[]) => {
+    setConversations(next);
+    queryClient.setQueryData(conversationsCacheKey, next);
+    if (conversationsStorageKey) writePersistentCache(conversationsStorageKey, next);
+  };
+
+  const cacheThread = (next: ChatMessage[]) => {
+    setMessages(next);
+    if (chatPartnerId) queryClient.setQueryData(threadCacheKey, next);
+    if (threadStorageKey) writePersistentCache(threadStorageKey, next);
+  };
+
+  const mergeMessages = (primary: ChatMessage[], secondary: ChatMessage[]) => {
+    const merged: ChatMessage[] = [];
+    const seenIds = new Set<string>();
+    const seenSemanticKeys = new Set<string>();
+
+    const messageKey = (msg: any) => {
+      const senderId = msg.user?.id || msg.sender_id || '';
+      const text = msg.text || msg.content || '';
+      const createdAt = msg.created_at ? new Date(msg.created_at).getTime() : 0;
+      const bucket = createdAt ? Math.floor(createdAt / 10_000) : 0;
+      return `${senderId}|${text}|${bucket}`;
+    };
+
+    for (const msg of [...secondary, ...primary]) {
+      if (msg.id && seenIds.has(msg.id)) continue;
+      const semanticKey = messageKey(msg);
+      if (seenSemanticKeys.has(semanticKey)) continue;
+      if (msg.id) seenIds.add(msg.id);
+      seenSemanticKeys.add(semanticKey);
+      merged.push(msg);
+    }
+
+    return merged.sort((a: any, b: any) =>
+      new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+    );
+  };
 
   // Auth redirect
   useEffect(() => {
@@ -97,18 +201,48 @@ function MessagesContent() {
   // ─── Try Stream, fallback to Supabase ───────────────
 
   useEffect(() => {
-    if (chatPartnerId) return;
-    const cachedConversations = queryClient.getQueryData<Conversation[]>(conversationsCacheKey);
+    hasHydratedVisibleCacheRef.current = false;
+
+    if (chatPartnerId) {
+      const cachedMessages =
+        queryClient.getQueryData<ChatMessage[]>(threadCacheKey) ||
+        (threadStorageKey ? readPersistentCache<ChatMessage[]>(threadStorageKey) : null);
+      if (cachedMessages && cachedMessages.length > 0) {
+        setMessages(cachedMessages);
+        queryClient.setQueryData(threadCacheKey, cachedMessages);
+        hasHydratedVisibleCacheRef.current = true;
+        setLoading(false);
+      }
+      return;
+    }
+
+    const cachedConversations =
+      queryClient.getQueryData<Conversation[]>(conversationsCacheKey) ||
+      (conversationsStorageKey ? readPersistentCache<Conversation[]>(conversationsStorageKey) : null);
     if (cachedConversations && cachedConversations.length > 0) {
       setConversations(cachedConversations);
+      queryClient.setQueryData(conversationsCacheKey, cachedConversations);
+      hasHydratedVisibleCacheRef.current = true;
       setLoading(false);
     }
 
-    const cachedRelatives = queryClient.getQueryData<RelativeCandidate[]>(relativesCacheKey);
+    const cachedRelatives =
+      queryClient.getQueryData<RelativeCandidate[]>(relativesCacheKey) ||
+      (relativesStorageKey ? readPersistentCache<RelativeCandidate[]>(relativesStorageKey) : null);
     if (cachedRelatives && cachedRelatives.length > 0) {
       setRelatives(cachedRelatives);
+      queryClient.setQueryData(relativesCacheKey, cachedRelatives);
     }
-  }, [chatPartnerId, conversationsCacheKey, queryClient, relativesCacheKey]);
+  }, [
+    chatPartnerId,
+    conversationsCacheKey,
+    conversationsStorageKey,
+    queryClient,
+    relativesCacheKey,
+    relativesStorageKey,
+    threadCacheKey,
+    threadStorageKey,
+  ]);
 
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
@@ -120,26 +254,26 @@ function MessagesContent() {
     fetchRelatives();
   }, [user?.id, session?.access_token]);
 
-  // Load data once we know which backend to use
+  // Load durable Supabase data immediately, then let Stream enrich it when ready.
   useEffect(() => {
     if (!user?.id || !session?.access_token) return;
-    // Wait until stream attempt finishes
-    if (useStream && !streamReady) return;
 
     if (chatPartnerId) {
-      if (useStream && streamClient) {
-        openStreamChat(chatPartnerId);
-      } else {
-        fetchSupabaseThread(chatPartnerId);
-      }
+      fetchSupabaseThread(chatPartnerId, messages.length > 0 || hasHydratedVisibleCacheRef.current);
     } else {
-      if (useStream && streamClient) {
-        loadStreamChannels();
-      } else {
-        fetchSupabaseConversations();
-      }
+      fetchSupabaseConversations(conversations.length > 0 || hasHydratedVisibleCacheRef.current);
     }
-  }, [user?.id, streamReady, useStream, chatPartnerId]);
+  }, [user?.id, session?.access_token, chatPartnerId]);
+
+  useEffect(() => {
+    if (!user?.id || !session?.access_token || !streamReady || !useStream || !streamClient) return;
+
+    if (chatPartnerId) {
+      openStreamChat(chatPartnerId);
+    } else {
+      loadStreamChannels();
+    }
+  }, [user?.id, session?.access_token, streamReady, useStream, streamClient, chatPartnerId]);
 
   useEffect(() => {
     if (!chatPartnerId) return;
@@ -157,10 +291,11 @@ function MessagesContent() {
 
   // Poll for Supabase messages
   useEffect(() => {
-    if (useStream || !chatPartnerId || !session?.access_token) return;
+    if (!chatPartnerId || !session?.access_token) return;
+    if (useStream && streamReady) return;
     const interval = setInterval(() => fetchSupabaseThread(chatPartnerId, true), 5000);
     return () => clearInterval(interval);
-  }, [useStream, chatPartnerId, session]);
+  }, [chatPartnerId, session, streamReady, useStream]);
 
   // ─── Stream Init ────────────────────────────────────
 
@@ -182,7 +317,6 @@ function MessagesContent() {
 
   const loadStreamChannels = async () => {
     if (!streamClient || !user) return;
-    if (conversations.length === 0) setLoading(true);
     try {
       const filter = { type: 'messaging' as const, members: { $in: [user.id] } };
       const sort = [{ last_message_at: -1 as const }];
@@ -205,16 +339,18 @@ function MessagesContent() {
         };
       })
       .filter((c): c is Conversation => Boolean(c));
-      setConversations(convos);
-      queryClient.setQueryData(conversationsCacheKey, convos);
-    } catch { setConversations([]); }
-    finally { setLoading(false); }
+      cacheConversations(mergeConversations(convos, conversations));
+    } catch (err) {
+      console.warn('Stream channel query failed; keeping cached conversations:', err);
+    }
   };
 
   const openStreamChat = async (partnerId: string) => {
     if (!streamClient || !user) return;
-    setLoading(true);
+    if (messages.length === 0) setLoading(true);
     try {
+      streamMessageUnsubscribeRef.current?.();
+      streamMessageUnsubscribeRef.current = null;
       const channelId = [user.id, partnerId].sort().join('--');
       const channel = streamClient.channel('messaging', channelId, {
         members: [user.id, partnerId],
@@ -228,36 +364,37 @@ function MessagesContent() {
         name: partner?.user?.name || 'Family Member',
         photo: (partner?.user?.image as string) || null,
       });
-      setMessages(channel.state.messages || []);
+      if (channel.state.messages?.length) {
+        cacheThread(mergeMessages(channel.state.messages, messages));
+      }
       await channel.markRead();
 
-      channel.on('message.new', (event) => {
-        if (event.message) setMessages(prev => [...prev, event.message!]);
+      const subscription = channel.on('message.new', (event) => {
+        if (event.message) {
+          if (event.message.user?.id === user.id) return;
+          setMessages(prev => {
+            const next = mergeMessages([event.message!], prev);
+            queryClient.setQueryData(threadCacheKey, next);
+            return next;
+          });
+        }
       });
+      streamMessageUnsubscribeRef.current = () => subscription.unsubscribe();
     } catch (err) {
       console.error('Stream chat failed:', err);
       setUseStream(false);
       setActiveChannel(null);
       await fetchSupabaseThread(partnerId);
-    } finally { setLoading(false); }
-  };
-
-  const sendStreamMessage = async () => {
-    if (!activeChannel || !newMessage.trim()) return;
-    setSending(true);
-    try {
-      await activeChannel.sendMessage({ text: newMessage.trim() });
-      setNewMessage('');
-      inputRef.current?.focus();
-    } catch (err) { console.error('Send failed:', err); }
-    finally { setSending(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ─── Supabase Fallback Methods ──────────────────────
 
-  const fetchSupabaseConversations = async () => {
+  const fetchSupabaseConversations = async (silent = false) => {
     if (!session?.access_token || !user?.id) return;
-    if (conversations.length === 0) setLoading(true);
+    if (!silent && conversations.length === 0) setLoading(true);
     try {
       const res = await fetch('/api/messages/conversations', {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -265,11 +402,14 @@ function MessagesContent() {
       if (res.ok) {
         const data = await res.json();
         const nextConversations = data.conversations || [];
-        setConversations(nextConversations);
-        queryClient.setQueryData(conversationsCacheKey, nextConversations);
-      } else { setConversations([]); }
-    } catch { setConversations([]); }
-    finally { setLoading(false); }
+        cacheConversations(mergeConversations(nextConversations, conversations));
+      } else if (!silent && conversations.length === 0) {
+        setConversations([]);
+      }
+    } catch {
+      if (!silent && conversations.length === 0) setConversations([]);
+    }
+    finally { if (!silent) setLoading(false); }
   };
 
   const fetchRelatives = async () => {
@@ -306,6 +446,7 @@ function MessagesContent() {
 
       setRelatives(family);
       queryClient.setQueryData(relativesCacheKey, family);
+      if (relativesStorageKey) writePersistentCache(relativesStorageKey, family);
     } catch (err) {
       console.error('Failed to fetch relatives for search:', err);
       setRelatives([]);
@@ -364,7 +505,8 @@ function MessagesContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.messages || []);
+        const nextMessages = data.messages || [];
+        cacheThread(messages.length > 0 ? mergeMessages(nextMessages, messages) : nextMessages);
       }
       if (!chatPartner) {
         const convRes = await fetch('/api/messages/conversations', {
@@ -382,6 +524,7 @@ function MessagesContent() {
 
   const sendSupabaseMessage = async () => {
     if (!newMessage.trim() || !chatPartnerId || !session?.access_token) return;
+    const text = newMessage.trim();
     setSending(true);
     try {
       const res = await fetch('/api/messages/send', {
@@ -390,13 +533,24 @@ function MessagesContent() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ receiver_id: chatPartnerId, content: newMessage.trim() }),
+        body: JSON.stringify({ receiver_id: chatPartnerId, content: text }),
       });
       if (res.ok) {
         const data = await res.json();
-        setMessages(prev => [...prev, data.message]);
+        setMessages(prev => {
+          const next = [...prev, data.message];
+          queryClient.setQueryData(threadCacheKey, next);
+          return next;
+        });
         setNewMessage('');
         inputRef.current?.focus();
+        queryClient.invalidateQueries({ queryKey: ['messages', 'conversations', user?.id] });
+        void fetchSupabaseConversations(true);
+        if (activeChannel) {
+          void activeChannel.sendMessage({ text }).catch((err) => {
+            console.warn('Stream mirror send failed:', err);
+          });
+        }
       }
     } catch (err) { console.error('Send failed:', err); }
     finally { setSending(false); }
@@ -405,8 +559,7 @@ function MessagesContent() {
   // ─── Unified Send ───────────────────────────────────
 
   const handleSend = () => {
-    if (useStream && streamClient) sendStreamMessage();
-    else sendSupabaseMessage();
+    sendSupabaseMessage();
   };
 
   // ─── Helpers ────────────────────────────────────────
@@ -437,12 +590,7 @@ function MessagesContent() {
 
   // ─── Loading State ──────────────────────────────────
 
-  const waitingForBackendBootstrap =
-    !streamReady &&
-    useStream &&
-    (chatPartnerId ? messages.length === 0 : conversations.length === 0);
-
-  if (authLoading || waitingForBackendBootstrap) {
+  if (authLoading) {
     return (
       <div className="min-h-screen" style={{ background: 'transparent' }}>
         <div className="max-w-sm mx-auto">
@@ -473,8 +621,8 @@ function MessagesContent() {
     // Normalize messages for both backends
     const normalizedMessages = messages.map((msg: any) => ({
       id: msg.id,
-      isMine: useStream ? msg.user?.id === user?.id : msg.sender_id === user?.id,
-      text: useStream ? msg.text : msg.content,
+      isMine: msg.user ? msg.user?.id === user?.id : msg.sender_id === user?.id,
+      text: msg.text || msg.content,
       created_at: msg.created_at,
     }));
 
@@ -506,7 +654,7 @@ function MessagesContent() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 min-h-0">
-            {loading ? (
+            {loading && normalizedMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 size={24} className="text-[#2A4365] animate-spin" />
               </div>
@@ -623,7 +771,7 @@ function MessagesContent() {
 
         {/* Conversations */}
         <div className="px-4 space-y-2 mt-2">
-          {loading ? (
+          {loading && filteredConvos.length === 0 ? (
             <div className="flex justify-center py-16">
               <Loader2 size={24} className="text-[#2A4365] animate-spin" />
             </div>

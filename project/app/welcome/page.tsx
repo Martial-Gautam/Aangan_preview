@@ -7,7 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { motion } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Users, Shield,
-  MapPin, Send, Image, Heart, ChevronDown, Sparkles, Globe
+  MapPin, Send, Image, Heart, ChevronDown, Sparkles, Globe, MessageCircle, CalendarDays, Network
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
@@ -277,191 +277,246 @@ export default function WelcomePage() {
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden"
+        className="relative min-h-[calc(100svh+48px)] flex flex-col justify-center px-5 sm:px-6 overflow-hidden"
         onMouseMove={handleHeroMouseMove}
         onMouseEnter={handleHeroPointerEnter}
         onMouseLeave={handleHeroPointerLeave}
         onTouchMove={handleHeroTouchMove}
       >
-        {/* Background gradient — deep forest */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2A4365] via-[#1a3320] to-[#0d1f13]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(201,166,107,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
+        <div className="absolute inset-0 bg-[#07121e]" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,127,99,0.35)_0%,rgba(255,196,87,0.18)_24%,rgba(45,129,255,0.25)_53%,rgba(30,177,138,0.24)_78%,rgba(7,18,30,0.94)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_52%,rgba(255,255,255,0.14),transparent_28%),linear-gradient(180deg,rgba(7,18,30,0.12)_0%,rgba(7,18,30,0.82)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#f7f9fb]" />
+
+        <motion.div
+          className="absolute inset-0 z-[1] pointer-events-none opacity-90"
+          aria-hidden="true"
+          animate={{ scale: [1, 1.025, 1], opacity: [0.82, 0.96, 0.86] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <svg viewBox="0 0 1800 980" className="w-full h-full object-cover">
+            <defs>
+              <linearGradient id="welcomeCosmosHot" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffad66" stopOpacity="0.96" />
+                <stop offset="46%" stopColor="#ff5f7e" stopOpacity="0.88" />
+                <stop offset="100%" stopColor="#72e7ff" stopOpacity="0.82" />
+              </linearGradient>
+              <linearGradient id="welcomeCosmosCool" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#5ff0b8" stopOpacity="0.66" />
+                <stop offset="48%" stopColor="#91c7ff" stopOpacity="0.58" />
+                <stop offset="100%" stopColor="#ffe69a" stopOpacity="0.58" />
+              </linearGradient>
+              <filter id="welcomeGlow">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g filter="url(#welcomeGlow)" opacity="0.95">
+              <path d="M900 515 L690 380 L510 275 L310 190 L130 145" stroke="url(#welcomeCosmosHot)" strokeWidth="4.8" strokeLinecap="round" fill="none" />
+              <path d="M900 515 L1110 380 L1300 280 L1500 200 L1680 155" stroke="url(#welcomeCosmosHot)" strokeWidth="4.8" strokeLinecap="round" fill="none" />
+              <path d="M900 515 L785 660 L655 790 L520 885" stroke="url(#welcomeCosmosCool)" strokeWidth="3.6" strokeLinecap="round" fill="none" />
+              <path d="M900 515 L1035 662 L1175 790 L1320 885" stroke="url(#welcomeCosmosCool)" strokeWidth="3.6" strokeLinecap="round" fill="none" />
+              <path d="M690 380 C790 250 1020 245 1110 380" stroke="url(#welcomeCosmosCool)" strokeWidth="3" strokeLinecap="round" fill="none" />
+              <path d="M510 275 C695 365 890 328 1110 380 C1215 405 1370 325 1500 200" stroke="url(#welcomeCosmosCool)" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.72" />
+
+              <ellipse cx="900" cy="515" rx="610" ry="225" transform="rotate(-12 900 515)" stroke="#ffd791" strokeOpacity="0.22" strokeWidth="1.7" fill="none" />
+              <ellipse cx="900" cy="515" rx="720" ry="275" transform="rotate(9 900 515)" stroke="#8adfff" strokeOpacity="0.2" strokeWidth="1.5" fill="none" />
+              <ellipse cx="900" cy="515" rx="840" ry="305" transform="rotate(20 900 515)" stroke="#ff9aaa" strokeOpacity="0.13" strokeWidth="1.2" fill="none" />
+
+              {[
+                [900, 515, 25], [690, 380, 18], [1110, 380, 18], [510, 275, 15], [1300, 280, 15],
+                [310, 190, 12], [1500, 200, 12], [130, 145, 10], [1680, 155, 10], [655, 790, 13],
+                [1175, 790, 13], [520, 885, 11], [1320, 885, 11], [785, 660, 10], [1035, 662, 10],
+              ].map(([cx, cy, r], index) => (
+                <motion.g
+                  key={`${cx}-${cy}`}
+                  animate={{ y: [0, index % 2 === 0 ? -8 : 7, 0], opacity: [0.75, 1, 0.78] }}
+                  transition={{ duration: 5.8 + index * 0.18, repeat: Infinity, ease: 'easeInOut', delay: index * 0.08 }}
+                >
+                  <circle cx={cx} cy={cy} r={r + 8} fill="#ffffff" fillOpacity="0.08" />
+                  <circle cx={cx} cy={cy} r={r} fill="#f8fcff" fillOpacity="0.9" />
+                  <circle cx={cx} cy={cy - r * 0.2} r={r * 0.28} fill="#17324f" fillOpacity="0.72" />
+                  <path d={`M${cx - r * 0.55} ${cy + r * 0.56}C${cx - r * 0.38} ${cy + r * 0.18} ${cx + r * 0.38} ${cy + r * 0.18} ${cx + r * 0.55} ${cy + r * 0.56}`} fill="#17324f" fillOpacity="0.68" />
+                </motion.g>
+              ))}
+            </g>
+          </svg>
+        </motion.div>
+
+        <div className="absolute inset-0 z-[2] pointer-events-none hidden md:block" aria-hidden="true">
           <div
             ref={revealMaskRef}
             className="absolute inset-0 transition-opacity duration-300"
             style={{
-              opacity: 'var(--reveal-strength,0.62)',
+              opacity: 'var(--reveal-strength,0.34)',
               WebkitMaskImage:
-                'radial-gradient(260px 260px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 34%, rgba(0,0,0,0.45) 54%, transparent 74%)',
+                'radial-gradient(320px 320px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.32) 62%, transparent 78%)',
               maskImage:
-                'radial-gradient(260px 260px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 34%, rgba(0,0,0,0.45) 54%, transparent 74%)',
+                'radial-gradient(320px 320px at var(--mx,50%) var(--my,52%), rgba(0,0,0,1) 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.32) 62%, transparent 78%)',
             }}
           >
-            <svg viewBox="0 0 1800 980" className="w-full h-full">
-              <defs>
-                <linearGradient id="cosmosStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffb08f" stopOpacity="0.9" />
-                  <stop offset="50%" stopColor="#ff7f63" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#ffd6a8" stopOpacity="0.75" />
-                </linearGradient>
-                <linearGradient id="cosmosStrokeDim" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#9ad0ff" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#ffe8b7" stopOpacity="0.45" />
-                </linearGradient>
-                <filter id="softGlow">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <symbol id="nodePerson" viewBox="0 0 24 24">
-                  <circle cx="12" cy="6.6" r="3.9" fill="#f8fcff" fillOpacity="0.95" />
-                  <path d="M3.8 20.6C3.8 16.1 7.2 13.4 12 13.4C16.8 13.4 20.2 16.1 20.2 20.6V22H3.8V20.6Z" fill="#f3fbff" fillOpacity="0.92" />
-                </symbol>
-              </defs>
-
-              <g filter="url(#softGlow)">
-                <path d="M900 560 L700 410 L520 290 L350 215 L200 170" stroke="url(#cosmosStroke)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                <path d="M900 560 L1100 410 L1280 300 L1450 220 L1600 176" stroke="url(#cosmosStroke)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                <path d="M700 410 L860 312 L1100 410" stroke="url(#cosmosStrokeDim)" strokeWidth="3.8" strokeLinecap="round" fill="none" />
-                <path d="M900 560 L850 680 L750 790 L640 860" stroke="url(#cosmosStrokeDim)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
-                <path d="M900 560 L1010 700 L1140 790 L1260 860" stroke="url(#cosmosStrokeDim)" strokeWidth="3.2" strokeLinecap="round" fill="none" />
-                <path d="M520 290 L650 350 L860 312" stroke="url(#cosmosStrokeDim)" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-                <path d="M1280 300 L1160 348 L860 312" stroke="url(#cosmosStrokeDim)" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-
-                <ellipse cx="900" cy="560" rx="470" ry="220" transform="rotate(-14 900 560)" stroke="#ffd0b2" strokeOpacity="0.23" strokeWidth="1.9" fill="none" />
-                <ellipse cx="900" cy="560" rx="560" ry="250" transform="rotate(9 900 560)" stroke="#c6e5ff" strokeOpacity="0.18" strokeWidth="1.6" fill="none" />
-                <ellipse cx="900" cy="560" rx="690" ry="290" transform="rotate(-3 900 560)" stroke="#ffddb8" strokeOpacity="0.12" strokeWidth="1.4" fill="none" />
-                <ellipse cx="900" cy="560" rx="770" ry="210" transform="rotate(21 900 560)" stroke="#a7d7ff" strokeOpacity="0.1" strokeWidth="1.2" fill="none" />
-
-                <circle cx="770" cy="468" r="5.5" fill="#ffffff" fillOpacity="0.78" />
-                <circle cx="1038" cy="488" r="5.5" fill="#ffffff" fillOpacity="0.74" />
-                <circle cx="835" cy="702" r="4.5" fill="#d9efff" fillOpacity="0.72" />
-                <circle cx="972" cy="690" r="4.5" fill="#ffe8c7" fillOpacity="0.72" />
-
-                <g opacity="0.92">
-                  <use href="#nodePerson" x="892" y="552" width="28" height="28" />
-                </g>
-                <g opacity="0.9">
-                  <use href="#nodePerson" x="692" y="402" width="28" height="28" />
-                </g>
-                <g opacity="0.9">
-                  <use href="#nodePerson" x="1092" y="402" width="28" height="28" />
-                </g>
-                <g opacity="0.88">
-                  <use href="#nodePerson" x="852" y="304" width="28" height="28" />
-                </g>
-                <g opacity="0.84">
-                  <use href="#nodePerson" x="512" y="282" width="28" height="28" />
-                </g>
-                <g opacity="0.84">
-                  <use href="#nodePerson" x="1272" y="292" width="28" height="28" />
-                </g>
-                <g opacity="0.8">
-                  <use href="#nodePerson" x="342" y="207" width="28" height="28" />
-                </g>
-                <g opacity="0.8">
-                  <use href="#nodePerson" x="1442" y="212" width="28" height="28" />
-                </g>
-                <g opacity="0.78">
-                  <use href="#nodePerson" x="192" y="162" width="28" height="28" />
-                </g>
-                <g opacity="0.78">
-                  <use href="#nodePerson" x="1592" y="168" width="28" height="28" />
-                </g>
-                <g opacity="0.82">
-                  <use href="#nodePerson" x="742" y="782" width="28" height="28" />
-                </g>
-                <g opacity="0.82">
-                  <use href="#nodePerson" x="1132" y="782" width="28" height="28" />
-                </g>
-                <g opacity="0.75">
-                  <use href="#nodePerson" x="632" y="852" width="28" height="28" />
-                </g>
-                <g opacity="0.75">
-                  <use href="#nodePerson" x="1252" y="852" width="28" height="28" />
-                </g>
-              </g>
-            </svg>
+            <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.18),transparent_38%,rgba(255,217,139,0.12)_62%,transparent_84%)]" />
           </div>
         </div>
 
-        {/* Floating decorative nodes */}
+        {/* Floating family cues */}
         <motion.div
-          className="absolute top-20 left-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          className="absolute z-[3] top-24 left-7 w-10 h-10 rounded-full bg-white/16 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           animate={{ y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <span className="text-white/50 text-xs font-bold">P</span>
+          <TreePine size={16} className="text-white/75" />
         </motion.div>
         <motion.div
-          className="absolute top-32 right-12 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          className="absolute z-[3] top-32 right-12 w-9 h-9 rounded-full bg-white/16 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           style={{ animationDelay: '1s' }}
           animate={{ y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] }}
           transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
         >
-          <span className="text-white/50 text-xs font-bold">M</span>
+          <MessageCircle size={15} className="text-white/75" />
         </motion.div>
         <motion.div
-          className="absolute bottom-40 left-16 w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          className="absolute z-[3] bottom-40 left-14 w-9 h-9 rounded-full bg-white/16 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           style={{ animationDelay: '2s' }}
           animate={{ y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] }}
           transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
         >
-          <span className="text-white/50 text-xs font-bold">S</span>
+          <CalendarDays size={15} className="text-white/75" />
         </motion.div>
         <motion.div
-          className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+          className="absolute z-[3] bottom-32 right-8 w-11 h-11 rounded-full bg-white/16 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
           animate={{ y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] }}
           transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
         >
-          <span className="text-white/50 text-xs font-bold">C</span>
+          <Network size={17} className="text-white/75" />
         </motion.div>
 
-        <motion.div
-          variants={heroStagger}
-          initial="hidden"
-          animate="show"
-          className="relative z-10 text-center max-w-lg mx-auto"
-        >
-          <motion.div variants={fadeUp} className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <BrandLogo size={50} />
+        <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28">
+          <motion.div
+            variants={heroStagger}
+            initial="hidden"
+            animate="show"
+            className="text-center lg:text-left"
+          >
+            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-3.5 py-2 text-white/82 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
+              <Sparkles size={15} className="text-[#ffd98f]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.14em]">The Digital Courtyard</span>
+            </motion.div>
+
+            <motion.h1 variants={fadeUp} className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-5 tracking-normal">
+              Familiar
+            </motion.h1>
+
+            <motion.p variants={fadeUp} className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
+              Your family tree, chats, memories, and invitations moving together.
+            </motion.p>
+
+            <motion.p variants={fadeUp} className="text-white/76 text-base sm:text-lg leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
+              Build a living cosmos of relatives, discover the right rishta, share family moments privately, and bring every generation into one warm space.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
+              <button
+                onClick={() => setMode('signup')}
+                className="w-full sm:w-auto bg-white text-[#16314d] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
+              >
+                Start Your Family Cosmos <ArrowRight size={18} />
+              </button>
+              <button
+                onClick={() => setMode('signin')}
+                className="w-full sm:w-auto bg-[#10243a]/50 backdrop-blur-md text-white border border-white/24 px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/18 active:scale-[0.97] transition-all"
+              >
+                Sign In
+              </button>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+              {[
+                { icon: TreePine, label: 'Universal Tree' },
+                { icon: Shield, label: 'Private by degree' },
+                { icon: MessageCircle, label: 'Family chats' },
+                { icon: Image, label: 'Shared memories' },
+              ].map((item) => (
+                <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full border border-white/18 bg-white/11 px-3 py-1.5 text-xs font-semibold text-white/78 backdrop-blur-md">
+                  <item.icon size={13} />
+                  {item.label}
+                </span>
+              ))}
+            </motion.div>
           </motion.div>
 
-          <motion.p variants={fadeUp} className="text-white/60 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
-            The Digital Courtyard
-          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 24, rotate: 1.5 }}
+            animate={{ opacity: 1, y: [0, -10, 0], rotate: [1.5, -0.8, 1.5] }}
+            transition={{
+              opacity: { duration: 0.65, ease: 'easeOut', delay: 0.35 },
+              y: { duration: 7.8, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
+              rotate: { duration: 9.4, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
+            }}
+            className="hidden sm:block justify-self-center w-full max-w-[390px]"
+          >
+            <div className="rounded-[2rem] border border-white/24 bg-white/14 p-3 shadow-2xl shadow-black/28 backdrop-blur-2xl">
+              <div className="rounded-[1.45rem] bg-[#081522]/92 border border-white/10 overflow-hidden">
+                <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Live Family Cosmos</p>
+                    <p className="text-white font-bold text-lg">Ranveer&apos;s Family</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-white/12 border border-white/12 flex items-center justify-center">
+                    <BrandLogo size={23} />
+                  </div>
+                </div>
 
-          <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4 tracking-tight">
-            Where Family Stories<br />
-            <span className="text-white/80">Meet & Grow</span>
-          </motion.h1>
+                <div className="relative h-56 mx-4 rounded-2xl bg-[linear-gradient(145deg,rgba(28,63,97,0.9),rgba(17,35,55,0.78))] border border-white/10 overflow-hidden">
+                  <svg viewBox="0 0 340 220" className="absolute inset-0 w-full h-full">
+                    <path d="M170 108 L92 58 L42 38" stroke="#ffba78" strokeWidth="2.6" strokeLinecap="round" />
+                    <path d="M170 108 L248 58 L298 38" stroke="#ffba78" strokeWidth="2.6" strokeLinecap="round" />
+                    <path d="M170 108 L118 174" stroke="#70e4c1" strokeWidth="2.2" strokeLinecap="round" />
+                    <path d="M170 108 L222 174" stroke="#70e4c1" strokeWidth="2.2" strokeLinecap="round" />
+                    {[
+                      [170, 108, 'ME', '#ffffff'], [92, 58, 'Maa', '#ffe2b0'], [248, 58, 'Papa', '#b7e5ff'],
+                      [42, 38, 'Nani', '#ffd0d9'], [298, 38, 'Dada', '#d8ffc9'], [118, 174, 'Bhai', '#c3f5ff'], [222, 174, 'Bua', '#ffd5a6'],
+                    ].map(([cx, cy, label, fill]) => (
+                      <g key={`${cx}-${cy}`}>
+                        <circle cx={cx as number} cy={cy as number} r="19" fill={fill as string} fillOpacity="0.95" />
+                        <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="700" fill="#10243a">{label}</text>
+                      </g>
+                    ))}
+                  </svg>
+                  <div className="absolute left-4 bottom-4 right-4 flex items-center justify-between rounded-2xl bg-[#07121e]/70 border border-white/10 px-3 py-2 backdrop-blur-md">
+                    <span className="text-xs text-white/82 font-semibold">Imagine is your Maasi</span>
+                    <span className="text-[10px] text-[#ffd98f] font-bold">2 hops</span>
+                  </div>
+                </div>
 
-          <motion.p variants={fadeUp} className="text-white/70 text-base sm:text-lg leading-relaxed mb-8 max-w-md mx-auto">
-            A social platform centered on the Universal Family Tree — mapping connections, discovering relatives, and cherishing memories together.
-          </motion.p>
-
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-            <button
-              onClick={() => setMode('signup')}
-              className="w-full sm:w-auto bg-white text-[#2A4365] px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 active:scale-[0.97] transition-all shadow-xl shadow-black/15 flex items-center justify-center gap-2"
-            >
-              Get Started Free <ArrowRight size={18} />
-            </button>
-            <button
-              onClick={() => setMode('signin')}
-              className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border border-white/20 px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/20 active:scale-[0.97] transition-all"
-            >
-              I have an account
-            </button>
+                <div className="p-4 space-y-2">
+                  {[
+                    { icon: MessageCircle, title: 'Family Chat', text: 'Badhaiya Hoon', tone: 'text-[#8edbff]' },
+                    { icon: CalendarDays, title: 'Wedding Invite', text: 'Sent to 42 relatives', tone: 'text-[#ffd98f]' },
+                    { icon: Image, title: 'Memories', text: '18 new photos added', tone: 'text-[#8ff0c7]' },
+                  ].map((item) => (
+                    <div key={item.title} className="flex items-center gap-3 rounded-2xl border border-white/9 bg-white/[0.055] px-3 py-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                        <item.icon size={16} className={item.tone} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white truncate">{item.title}</p>
+                        <p className="text-xs text-white/55 truncate">{item.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* Scroll indicator */}
-        <button onClick={scrollToFeatures} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 hover:text-white/70 transition-colors animate-bounce">
+        <button onClick={scrollToFeatures} className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 text-[#17324f]/60 hover:text-[#17324f] transition-colors animate-bounce">
           <ChevronDown size={28} />
         </button>
       </section>

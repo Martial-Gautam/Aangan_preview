@@ -104,6 +104,55 @@ function isSiblingRel(relType: string) {
   return relType === 'sibling';
 }
 
+function normalizeSemanticPath(pathIds: string[], relPath: string[]): { pathIds: string[]; relPath: string[] } {
+  let nextPath = [...pathIds];
+  let nextRelPath = [...relPath];
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+
+    // sibling -> sibling => sibling
+    if (nextRelPath.length === 2 && nextRelPath[0] === 'sibling' && nextRelPath[1] === 'sibling') {
+      nextPath = [nextPath[0], nextPath[2]];
+      nextRelPath = ['sibling'];
+      changed = true;
+      continue;
+    }
+
+    // sibling -> father/mother/parent => father/mother/parent
+    if (nextRelPath.length === 2 && nextRelPath[0] === 'sibling' && isParentRel(nextRelPath[1])) {
+      nextPath = [nextPath[0], nextPath[2]];
+      nextRelPath = [nextRelPath[1]];
+      changed = true;
+      continue;
+    }
+
+    // parent -> child => sibling (or self; self is handled separately at caller)
+    if (nextRelPath.length === 2 && isParentRel(nextRelPath[0]) && nextRelPath[1] === 'child') {
+      nextPath = [nextPath[0], nextPath[2]];
+      nextRelPath = ['sibling'];
+      changed = true;
+      continue;
+    }
+
+    // spouse -> sibling -> father/mother/parent => spouse -> father/mother/parent
+    if (
+      nextRelPath.length === 3 &&
+      nextRelPath[0] === 'spouse' &&
+      nextRelPath[1] === 'sibling' &&
+      isParentRel(nextRelPath[2])
+    ) {
+      nextPath = [nextPath[0], nextPath[1], nextPath[3]];
+      nextRelPath = ['spouse', nextRelPath[2]];
+      changed = true;
+      continue;
+    }
+  }
+
+  return { pathIds: nextPath, relPath: nextRelPath };
+}
+
 function resolveDirect(
   relType: string,
   selfGender: Gender,
@@ -530,6 +579,12 @@ function resolvePath(
     const firstPerson = peopleById.get(pathIds[1]) || null;
     const secondPerson = peopleById.get(pathIds[2]) || null;
 
+    if (first === 'sibling' && second === 'sibling') {
+      return resolveDirect('sibling', normalizeGender(selfPerson?.gender), normalizeGender(secondPerson?.gender), compareAge(selfPerson, secondPerson));
+    }
+    if (first === 'sibling' && isParentRel(second)) {
+      return resolveDirect(second, normalizeGender(selfPerson?.gender), normalizeGender(secondPerson?.gender), compareAge(selfPerson, secondPerson));
+    }
     if (isParentRel(first) && isParentRel(second)) return resolveGrandparent(first, second);
     if (isParentRel(first) && second === 'child') {
       return resolveDirect('sibling', normalizeGender(selfPerson?.gender), normalizeGender(secondPerson?.gender), compareAge(selfPerson, secondPerson));
@@ -670,17 +725,18 @@ function buildShortestPath(
   const paths = buildPaths(targetId);
   if (paths.length === 0) return null;
 
-  const primary = paths[0];
+  const primary = normalizeSemanticPath(paths[0].pathIds, paths[0].relPath);
   const term = resolvePath(primary.relPath, primary.pathIds, peopleById);
   const chain = buildChain(primary.pathIds, primary.relPath, peopleById);
   const multiplePaths = paths.length > 1;
   const alternatives = paths.slice(1).map((path) => {
-    const termAlt = resolvePath(path.relPath, path.pathIds, peopleById);
-    const chainAlt = buildChain(path.pathIds, path.relPath, peopleById);
+    const normalized = normalizeSemanticPath(path.pathIds, path.relPath);
+    const termAlt = resolvePath(normalized.relPath, normalized.pathIds, peopleById);
+    const chainAlt = buildChain(normalized.pathIds, normalized.relPath, peopleById);
     return {
       term: termAlt,
-      pathIds: path.pathIds,
-      relPath: path.relPath,
+      pathIds: normalized.pathIds,
+      relPath: normalized.relPath,
       chainEnglish: chainAlt.chainEnglish,
       chainHindi: chainAlt.chainHindi,
     };

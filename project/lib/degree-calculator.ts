@@ -105,6 +105,18 @@ function isParentRel(relType: string) {
 }
 
 function normalizeSemanticDegree(path: string[], relPath: string[]): DegreeResult {
+  // Sibling's sibling is also my sibling.
+  if (relPath.length === 2 && relPath[0] === 'sibling' && relPath[1] === 'sibling') {
+    const normalizedRelPath = ['sibling'];
+    const normalizedPath = [path[0], path[2]];
+    return {
+      degree: 1,
+      path: normalizedPath,
+      relationshipPath: normalizedRelPath,
+      label: degreeToLabel(1, normalizedRelPath),
+    };
+  }
+
   // Sibling's father/mother is also my father/mother.
   if (relPath.length === 2 && relPath[0] === 'sibling' && isParentRel(relPath[1])) {
     const normalizedRelPath = [relPath[1]];

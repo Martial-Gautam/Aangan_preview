@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
@@ -11,21 +11,6 @@ import {
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
-
-const heroStagger = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.12,
-    },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0 },
-};
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -40,10 +25,14 @@ export default function WelcomePage() {
   const [hoveredFeature, setHoveredFeature] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
   const revealMaskRef = useRef<HTMLDivElement>(null);
+  const heroRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
+  const pointerFrameRef = useRef<number | null>(null);
+  const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 60);
+      const next = window.scrollY > 60;
+      setScrolled((prev) => (prev === next ? prev : next));
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -87,22 +76,46 @@ export default function WelcomePage() {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const updateRevealPosition = (clientX: number, clientY: number) => {
+  const measureHeroRect = useCallback(() => {
     const heroEl = heroRef.current;
-    const revealEl = revealMaskRef.current;
-    if (!heroEl || !revealEl) return;
-
+    if (!heroEl) return;
     const rect = heroEl.getBoundingClientRect();
+    heroRectRef.current = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  }, []);
+
+  const updateRevealPosition = useCallback((clientX: number, clientY: number) => {
+    const revealEl = revealMaskRef.current;
+    const rect = heroRectRef.current;
+    if (!revealEl || !rect) return;
+
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
-
     revealEl.style.setProperty('--mx', `${x}px`);
     revealEl.style.setProperty('--my', `${y}px`);
-  };
+  }, []);
+
+  const flushPendingPointer = useCallback(() => {
+    pointerFrameRef.current = null;
+    const pending = pendingPointerRef.current;
+    if (!pending) return;
+    updateRevealPosition(pending.clientX, pending.clientY);
+  }, [updateRevealPosition]);
+
+  const scheduleRevealUpdate = useCallback((clientX: number, clientY: number) => {
+    pendingPointerRef.current = { clientX, clientY };
+    if (pointerFrameRef.current !== null) return;
+    pointerFrameRef.current = window.requestAnimationFrame(flushPendingPointer);
+  }, [flushPendingPointer]);
 
   const handleHeroPointerEnter = () => {
     const revealEl = revealMaskRef.current;
     if (!revealEl) return;
+    measureHeroRect();
     revealEl.style.setProperty('--reveal-strength', '0.46');
   };
 
@@ -113,24 +126,39 @@ export default function WelcomePage() {
   };
 
   const handleHeroMouseMove = (event: React.MouseEvent<HTMLElement>) => {
-    updateRevealPosition(event.clientX, event.clientY);
+    scheduleRevealUpdate(event.clientX, event.clientY);
   };
 
   const handleHeroTouchMove = (event: React.TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     if (!touch) return;
-    updateRevealPosition(touch.clientX, touch.clientY);
+    scheduleRevealUpdate(touch.clientX, touch.clientY);
     const revealEl = revealMaskRef.current;
     if (revealEl) revealEl.style.setProperty('--reveal-strength', '0.42');
   };
 
   useEffect(() => {
-    const heroEl = heroRef.current;
     const revealEl = revealMaskRef.current;
-    if (!heroEl || !revealEl) return;
-    const rect = heroEl.getBoundingClientRect();
+    if (!revealEl) return;
+    measureHeroRect();
+    const rect = heroRectRef.current;
+    if (!rect) return;
     revealEl.style.setProperty('--mx', `${rect.width * 0.5}px`);
     revealEl.style.setProperty('--my', `${rect.height * 0.52}px`);
+  }, [measureHeroRect]);
+
+  useEffect(() => {
+    const handleResize = () => measureHeroRect();
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, [measureHeroRect]);
+
+  useEffect(() => {
+    return () => {
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current);
+      }
+    };
   }, []);
 
   const problemItems = [
@@ -505,30 +533,25 @@ export default function WelcomePage() {
         </motion.div>
 
         <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28">
-          <motion.div
-            variants={heroStagger}
-            initial="hidden"
-            animate="show"
-            className="text-center lg:text-left"
-          >
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07121e]/60 px-3.5 py-2 text-white/90 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
+          <div className="text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07121e]/60 px-3.5 py-2 text-white/90 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
               <Sparkles size={15} className="text-[#ffd98f]" />
               <span className="text-xs font-semibold uppercase tracking-[0.14em]">The Digital Courtyard</span>
-            </motion.div>
+            </div>
 
-            <motion.h1 variants={fadeUp} className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-5 tracking-normal">
+            <h1 className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-5 tracking-normal">
               Familiar
-            </motion.h1>
+            </h1>
 
-            <motion.p variants={fadeUp} className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
+            <p className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
               Your family tree, chats, memories, and invitations moving together.
-            </motion.p>
+            </p>
 
-            <motion.p variants={fadeUp} className="text-white/90 text-base sm:text-lg leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
+            <p className="text-white/90 text-base sm:text-lg leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
               Build a living cosmos of relatives, discover the right rishta, share family moments privately, and bring every generation into one warm space.
-            </motion.p>
+            </p>
 
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
               <button
                 onClick={() => setMode('signup')}
                 className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
@@ -541,9 +564,9 @@ export default function WelcomePage() {
               >
                 Sign In
               </button>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
               {[
                 { icon: TreePine, label: 'Universal Tree' },
                 { icon: Shield, label: 'Private by degree' },
@@ -555,8 +578,8 @@ export default function WelcomePage() {
                   {item.label}
                 </span>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 24, rotate: 1.5 }}

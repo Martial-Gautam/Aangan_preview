@@ -1,8 +1,22 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import { QueryProvider } from '@/lib/query-provider';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-body',
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['700', '800'],
+  display: 'swap',
+  variable: '--font-brand',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -29,13 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
         <link rel="apple-touch-icon" href="/icons/familiar-icon-192.webp" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body>
+      <body className={`${inter.variable} ${plusJakarta.variable}`}>
         <QueryProvider>
           <AuthProvider>
             <ServiceWorkerRegister />

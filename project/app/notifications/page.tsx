@@ -38,11 +38,15 @@ export default function NotificationsPage() {
   const { data: pendingRequests = [], isLoading: requestsLoading } = useQuery<PendingRequest[]>({
     queryKey: pendingRequestsKey,
     enabled: Boolean(session?.access_token && user?.id),
+    staleTime: 15_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+    retry: 2,
     queryFn: async () => {
       const res = await fetch('/api/connections/pending', {
         headers: { Authorization: `Bearer ${session!.access_token}` },
       });
-      if (!res.ok) return [] as any[];
+      if (!res.ok) throw new Error('Failed to fetch pending notifications');
       const data = await res.json();
       return data.requests || [];
     },
@@ -75,11 +79,15 @@ export default function NotificationsPage() {
   const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery<Suggestion[]>({
     queryKey: suggestionsKey,
     enabled: Boolean(session?.access_token && user?.id),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    retry: 2,
     queryFn: async () => {
       const res = await fetch('/api/connections/suggestions', {
         headers: { Authorization: `Bearer ${session!.access_token}` },
       });
-      if (!res.ok) return [] as any[];
+      if (!res.ok) throw new Error('Failed to fetch suggestions');
       const data = await res.json();
       return data.suggestions || [];
     },

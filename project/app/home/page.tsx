@@ -469,11 +469,40 @@ export default function HomePage() {
       if (res.ok) {
         const data = await res.json();
         setPendingAlertCount(data.requests?.length || 0);
+      } else {
+        setPendingAlertCount(0);
       }
     } catch (err) {
       console.error('Failed to fetch alerts:', err);
+      setPendingAlertCount(0);
     }
   };
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+
+    const refreshAlerts = () => {
+      fetchPendingAlerts();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshAlerts();
+      }
+    };
+
+    const onFocus = () => refreshAlerts();
+
+    const interval = window.setInterval(refreshAlerts, 15000);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [session?.access_token]);
 
   const handleSuggestionResponse = async (suggestionId: string, action: 'accept' | 'reject') => {
     if (!session?.access_token || !user) return;

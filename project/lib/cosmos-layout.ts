@@ -11,6 +11,8 @@
  */
 
 import type { Person, Relationship } from './tree-to-flow';
+import { calculateDegree } from './degree-calculator';
+import { resolveRelationshipLabel } from './relationship-resolver';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -67,90 +69,29 @@ function classifyLineage(
   relationships: Relationship[],
   visibleIds: Set<string>
 ): Map<string, { sector: LineageSector; generation: number; hopDistance: number }> {
-
   const result = new Map<string, { sector: LineageSector; generation: number; hopDistance: number }>();
   result.set(selfId, { sector: 'self', generation: 0, hopDistance: 0 });
 
-  // Build adjacency with relationship types
-  interface Edge {
-    targetId: string;
-    relType: string;
-    direction: 'outgoing' | 'incoming';
-  }
+  for (const person of people) {
+    if (!visibleIds.has(person.id) || person.id === selfId) continue;
 
-  const adj = new Map<string, Edge[]>();
+    const relation = resolveRelationshipLabel(selfId, person.id, people, relationships);
+    const relPath = relation.relPath || [];
 
-  for (let i = 0; i < relationships.length; i++) {
-    const rel = relationships[i];
-    if (!visibleIds.has(rel.person_id) || !visibleIds.has(rel.related_person_id)) continue;
-
-    if (!adj.has(rel.person_id)) adj.set(rel.person_id, []);
-    if (!adj.has(rel.related_person_id)) adj.set(rel.related_person_id, []);
-
-    adj.get(rel.person_id)!.push({
-      targetId: rel.related_person_id,
-      relType: rel.relationship_type,
-      direction: 'outgoing',
-    });
-
-    // Reverse edge
-    const reverseType = reverseRelationship(rel.relationship_type);
-    adj.get(rel.related_person_id)!.push({
-      targetId: rel.person_id,
-      relType: reverseType,
-      direction: 'outgoing',
-    });
-  }
-
-  // BFS from self — track entry sector and generation
-  interface QueueItem {
-    id: string;
-    sector: LineageSector;
-    generation: number;
-    hop: number;
-  }
-
-  const queue: QueueItem[] = [];
-  const visited = new Set<string>();
-  visited.add(selfId);
-
-  // Seed initial neighbors
-  const selfEdges = adj.get(selfId) || [];
-  for (let i = 0; i < selfEdges.length; i++) {
-    const edge = selfEdges[i];
-    if (visited.has(edge.targetId)) continue;
-
-    const sector = relTypeToSector(edge.relType);
-    const gen = relTypeToGenDelta(edge.relType);
-
-    visited.add(edge.targetId);
-    result.set(edge.targetId, { sector, generation: gen, hopDistance: 1 });
-    queue.push({ id: edge.targetId, sector, generation: gen, hop: 1 });
-  }
-
-  // BFS — propagate sector from entry point
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const edges = adj.get(current.id) || [];
-
-    for (let i = 0; i < edges.length; i++) {
-      const edge = edges[i];
-      if (visited.has(edge.targetId)) continue;
-
-      visited.add(edge.targetId);
-      const genDelta = relTypeToGenDelta(edge.relType);
-      const gen = current.generation + genDelta;
-      const hop = current.hop + 1;
-
-      // Inherit sector from the entry point (first person in this branch)
-      result.set(edge.targetId, {
-        sector: current.sector,
-        generation: gen,
-        hopDistance: hop,
-      });
-
-      queue.push({ id: edge.targetId, sector: current.sector, generation: gen, hop });
+    if (relPath.length === 0) {
+      result.set(person.id, { sector: 'self', generation: 0, hopDistance: 99 });
+      continue;
     }
+
+    const firstHop = relPath[0];
+    const sector = relTypeToSector(firstHop);
+    const generation = relPath.reduce((sum, relType) => sum + relTypeToGenDelta(relType), 0);
+
+    result.set(person.id, {
+      sector,
+      generation,
+      hopDistance: relPath.length,
+    });
   }
 
   // Fallback: any unvisited visible nodes
@@ -163,20 +104,11 @@ function classifyLineage(
   return result;
 }
 
-function reverseRelationship(type: string): string {
-  switch (type) {
-    case 'father': case 'mother': return 'child';
-    case 'child': return 'father'; // generic parent
-    case 'spouse': return 'spouse';
-    case 'sibling': return 'sibling';
-    default: return type;
-  }
-}
-
 function relTypeToSector(type: string): LineageSector {
   switch (type) {
     case 'mother': return 'maternal';
     case 'father': return 'paternal';
+    case 'parent': return 'paternal';
     case 'spouse': return 'spouse';
     case 'sibling': return 'siblings';
     case 'child': return 'children';
@@ -187,6 +119,7 @@ function relTypeToSector(type: string): LineageSector {
 function relTypeToGenDelta(type: string): number {
   switch (type) {
     case 'father': case 'mother': return -1; // going up to parent
+    case 'parent': return -1;
     case 'child': return 1; // going down to child
     case 'spouse': case 'sibling': return 0; // same generation
     default: return 0;
@@ -252,36 +185,20 @@ function allocateSectors(
  */
 export function getVisibleIds(
   centerId: string,
+  people: Person[],
   relationships: Relationship[],
   maxHops: number
 ): Set<string> {
-  const adj = new Map<string, string[]>();
-
-  for (let i = 0; i < relationships.length; i++) {
-    const rel = relationships[i];
-    if (!adj.has(rel.person_id)) adj.set(rel.person_id, []);
-    if (!adj.has(rel.related_person_id)) adj.set(rel.related_person_id, []);
-    adj.get(rel.person_id)!.push(rel.related_person_id);
-    adj.get(rel.related_person_id)!.push(rel.person_id);
-  }
-
   const visited = new Set<string>();
-  const queue: Array<{ id: string; depth: number }> = [{ id: centerId, depth: 0 }];
-  visited.add(centerId);
 
-  while (queue.length > 0) {
-    const item = queue.shift()!;
-    if (item.depth >= maxHops) continue;
-
-    const neighbors = adj.get(item.id) || [];
-    for (let i = 0; i < neighbors.length; i++) {
-      if (!visited.has(neighbors[i])) {
-        visited.add(neighbors[i]);
-        queue.push({ id: neighbors[i], depth: item.depth + 1 });
-      }
+  for (const person of people) {
+    const degree = calculateDegree(centerId, person.id, relationships).degree;
+    if (degree >= 0 && degree <= maxHops) {
+      visited.add(person.id);
     }
   }
 
+  visited.add(centerId);
   return visited;
 }
 
@@ -296,7 +213,7 @@ export function computeCosmosLayout(
   const positions = new Map<string, CosmosPosition>();
 
   // Step 1: Focus mode — get visible IDs
-  const visibleIds = getVisibleIds(selfId, relationships, maxHops);
+  const visibleIds = getVisibleIds(selfId, people, relationships, maxHops);
   visibleIds.add(selfId);
 
   // Step 2: Classify each person

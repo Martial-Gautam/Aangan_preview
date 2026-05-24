@@ -6,6 +6,19 @@ export const dynamic = 'force-dynamic';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+function normalizeEmail(value?: string | null): string | null {
+  if (!value) return null;
+  const cleaned = value.trim().toLowerCase();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+function normalizePhone(value?: string | null): string | null {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
 export async function GET(req: NextRequest) {
   try {
     // Validate auth
@@ -30,12 +43,22 @@ export async function GET(req: NextRequest) {
       .from('profiles')
       .select('phone')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     // Query pending requests for this user
     let orConditions = [`to_user_id.eq.${user.id}`, `receiver_id.eq.${user.id}`];
-    if (user.email) orConditions.push(`receiver_email.eq.${user.email}`);
-    if (profile?.phone) orConditions.push(`receiver_phone.eq.${profile.phone}`);
+    const normalizedUserEmail = normalizeEmail(user.email);
+    const normalizedProfilePhone = normalizePhone(profile?.phone);
+    if (normalizedUserEmail) {
+      // include both exact and case-insensitive checks for legacy rows
+      orConditions.push(`receiver_email.eq.${normalizedUserEmail}`);
+      orConditions.push(`receiver_email.ilike.${normalizedUserEmail}`);
+    }
+    if (normalizedProfilePhone) {
+      orConditions.push(`receiver_phone.eq.${normalizedProfilePhone}`);
+      // legacy fallback where phone may be stored unnormalized
+      orConditions.push(`receiver_phone.ilike.%${normalizedProfilePhone}`);
+    }
 
     const { data: requests, error: reqError } = await supabaseAdmin
       .from('connection_requests')
@@ -52,86 +75,52 @@ export async function GET(req: NextRequest) {
         sender_id
       `)
       .eq('status', 'pending')
-      .or(orConditions.join(','));
+      .or(orConditions.join(','))
+      .order('created_at', { ascending: false });
 
     if (reqError) {
       console.error('Fetch requests error:', reqError);
       return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
     }
 
-    // Enrich requests with sender and node details
-    const enrichedRequests = await Promise.all(
-      (requests || []).map(async (req) => {
-        // Get sender profile
-        const senderId = req.from_user_id || req.sender_id;
-        const { data: sender } = await supabaseAdmin
-          .from('profiles')
-          .select('full_name, photo_url')
-          .eq('id', senderId)
-          .single();
-
-        let relationshipType = req.relationship_type || 'Connection';
-        let addedAs = '';
-
-        const linkedPersonId = req.person_id || req.linked_person_id;
-        if (linkedPersonId) {
-          // Get how the sender recorded the receiver in their tree
-          const { data: node } = await supabaseAdmin
-            .from('people')
-            .select('full_name, gender')
-            .eq('id', linkedPersonId)
-            .single();
-          
-          if (node) {
-            addedAs = node.full_name;
-            relationshipType = 'Relative';
-          }
-
-          // Get relationship type
-          const { data: senderSelf } = await supabaseAdmin
-            .from('people')
-            .select('id')
-            .eq('owner_id', senderId)
-            .eq('is_self', true)
-            .maybeSingle();
-
-          if (senderSelf) {
-            const { data: rel } = await supabaseAdmin
-              .from('relationships')
-              .select('relationship_type')
-              .eq('person_id', senderSelf.id)
-              .eq('related_person_id', linkedPersonId)
-              .maybeSingle();
-            if (rel) {
-              relationshipType = rel.relationship_type;
-            } else {
-               const { data: reverseRel } = await supabaseAdmin
-                 .from('relationships')
-                 .select('relationship_type')
-                 .eq('person_id', linkedPersonId)
-                 .eq('related_person_id', senderSelf.id)
-                 .maybeSingle();
-               if (reverseRel) {
-                 relationshipType = reverseRel.relationship_type + ' (reverse)';
-               }
-            }
-          }
-        }
-
-        return {
-          id: req.id,
-          sender: {
-            full_name: sender?.full_name || 'Someone',
-            photo_url: sender?.photo_url
-          },
-          added_as: addedAs,
-          relationship: relationshipType,
-          created_at: req.created_at,
-          type: req.type,
-          initiated_by: req.initiated_by
-        };
-      })
+    const senderIds = Array.from(
+      new Set((requests || []).map((r) => r.from_user_id || r.sender_id).filter(Boolean) as string[])
     );
+    const linkedPersonIds = Array.from(
+      new Set((requests || []).map((r) => r.person_id || r.linked_person_id).filter(Boolean) as string[])
+    );
+
+    const [{ data: senderProfiles }, { data: linkedPeople }] = await Promise.all([
+      senderIds.length > 0
+        ? supabaseAdmin.from('profiles').select('id, full_name, photo_url').in('id', senderIds)
+        : Promise.resolve({ data: [] as any[] }),
+      linkedPersonIds.length > 0
+        ? supabaseAdmin.from('people').select('id, full_name').in('id', linkedPersonIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const senderMap = new Map((senderProfiles || []).map((s: any) => [s.id, s]));
+    const linkedPeopleMap = new Map((linkedPeople || []).map((p: any) => [p.id, p]));
+
+    const enrichedRequests = (requests || []).map((req) => {
+      const senderId = req.from_user_id || req.sender_id;
+      const sender = senderId ? senderMap.get(senderId) : null;
+      const linkedPersonId = req.person_id || req.linked_person_id;
+      const linkedPerson = linkedPersonId ? linkedPeopleMap.get(linkedPersonId) : null;
+
+      return {
+        id: req.id,
+        sender: {
+          full_name: sender?.full_name || 'Someone',
+          photo_url: sender?.photo_url || null,
+        },
+        added_as: linkedPerson?.full_name || '',
+        relationship: req.relationship_type || 'Relative',
+        created_at: req.created_at,
+        type: req.type,
+        initiated_by: req.initiated_by,
+      };
+    });
 
     return NextResponse.json({ requests: enrichedRequests });
 

@@ -48,7 +48,13 @@ const SEMANTIC_RELATIONS: Record<string, SemanticRelation> = {
 const CORE_REL_TYPES = new Set(['father', 'mother', 'sibling', 'spouse', 'child']);
 
 function normalizePhone(phone?: string | null) {
-  return (phone || '').replace(/\D/g, '');
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
+function normalizeEmail(email?: string | null) {
+  return (email || '').trim().toLowerCase();
 }
 
 function normalizeName(name?: string | null) {
@@ -313,23 +319,25 @@ export async function POST(req: NextRequest) {
 
     let requestCreated = false;
     if (!is_self && (email || phone_number)) {
+      const normalizedEmail = normalizeEmail(email) || null;
+      const normalizedPhone = normalizePhone(phone_number) || null;
       let matchedUserId: string | null = null;
 
       // Look up existing user by email (email lives in auth.users, not profiles)
-      if (email && !matchedUserId) {
+      if (normalizedEmail && !matchedUserId) {
         const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
         const matchedUser = (allUsers?.users || []).find(
-          (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && u.id !== user.id
+          (u) => u.email?.toLowerCase() === normalizedEmail && u.id !== user.id
         );
         matchedUserId = matchedUser?.id || null;
       }
 
       // Look up existing user by phone
-      if (phone_number && !matchedUserId) {
+      if (normalizedPhone && !matchedUserId) {
         const { data: phoneProfile } = await supabaseAdmin
           .from('profiles')
           .select('id')
-          .eq('phone', phone_number)
+          .eq('phone', normalizedPhone)
           .neq('id', user.id)
           .maybeSingle();
         matchedUserId = phoneProfile?.id || null;
@@ -351,8 +359,8 @@ export async function POST(req: NextRequest) {
             sender_id: user.id,
             to_user_id: matchedUserId,
             receiver_id: matchedUserId,
-            receiver_email: email || null,
-            receiver_phone: phone_number || null,
+            receiver_email: normalizedEmail,
+            receiver_phone: normalizedPhone,
             person_id: person.id,
             linked_person_id: person.id,
             relationship_type: semanticRelation?.label || relationship_type,

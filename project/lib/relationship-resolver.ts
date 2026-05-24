@@ -161,7 +161,7 @@ function resolveDirect(
 ): RelationTerm {
   switch (relType) {
     case 'father':
-      return { hindi: 'Pitaji', english: 'Father' };
+      return { hindi: 'Papa', english: 'Father' };
     case 'mother':
       return { hindi: 'Maa', english: 'Mother' };
     case 'spouse': {
@@ -188,7 +188,7 @@ function resolveDirect(
       return { hindi: 'Bachcha', english: 'Child', notes: 'Gender unknown' };
     }
     case 'parent': {
-      if (targetGender === 'male') return { hindi: 'Pitaji', english: 'Father' };
+      if (targetGender === 'male') return { hindi: 'Papa', english: 'Father' };
       if (targetGender === 'female') return { hindi: 'Maa', english: 'Mother' };
       return { hindi: 'Mata/Pita', english: 'Parent', notes: 'Gender unknown' };
     }
@@ -243,11 +243,11 @@ function stepLabel(
 
   switch (relType) {
     case 'father':
-      return 'Pitaji';
+      return 'Papa';
     case 'mother':
       return 'Maa';
     case 'parent':
-      if (toGender === 'male') return 'Pitaji';
+      if (toGender === 'male') return 'Papa';
       if (toGender === 'female') return 'Maa';
       return 'Mata/Pita';
     case 'child':

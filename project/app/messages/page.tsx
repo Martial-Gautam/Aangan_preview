@@ -67,6 +67,24 @@ function writePersistentCache<T>(key: string, data: T) {
   }
 }
 
+function hashString(input: string): string {
+  let hash = 5381;
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) + hash) ^ input.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function sanitizeIdPart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 12);
+}
+
+function buildDirectChannelId(userA: string, userB: string): string {
+  const [a, b] = [userA, userB].sort();
+  const digest = hashString(`${a}|${b}`);
+  return `dm_${sanitizeIdPart(a)}_${sanitizeIdPart(b)}_${digest}`;
+}
+
 
 // ─── Main Export ─────────────────────────────────────────────
 
@@ -351,7 +369,7 @@ function MessagesContent() {
     try {
       streamMessageUnsubscribeRef.current?.();
       streamMessageUnsubscribeRef.current = null;
-      const channelId = [user.id, partnerId].sort().join('--');
+      const channelId = buildDirectChannelId(user.id, partnerId);
       const channel = streamClient.channel('messaging', channelId, {
         members: [user.id, partnerId],
       } as any);

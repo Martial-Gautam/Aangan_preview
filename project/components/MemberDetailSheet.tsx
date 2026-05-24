@@ -263,13 +263,6 @@ export default function MemberDetailSheet({
           {relationshipMeta?.term.english && relationshipMeta.term.english !== label && (
             <p className="text-[11px] text-gray-500 mt-1">{relationshipMeta.term.english}</p>
           )}
-          {relationshipMeta?.chainEnglish && (
-            <div className="mt-2 text-[10px] text-gray-500 bg-gray-100/50 px-3 py-2 rounded-xl">
-              <p className="uppercase tracking-[0.1em] text-[9px] text-gray-400 mb-1">Chain</p>
-              <p>{relationshipMeta.chainEnglish}</p>
-              <p className="mt-1">{relationshipMeta.chainHindi}</p>
-            </div>
-          )}
           {relationshipMeta?.multiplePaths && (
             <p className="text-[10px] text-amber-600 mt-1">Multiple relations detected - showing nearest</p>
           )}

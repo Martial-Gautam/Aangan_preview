@@ -378,6 +378,55 @@ function resolveSpouseSibling(
   return { hindi: 'Sala/Nanad', english: 'Spouse sibling', notes: 'Self gender unknown' };
 }
 
+function resolveSpouseSiblingSpouse(
+  selfGender: Gender,
+  spousePerson: Person | null,
+  siblingPerson: Person | null
+): RelationTerm {
+  const siblingGender = normalizeGender(siblingPerson?.gender);
+  if (selfGender === 'female') {
+    if (siblingGender === 'male') {
+      const order = compareAge(spousePerson, siblingPerson);
+      if (order === 'older') return { hindi: 'Jethani', english: "Husband's Elder Brother's Wife" };
+      if (order === 'younger') return { hindi: 'Devrani', english: "Husband's Younger Brother's Wife" };
+      return { hindi: 'Jethani/Devrani', english: "Husband's Brother's Wife", notes: 'Age order unknown' };
+    }
+    if (siblingGender === 'female') return { hindi: 'Nandoi', english: "Husband's Sister's Husband" };
+    return { hindi: 'Nandoi/Jethani', english: "Spouse sibling's spouse", notes: 'Sibling gender unknown' };
+  }
+
+  if (selfGender === 'male') {
+    if (siblingGender === 'male') return { hindi: 'Sala ki Patni', english: "Wife's Brother's Wife" };
+    if (siblingGender === 'female') return { hindi: 'Bahnoi/Jija', english: "Wife's Sister's Husband" };
+    return { hindi: 'Sala/Sali ka Jeevan Saathi', english: "Wife's sibling's spouse", notes: 'Sibling gender unknown' };
+  }
+
+  return { hindi: 'Spouse ke sibling ka jeevan saathi', english: "Spouse sibling's spouse", notes: 'Self gender unknown' };
+}
+
+function resolveSpouseSiblingChild(
+  selfGender: Gender,
+  siblingPerson: Person | null,
+  childPerson: Person | null
+): RelationTerm {
+  const siblingGender = normalizeGender(siblingPerson?.gender);
+  const childGender = normalizeGender(childPerson?.gender);
+  const childWord = childGender === 'male' ? 'Beta' : childGender === 'female' ? 'Beti' : 'Bachcha';
+  const childEnglish = childGender === 'male' ? 'Son' : childGender === 'female' ? 'Daughter' : 'Child';
+
+  if (selfGender === 'female') {
+    if (siblingGender === 'male') return { hindi: `Devar/Jeth ka ${childWord}`, english: `Husband's Brother's ${childEnglish}`, notes: 'Age order unknown' };
+    if (siblingGender === 'female') return { hindi: `Nanad ka ${childWord}`, english: `Husband's Sister's ${childEnglish}` };
+  }
+
+  if (selfGender === 'male') {
+    if (siblingGender === 'male') return { hindi: `Sala ka ${childWord}`, english: `Wife's Brother's ${childEnglish}` };
+    if (siblingGender === 'female') return { hindi: `Sali ka ${childWord}`, english: `Wife's Sister's ${childEnglish}` };
+  }
+
+  return { hindi: `Spouse ke sibling ka ${childWord}`, english: `Spouse sibling's ${childEnglish}`, notes: 'Self or sibling gender unknown' };
+}
+
 function resolveParentSiblingSpouse(
   parentRel: string,
   siblingPerson: Person | null
@@ -437,6 +486,26 @@ function resolveCousin(
   }
 
   return { hindi: 'Cousin', english: 'Cousin', notes: 'Side or gender unknown' };
+}
+
+function buildDescriptiveTerm(
+  relPath: string[],
+  pathIds: string[],
+  peopleById: Map<string, Person>
+): RelationTerm {
+  const chain = buildChain(pathIds, relPath, peopleById);
+  const englishParts = chain.chainEnglish.split(' -> ').slice(1);
+  const hindiParts = chain.chainHindi.split(' -> ').slice(1);
+
+  if (englishParts.length === 0 || hindiParts.length === 0) {
+    return { hindi: 'Rishtedaar', english: 'Relative' };
+  }
+
+  return {
+    hindi: hindiParts.join(' ke '),
+    english: englishParts.join("'s "),
+    notes: 'No single standard Hindi term; showing resolved relation',
+  };
 }
 
 function resolvePath(
@@ -509,13 +578,21 @@ function resolvePath(
     if (first === 'child' && second === 'child' && third === 'child') {
       return { hindi: 'Par-Pota/Par-Nati', english: 'Great-grandchild' };
     }
+    if (first === 'spouse' && second === 'sibling' && isParentRel(third)) {
+      return resolveSpouseParent(finalPerson);
+    }
+    if (first === 'spouse' && isParentRel(second) && third === 'child') {
+      return resolveSpouseSibling(selfGender, parentPerson, finalPerson);
+    }
+    if (first === 'spouse' && second === 'sibling' && third === 'spouse') {
+      return resolveSpouseSiblingSpouse(selfGender, parentPerson, siblingPerson);
+    }
+    if (first === 'spouse' && second === 'sibling' && third === 'child') {
+      return resolveSpouseSiblingChild(selfGender, siblingPerson, finalPerson);
+    }
   }
 
-  return {
-    hindi: 'Door ka rishtedar',
-    english: 'Distant relative',
-    notes: 'No direct term for this chain',
-  };
+  return buildDescriptiveTerm(relPath, pathIds, peopleById);
 }
 
 function buildShortestPath(
@@ -530,6 +607,8 @@ function buildShortestPath(
       pathIds: [selfId],
       relPath: [],
       multiplePaths: false,
+      chainEnglish: 'ME',
+      chainHindi: 'Main',
     };
   }
 

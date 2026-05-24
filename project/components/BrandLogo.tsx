@@ -20,7 +20,7 @@ export default function BrandLogo({
       aria-hidden={alt ? undefined : true}
     >
       <Image
-        src="/brand/aangan-logo.png"
+        src="/brand/familiar-logo.webp"
         alt={alt}
         fill
         priority={priority}

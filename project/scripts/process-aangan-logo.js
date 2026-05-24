@@ -47,7 +47,7 @@ const iconsDir = path.join(__dirname, '..', 'public', 'icons');
     .png({ compressionLevel: 9 })
     .toBuffer();
 
-  const cleanLogoPath = path.join(outDir, 'aangan-logo.png');
+  const cleanLogoPath = path.join(outDir, 'familiar-logo.webp');
   await sharp(trimmedBuffer)
     .resize(1024, 1024, {
       fit: 'contain',
@@ -63,7 +63,7 @@ const iconsDir = path.join(__dirname, '..', 'public', 'icons');
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     })
     .png({ compressionLevel: 9 })
-    .toFile(path.join(iconsDir, 'icon-512.png'));
+    .toFile(path.join(iconsDir, 'familiar-icon-512.webp'));
 
   await sharp(cleanLogoPath)
     .resize(192, 192, {
@@ -71,7 +71,7 @@ const iconsDir = path.join(__dirname, '..', 'public', 'icons');
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     })
     .png({ compressionLevel: 9 })
-    .toFile(path.join(iconsDir, 'icon-192.png'));
+    .toFile(path.join(iconsDir, 'familiar-icon-192.webp'));
 
   console.log('✅ Logo assets generated');
 })();

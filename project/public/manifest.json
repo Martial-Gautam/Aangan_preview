@@ -11,25 +11,25 @@
   "id": "/",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/familiar-icon-192.webp",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/familiar-icon-192.webp",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/familiar-icon-512.webp",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/familiar-icon-512.webp",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -37,7 +37,7 @@
   ],
   "screenshots": [
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/familiar-icon-512.webp",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",

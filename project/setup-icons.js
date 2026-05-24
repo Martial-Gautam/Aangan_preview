@@ -9,8 +9,8 @@ fs.mkdirSync(iconsDir, { recursive: true });
 const src = '/home/ranveergautam/.gemini/antigravity/brain/ce7c9d4c-3710-4e38-9435-994c4f404aeb/aangan_icon_1778228800299.png';
 
 if (fs.existsSync(src)) {
-  fs.copyFileSync(src, path.join(iconsDir, 'icon-512.png'));
-  fs.copyFileSync(src, path.join(iconsDir, 'icon-192.png'));
+  fs.copyFileSync(src, path.join(iconsDir, 'familiar-icon-512.webp'));
+  fs.copyFileSync(src, path.join(iconsDir, 'familiar-icon-192.webp'));
   console.log('✅ Icons created:', fs.readdirSync(iconsDir));
 } else {
   console.log('Source icon not found at:', src);

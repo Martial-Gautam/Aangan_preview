@@ -79,13 +79,7 @@ export function calculateDegree(
       const newRelPath = [...current.relPath, neighbor.relType];
 
       if (neighbor.personId === personBId) {
-        const degree = newPath.length - 1;
-        return {
-          degree,
-          path: newPath,
-          relationshipPath: newRelPath,
-          label: degreeToLabel(degree, newRelPath),
-        };
+        return normalizeSemanticDegree(newPath, newRelPath);
       }
 
       visited.add(neighbor.personId);
@@ -103,6 +97,57 @@ export function calculateDegree(
     path: [],
     relationshipPath: [],
     label: 'Not connected',
+  };
+}
+
+function isParentRel(relType: string) {
+  return relType === 'father' || relType === 'mother' || relType === 'parent';
+}
+
+function normalizeSemanticDegree(path: string[], relPath: string[]): DegreeResult {
+  // Sibling's father/mother is also my father/mother.
+  if (relPath.length === 2 && relPath[0] === 'sibling' && isParentRel(relPath[1])) {
+    const normalizedRelPath = [relPath[1]];
+    const normalizedPath = [path[0], path[2]];
+    return {
+      degree: 1,
+      path: normalizedPath,
+      relationshipPath: normalizedRelPath,
+      label: degreeToLabel(1, normalizedRelPath),
+    };
+  }
+
+  // My parent's child is either me or my sibling. If it is a different node,
+  // display it as a first-degree sibling rather than a 2-hop relative.
+  if (relPath.length === 2 && isParentRel(relPath[0]) && relPath[1] === 'child') {
+    const normalizedRelPath = ['sibling'];
+    const normalizedPath = [path[0], path[2]];
+    return {
+      degree: 1,
+      path: normalizedPath,
+      relationshipPath: normalizedRelPath,
+      label: degreeToLabel(1, normalizedRelPath),
+    };
+  }
+
+  // Spouse's sibling's father/mother is spouse's father/mother: Sasur/Saas.
+  if (relPath.length === 3 && relPath[0] === 'spouse' && relPath[1] === 'sibling' && isParentRel(relPath[2])) {
+    const normalizedRelPath = ['spouse', relPath[2]];
+    const normalizedPath = [path[0], path[1], path[3]];
+    return {
+      degree: 2,
+      path: normalizedPath,
+      relationshipPath: normalizedRelPath,
+      label: degreeToLabel(2, normalizedRelPath),
+    };
+  }
+
+  const degree = path.length - 1;
+  return {
+    degree,
+    path,
+    relationshipPath: relPath,
+    label: degreeToLabel(degree, relPath),
   };
 }
 

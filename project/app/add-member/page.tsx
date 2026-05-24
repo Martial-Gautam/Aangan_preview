@@ -3,18 +3,42 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { RelationshipType } from '@/lib/supabase';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import BottomNav from '@/components/BottomNav';
 import { Camera, ChevronLeft, Check, User, Mail, Phone, Users } from 'lucide-react';
 import Link from 'next/link';
 
-const RELATIONSHIP_OPTIONS: { value: RelationshipType; label: string; desc: string; icon: string }[] = [
+type AddRelationshipType =
+  | 'father'
+  | 'mother'
+  | 'sibling'
+  | 'spouse'
+  | 'child'
+  | 'father_in_law'
+  | 'mother_in_law'
+  | 'bua'
+  | 'chacha'
+  | 'mama'
+  | 'maasi'
+  | 'fufa'
+  | 'mami'
+  | 'maasa';
+
+const RELATIONSHIP_OPTIONS: { value: AddRelationshipType; label: string; desc: string; icon: string }[] = [
   { value: 'father', label: 'Father', desc: 'Your dad', icon: 'F' },
   { value: 'mother', label: 'Mother', desc: 'Your mom', icon: 'M' },
   { value: 'sibling', label: 'Sibling', desc: 'Brother or sister', icon: 'S' },
   { value: 'spouse', label: 'Spouse', desc: 'Husband or wife', icon: 'Sp' },
   { value: 'child', label: 'Child', desc: 'Son or daughter', icon: 'C' },
+  { value: 'father_in_law', label: 'Father-in-law', desc: 'Spouse → Father', icon: 'Fi' },
+  { value: 'mother_in_law', label: 'Mother-in-law', desc: 'Spouse → Mother', icon: 'Mi' },
+  { value: 'bua', label: 'Bua', desc: 'Father → Sister', icon: 'Bu' },
+  { value: 'chacha', label: 'Chacha/Tau', desc: 'Father → Brother', icon: 'Ch' },
+  { value: 'mama', label: 'Mama', desc: 'Mother → Brother', icon: 'Ma' },
+  { value: 'maasi', label: 'Maasi', desc: 'Mother → Sister', icon: 'Ms' },
+  { value: 'fufa', label: 'Fufa', desc: 'Bua → Husband', icon: 'Fu' },
+  { value: 'mami', label: 'Mami', desc: 'Mama → Wife', icon: 'Mm' },
+  { value: 'maasa', label: 'Maasa', desc: 'Maasi → Husband', icon: 'Mo' },
 ];
 
 const genders = [
@@ -31,7 +55,7 @@ const isValidPhone = (phone: string) => /^[\d\s\-+()]{7,}$/.test(phone);
 export default function AddMemberPage() {
   const router = useRouter();
   const { user, session, profile, loading } = useAuth();
-  const [relationship, setRelationship] = useState<RelationshipType | ''>('');
+  const [relationship, setRelationship] = useState<AddRelationshipType | ''>('');
   const [name, setName] = useState('');
   const [gender, setGender] = useState('');
   const [dob, setDob] = useState('');

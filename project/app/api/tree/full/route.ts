@@ -170,6 +170,152 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // --- Step 3.5: Semantic graph healing ---
+    // The graph should represent meaning, not insertion path. If A is sibling of B
+    // and B has a father/mother, infer the same parent edge for A. This fixes
+    // existing data like: Wife -> Brother -> Father, which semantically means
+    // Wife -> Father as well.
+    const peopleById = new Map(people.map((p) => [p.id, p]));
+    const normalizeName = (name?: string | null) => (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const edgeKey = (r: any) => `${r.person_id}|${r.related_person_id}|${r.relationship_type}`;
+    const edgeKeys = new Set(relationships.map(edgeKey));
+    const inferredEdges: any[] = [];
+    const idsToRemoveAfterSemanticMerge = new Set<string>();
+    const semanticIdRemap = new Map<string, string>();
+    const selfPersonForHealing = people.find((p) => p.owner_id === user.id && p.is_self);
+
+    for (const siblingEdge of relationships.filter((r) => r.relationship_type === 'sibling')) {
+      const siblingPairs = [
+        { childId: siblingEdge.person_id, siblingId: siblingEdge.related_person_id },
+        { childId: siblingEdge.related_person_id, siblingId: siblingEdge.person_id },
+      ];
+
+      for (const pair of siblingPairs) {
+        const siblingParents = relationships.filter(
+          (r) =>
+            r.person_id === pair.siblingId &&
+            (r.relationship_type === 'father' || r.relationship_type === 'mother')
+        );
+
+        for (const parentEdge of siblingParents) {
+          const inferred = {
+            id: `inferred-${pair.childId}-${parentEdge.related_person_id}-${parentEdge.relationship_type}`,
+            owner_id: peopleById.get(pair.childId)?.owner_id || siblingEdge.owner_id,
+            person_id: pair.childId,
+            related_person_id: parentEdge.related_person_id,
+            relationship_type: parentEdge.relationship_type,
+            created_at: new Date().toISOString(),
+            inferred: true,
+          };
+          const key = edgeKey(inferred);
+          if (!edgeKeys.has(key) && inferred.person_id !== inferred.related_person_id) {
+            edgeKeys.add(key);
+            inferredEdges.push(inferred);
+          }
+        }
+      }
+    }
+
+    // If two people are children of the same parent, they are siblings. If the
+    // new child has the same name as self, treat it as the same self node.
+    const parentEdgesFromSelf = selfPersonForHealing
+      ? relationships.filter(
+          (r) =>
+            r.person_id === selfPersonForHealing.id &&
+            (r.relationship_type === 'father' || r.relationship_type === 'mother')
+        )
+      : [];
+
+    for (const parentEdge of parentEdgesFromSelf) {
+      const siblingsFromParent = relationships.filter(
+        (r) => r.person_id === parentEdge.related_person_id && r.relationship_type === 'child'
+      );
+
+      for (const childEdge of siblingsFromParent) {
+        const child = peopleById.get(childEdge.related_person_id);
+        if (!child || !selfPersonForHealing || child.id === selfPersonForHealing.id) continue;
+
+        if (normalizeName(child.full_name) === normalizeName(selfPersonForHealing.full_name)) {
+          semanticIdRemap.set(child.id, selfPersonForHealing.id);
+          idsToRemoveAfterSemanticMerge.add(child.id);
+          continue;
+        }
+
+        const inferred = {
+          id: `inferred-${selfPersonForHealing.id}-${child.id}-sibling`,
+          owner_id: user.id,
+          person_id: selfPersonForHealing.id,
+          related_person_id: child.id,
+          relationship_type: 'sibling',
+          created_at: new Date().toISOString(),
+          inferred: true,
+        };
+        const key = edgeKey(inferred);
+        if (!edgeKeys.has(key)) {
+          edgeKeys.add(key);
+          inferredEdges.push(inferred);
+        }
+      }
+    }
+
+    if (semanticIdRemap.size > 0) {
+      people = people.filter((p) => !idsToRemoveAfterSemanticMerge.has(p.id));
+      relationships = relationships
+        .map((r) => ({
+          ...r,
+          person_id: semanticIdRemap.get(r.person_id) || r.person_id,
+          related_person_id: semanticIdRemap.get(r.related_person_id) || r.related_person_id,
+        }))
+        .filter((r) => r.person_id !== r.related_person_id);
+
+      for (let i = 0; i < inferredEdges.length; i++) {
+        inferredEdges[i] = {
+          ...inferredEdges[i],
+          person_id: semanticIdRemap.get(inferredEdges[i].person_id) || inferredEdges[i].person_id,
+          related_person_id: semanticIdRemap.get(inferredEdges[i].related_person_id) || inferredEdges[i].related_person_id,
+        };
+      }
+
+      const seen = new Set<string>();
+      relationships = relationships.filter((r) => {
+        const key = edgeKey(r);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Persist the self-merge only for duplicate nodes owned by the current user.
+      for (const [duplicateId, canonicalId] of Array.from(semanticIdRemap.entries())) {
+        const duplicate = peopleById.get(duplicateId);
+        if (duplicate?.owner_id !== user.id) continue;
+        await supabaseAdmin
+          .from('relationships')
+          .update({ person_id: canonicalId })
+          .eq('owner_id', user.id)
+          .eq('person_id', duplicateId);
+        await supabaseAdmin
+          .from('relationships')
+          .update({ related_person_id: canonicalId })
+          .eq('owner_id', user.id)
+          .eq('related_person_id', duplicateId);
+        await supabaseAdmin.from('people').delete().eq('owner_id', user.id).eq('id', duplicateId);
+      }
+    }
+
+    if (inferredEdges.length > 0) {
+      relationships = [...relationships, ...inferredEdges];
+
+      // Persist only edges in the current user's owned tree. Connected trees are
+      // still augmented in-memory for display, but we do not mutate someone else's tree.
+      const ownedInferredEdges = inferredEdges
+        .filter((edge) => edge.owner_id === user.id)
+        .map(({ id, inferred, created_at, ...edge }) => edge);
+
+      if (ownedInferredEdges.length > 0) {
+        await supabaseAdmin.from('relationships').insert(ownedInferredEdges);
+      }
+    }
+
     const connectedRoots = people
       .filter((p) => p.is_self)
       .map((p) => p.id);

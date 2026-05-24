@@ -62,7 +62,7 @@ function FamilyNode({ data }: NodeProps) {
   const setQuickAddTarget = useFamilyStore(s => s.setQuickAddTarget);
 
   const colors = COLOR_MAP[nodeData.relationshipType as keyof typeof COLOR_MAP] || COLOR_MAP.relative;
-  const label = LABEL_MAP[nodeData.relationshipType] || nodeData.relationshipType;
+  const label = nodeData.relationshipLabel || LABEL_MAP[nodeData.relationshipType] || nodeData.relationshipType;
   const initials = nodeData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const age = useMemo(() => calculateAge(nodeData.dateOfBirth), [nodeData.dateOfBirth]);
   const birthdaySoon = useMemo(() => isBirthdaySoon(nodeData.dateOfBirth), [nodeData.dateOfBirth]);
@@ -160,7 +160,7 @@ function FamilyNode({ data }: NodeProps) {
 
         {/* Relationship badge */}
         <span className={`meta-text mt-1 px-2 py-[2px] rounded-full tracking-wide uppercase ${colors.badge} ${colors.badgeText}`}>
-          {label}
+          {label}{nodeData.hasMultipleRelations ? ' +' : ''}
         </span>
       </div>
     </div>

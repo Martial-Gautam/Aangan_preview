@@ -13,6 +13,7 @@
 
 import { Node, Edge, MarkerType } from '@xyflow/react';
 import { getVisiblePersonIds } from './flow-layout';
+import { resolveRelationshipLabel } from './relationship-resolver';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -46,6 +47,9 @@ export type FamilyNodeData = {
   email: string | null;
   phone: string | null;
   relationshipType: string;
+  relationshipLabel?: string;
+  hasMultipleRelations?: boolean;
+  relationNote?: string;
   isSelf: boolean;
   isLinked: boolean;
   isCenterPerson: boolean;
@@ -225,6 +229,8 @@ export function transformToFlow(
   const flowNodes: Node[] = visiblePeople.map(person => {
     const relType = selfRelMap.get(person.id)
       || (person.owner_id !== selfOwnerId ? 'connection' : 'relative');
+    const relation = resolveRelationshipLabel(selfPersonId, person.id, people, relationships);
+    const relationLabel = relation.term.hindi || relation.term.english || relType;
 
     return {
       id: person.id,
@@ -239,6 +245,9 @@ export function transformToFlow(
         email: person.email,
         phone: person.phone_number,
         relationshipType: relType,
+        relationshipLabel: relationLabel,
+        hasMultipleRelations: relation.multiplePaths,
+        relationNote: relation.term.notes,
         isSelf: person.is_self && person.owner_id === selfOwnerId,
         isLinked: person.user_id !== null,
         isCenterPerson: person.id === centerPersonId,

@@ -7,6 +7,7 @@ import { Person, Relationship } from '@/lib/tree-to-flow';
 import { Pencil, Trash2, LinkIcon, Route, MessageCircle, UserPlus, Calendar, Cake } from 'lucide-react';
 import { calculateDegree } from '@/lib/degree-calculator';
 import { useFamilyStore } from '@/lib/family-store';
+import { resolveRelationshipLabel } from '@/lib/relationship-resolver';
 
 const LABEL_MAP: Record<string, string> = {
   self: 'You', father: 'Father', mother: 'Mother',
@@ -108,6 +109,11 @@ export default function MemberDetailSheet({
     return rel?.relationship_type || 'relative';
   }, [personId, selfPersonId, relationships]);
 
+  const relationshipMeta = useMemo(() => {
+    if (!personId) return null;
+    return resolveRelationshipLabel(selfPersonId, personId, people, relationships);
+  }, [personId, selfPersonId, people, relationships]);
+
   const degreeResult = useMemo(() => {
     if (!personId || personId === selfPersonId) return null;
     return calculateDegree(selfPersonId, personId, relationships);
@@ -166,7 +172,7 @@ export default function MemberDetailSheet({
   if (!person) return null;
 
   const initials = person.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const label = LABEL_MAP[relationshipType] || relationshipType;
+  const label = relationshipMeta?.term.hindi || LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
   const isLinked = person.user_id !== null || !!messageTargetId;
   const canEdit = !isSelf;
@@ -254,6 +260,33 @@ export default function MemberDetailSheet({
               </span>
             )}
           </div>
+          {relationshipMeta?.term.english && relationshipMeta.term.english !== label && (
+            <p className="text-[11px] text-gray-500 mt-1">{relationshipMeta.term.english}</p>
+          )}
+          {relationshipMeta?.chainEnglish && (
+            <div className="mt-2 text-[10px] text-gray-500 bg-gray-100/50 px-3 py-2 rounded-xl">
+              <p className="uppercase tracking-[0.1em] text-[9px] text-gray-400 mb-1">Chain</p>
+              <p>{relationshipMeta.chainEnglish}</p>
+              <p className="mt-1">{relationshipMeta.chainHindi}</p>
+            </div>
+          )}
+          {relationshipMeta?.multiplePaths && (
+            <p className="text-[10px] text-amber-600 mt-1">Multiple relations detected - showing nearest</p>
+          )}
+          {relationshipMeta?.alternatives && relationshipMeta.alternatives.length > 0 && (
+            <details className="mt-2 text-[10px] text-gray-500">
+              <summary className="cursor-pointer text-[#2A4365] font-semibold">Other relations</summary>
+              <div className="mt-2 space-y-2">
+                {relationshipMeta.alternatives.map((alt, index) => (
+                  <div key={`${alt.chainEnglish}-${index}`} className="bg-gray-100/50 px-3 py-2 rounded-xl">
+                    <p className="font-semibold text-gray-700">{alt.term.hindi} - {alt.term.english}</p>
+                    <p className="mt-1">{alt.chainEnglish}</p>
+                    <p className="mt-0.5">{alt.chainHindi}</p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
 
           {/* Birthday countdown */}
           {birthdayNote && (

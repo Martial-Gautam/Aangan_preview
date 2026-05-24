@@ -10,6 +10,7 @@ import CosmosEdge from './CosmosEdge';
 import CosmosRings from './CosmosRings';
 import { computeCosmosLayout, type CosmosPosition } from '@/lib/cosmos-layout';
 import type { Person, Relationship } from '@/lib/tree-to-flow';
+import { resolveRelationshipLabel } from '@/lib/relationship-resolver';
 
 // ─── Camera Controller ───────────────────────────────────────
 
@@ -81,26 +82,23 @@ function Scene({
     [centerPersonId, people, relationships, maxHops]
   );
 
-  // Build relationship label map (from self)
   const relationLabels = useMemo(() => {
     const labels = new Map<string, string>();
     labels.set(selfPersonId, 'You');
 
-    for (let i = 0; i < relationships.length; i++) {
-      const rel = relationships[i];
-      if (rel.person_id === selfPersonId) {
-        labels.set(rel.related_person_id, rel.relationship_type);
-      }
-      if (rel.related_person_id === selfPersonId) {
-        const reverse: Record<string, string> = {
-          father: 'child', mother: 'child', child: 'parent',
-          spouse: 'spouse', sibling: 'sibling',
-        };
-        labels.set(rel.person_id, reverse[rel.relationship_type] || rel.relationship_type);
-      }
+    const visibleIds = new Set<string>();
+    for (const person of people) {
+      if (cosmosPositions.has(person.id)) visibleIds.add(person.id);
     }
+
+    for (const personId of Array.from(visibleIds)) {
+      const result = resolveRelationshipLabel(selfPersonId, personId, people, relationships);
+      const label = result.term.hindi || result.term.english || 'Relative';
+      labels.set(personId, label);
+    }
+
     return labels;
-  }, [selfPersonId, relationships]);
+  }, [selfPersonId, people, relationships, cosmosPositions]);
 
   // Get self person for owner comparison
   const selfPerson = useMemo(() =>

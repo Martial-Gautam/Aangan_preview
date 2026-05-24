@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
-import DeferredLandingSections from '@/components/welcome/DeferredLandingSections';
 import { motion } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield,
@@ -12,6 +12,11 @@ import {
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
+
+const DeferredLandingSections = dynamic(
+  () => import('@/components/welcome/DeferredLandingSections'),
+  { ssr: false, loading: () => null }
+);
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -22,11 +27,13 @@ export default function WelcomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [showDeferred, setShowDeferred] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const revealMaskRef = useRef<HTMLDivElement>(null);
   const heroRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
+  const heroMeasureFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,18 +82,6 @@ export default function WelcomePage() {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const measureHeroRect = useCallback(() => {
-    const heroEl = heroRef.current;
-    if (!heroEl) return;
-    const rect = heroEl.getBoundingClientRect();
-    heroRectRef.current = {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    };
-  }, []);
-
   const updateRevealPosition = useCallback((clientX: number, clientY: number) => {
     const revealEl = revealMaskRef.current;
     const rect = heroRectRef.current;
@@ -111,32 +106,91 @@ export default function WelcomePage() {
     pointerFrameRef.current = window.requestAnimationFrame(flushPendingPointer);
   }, [flushPendingPointer]);
 
+  const scheduleHeroMeasure = useCallback(() => {
+    if (heroMeasureFrameRef.current !== null) return;
+    heroMeasureFrameRef.current = window.requestAnimationFrame(() => {
+      heroMeasureFrameRef.current = null;
+      const heroEl = heroRef.current;
+      if (!heroEl) return;
+      const rect = heroEl.getBoundingClientRect();
+      heroRectRef.current = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+      const pending = pendingPointerRef.current;
+      if (pending) updateRevealPosition(pending.clientX, pending.clientY);
+    });
+  }, [updateRevealPosition]);
+
+  useEffect(() => {
+    scheduleHeroMeasure();
+    const handleResize = () => scheduleHeroMeasure();
+    const handleScroll = () => scheduleHeroMeasure();
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && heroRef.current) {
+      observer = new ResizeObserver(() => scheduleHeroMeasure());
+      observer.observe(heroRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+      if (observer) observer.disconnect();
+      if (heroMeasureFrameRef.current !== null) {
+        window.cancelAnimationFrame(heroMeasureFrameRef.current);
+        heroMeasureFrameRef.current = null;
+      }
+    };
+  }, [scheduleHeroMeasure]);
+
   const handleHeroPointerEnter = () => {
     const revealEl = revealMaskRef.current;
     if (!revealEl) return;
-    if (!heroRectRef.current) measureHeroRect();
+    scheduleHeroMeasure();
     revealEl.style.setProperty('--reveal-strength', '0.46');
   };
 
   const handleHeroPointerLeave = () => {
     const revealEl = revealMaskRef.current;
     if (!revealEl) return;
+    pendingPointerRef.current = null;
     revealEl.style.setProperty('--reveal-strength', '0.24');
   };
 
   const handleHeroMouseMove = (event: React.MouseEvent<HTMLElement>) => {
-    if (!heroRectRef.current) measureHeroRect();
     scheduleRevealUpdate(event.clientX, event.clientY);
   };
 
   const handleHeroTouchMove = (event: React.TouchEvent<HTMLElement>) => {
     const touch = event.touches[0];
     if (!touch) return;
-    if (!heroRectRef.current) measureHeroRect();
     scheduleRevealUpdate(touch.clientX, touch.clientY);
     const revealEl = revealMaskRef.current;
     if (revealEl) revealEl.style.setProperty('--reveal-strength', '0.42');
   };
+
+  useEffect(() => {
+    let idleId: number | null = null;
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(() => setShowDeferred(true));
+    } else {
+      idleId = window.setTimeout(() => setShowDeferred(true), 800);
+    }
+    return () => {
+      if (idleId === null) return;
+      if ('cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      } else {
+        window.clearTimeout(idleId);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -533,7 +587,9 @@ export default function WelcomePage() {
         </button>
       </section>
 
-      <DeferredLandingSections onSignIn={() => setMode('signin')} onSignUp={() => setMode('signup')} />
+      {showDeferred ? (
+        <DeferredLandingSections onSignIn={() => setMode('signin')} onSignUp={() => setMode('signup')} />
+      ) : null}
     </div>
   );
 }

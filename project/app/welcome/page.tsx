@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
-import { motion } from 'motion/react';
+import styles from './welcome.module.css';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield,
   Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network
@@ -28,7 +28,6 @@ export default function WelcomePage() {
   const [error, setError] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showDeferred, setShowDeferred] = useState(false);
-  const [enableMotion, setEnableMotion] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const revealMaskRef = useRef<HTMLDivElement>(null);
   const heroRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
@@ -45,10 +44,6 @@ export default function WelcomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setEnableMotion(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,11 +210,8 @@ export default function WelcomePage() {
   // --- Auth form screen ---
   if (mode !== 'landing') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="welcome-page min-h-screen flex flex-col"
+      <div
+        className={`${styles.authEnter} welcome-page min-h-screen flex flex-col`}
         style={{ background: 'transparent' }}
       >
         <div className="flex-1 flex flex-col justify-center px-6 py-12">
@@ -312,7 +304,7 @@ export default function WelcomePage() {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -369,11 +361,9 @@ export default function WelcomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_52%,rgba(255,255,255,0.06),transparent_30%),linear-gradient(180deg,rgba(7,18,30,0.34)_0%,rgba(7,18,30,0.88)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#f7f9fb]" />
 
-        <motion.div
-          className="absolute inset-0 z-[1] pointer-events-none opacity-65"
+        <div
+          className={`${styles.heroPulse} absolute inset-0 z-[1] pointer-events-none opacity-65`}
           aria-hidden="true"
-          animate={enableMotion ? { scale: [1, 1.018, 1], opacity: [0.46, 0.58, 0.5] } : false}
-          transition={enableMotion ? { duration: 16, repeat: Infinity, ease: 'easeInOut' } : undefined}
         >
           <svg viewBox="0 0 1800 980" className="w-full h-full object-cover">
             <defs>
@@ -413,20 +403,24 @@ export default function WelcomePage() {
                 [310, 190, 12], [1500, 200, 12], [130, 145, 10], [1680, 155, 10], [655, 790, 13],
                 [1175, 790, 13], [520, 885, 11], [1320, 885, 11], [785, 660, 10], [1035, 662, 10],
               ].map(([cx, cy, r], index) => (
-                <motion.g
+                <g
                   key={`${cx}-${cy}`}
-                  animate={enableMotion ? { y: [0, index % 2 === 0 ? -8 : 7, 0], opacity: [0.75, 1, 0.78] } : false}
-                  transition={enableMotion ? { duration: 5.8 + index * 0.18, repeat: Infinity, ease: 'easeInOut', delay: index * 0.08 } : undefined}
+                  className={styles.orbitFloat}
+                  style={{
+                    ['--float-y' as const]: index % 2 === 0 ? '-8px' : '7px',
+                    animationDuration: `${5.8 + index * 0.18}s`,
+                    animationDelay: `${index * 0.08}s`,
+                  }}
                 >
                   <circle cx={cx} cy={cy} r={r + 8} fill="#ffffff" fillOpacity="0.08" />
                   <circle cx={cx} cy={cy} r={r} fill="#f8fcff" fillOpacity="0.9" />
                   <circle cx={cx} cy={cy - r * 0.2} r={r * 0.28} fill="#17324f" fillOpacity="0.72" />
                   <path d={`M${cx - r * 0.55} ${cy + r * 0.56}C${cx - r * 0.38} ${cy + r * 0.18} ${cx + r * 0.38} ${cy + r * 0.18} ${cx + r * 0.55} ${cy + r * 0.56}`} fill="#17324f" fillOpacity="0.68" />
-                </motion.g>
+                </g>
               ))}
             </g>
           </svg>
-        </motion.div>
+        </div>
 
         <div className="absolute inset-0 z-[2] pointer-events-none bg-[linear-gradient(90deg,rgba(7,18,30,0.88)_0%,rgba(7,18,30,0.66)_34%,rgba(7,18,30,0.30)_67%,rgba(7,18,30,0.50)_100%)]" />
 
@@ -447,36 +441,28 @@ export default function WelcomePage() {
         </div>
 
         {/* Floating family cues */}
-        <motion.div
-          className="absolute z-[3] top-24 left-7 w-10 h-10 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={enableMotion ? { y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] } : false}
-          transition={enableMotion ? { duration: 6, repeat: Infinity, ease: 'easeInOut' } : undefined}
+        <div
+          className={`${styles.floatSlow} absolute z-[3] top-24 left-7 w-10 h-10 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10`}
         >
           <TreePine size={16} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] top-32 right-12 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+        </div>
+        <div
+          className={`${styles.floatMedium} absolute z-[3] top-32 right-12 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10`}
           style={{ animationDelay: '1s' }}
-          animate={enableMotion ? { y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] } : false}
-          transition={enableMotion ? { duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 } : undefined}
         >
           <MessageCircle size={15} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] bottom-40 left-14 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+        </div>
+        <div
+          className={`${styles.floatMid} absolute z-[3] bottom-40 left-14 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10`}
           style={{ animationDelay: '2s' }}
-          animate={enableMotion ? { y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] } : false}
-          transition={enableMotion ? { duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 } : undefined}
         >
           <CalendarDays size={15} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] bottom-32 right-8 w-11 h-11 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={enableMotion ? { y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] } : false}
-          transition={enableMotion ? { duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 } : undefined}
+        </div>
+        <div
+          className={`${styles.floatFast} absolute z-[3] bottom-32 right-8 w-11 h-11 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10`}
         >
           <Network size={17} className="text-white/75" />
-        </motion.div>
+        </div>
 
         <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28">
           <div className="text-center lg:text-left">
@@ -527,15 +513,8 @@ export default function WelcomePage() {
             </div>
           </div>
 
-          <motion.div
-            initial={enableMotion ? { opacity: 0, y: 24, rotate: 1.5 } : false}
-            animate={enableMotion ? { opacity: 1, y: [0, -10, 0], rotate: [1.5, -0.8, 1.5] } : { opacity: 1, y: 0, rotate: 1.5 }}
-            transition={enableMotion ? {
-              opacity: { duration: 0.65, ease: 'easeOut', delay: 0.35 },
-              y: { duration: 7.8, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
-              rotate: { duration: 9.4, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
-            } : { duration: 0 }}
-            className="hidden sm:block justify-self-center w-full max-w-[390px]"
+          <div
+            className={`${styles.previewFloat} hidden sm:block justify-self-center w-full max-w-[390px]`}
           >
             <div className="rounded-[2rem] border border-white/24 bg-white/[0.14] p-3 shadow-2xl shadow-black/28 backdrop-blur-2xl">
               <div className="rounded-[1.45rem] bg-[#081522]/92 border border-white/10 overflow-hidden">
@@ -590,7 +569,7 @@ export default function WelcomePage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Scroll indicator */}

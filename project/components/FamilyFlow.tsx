@@ -12,6 +12,7 @@ import {
   BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import './FamilyFlow.module.css';
 
 import FamilyNode from './FamilyNode';
 import { transformToFlow, Person, Relationship } from '@/lib/tree-to-flow';

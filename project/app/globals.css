@@ -112,52 +112,6 @@
   border-radius: 2px;
 }
 
-/* ─── Three.js HTML overlay reset ─── */
-[data-testid="html"],
-.r3f-html,
-div[style*="transform: translate3d"] {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* ─── React Flow ─── */
-.react-flow__renderer {
-  background: transparent;
-}
-
-.react-flow__background {
-  background-color: transparent;
-}
-
-.react-flow__controls {
-  display: none !important;
-}
-
-.react-flow__edge-text {
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-.react-flow__edge-path {
-  transition: stroke 0.2s ease, stroke-width 0.2s ease;
-}
-
-.react-flow__node.selected {
-  outline: 2px solid #2A4365;
-  outline-offset: 2px;
-  border-radius: 16px;
-}
-
-/* ─── Sector Color System (Cosmos 3D — preserved) ─── */
-:root {
-  --sector-self: #10B981;
-  --sector-maternal: #8B5CF6;
-  --sector-paternal: #3B82F6;
-  --sector-spouse: #EC4899;
-  --sector-siblings: #F59E0B;
-  --sector-children: #14B8A6;
-}
-
 /* ─── Animations ─── */
 @keyframes fadeIn {
   from {

@@ -1,0 +1,16 @@
+:global([data-testid="html"]),
+:global(.r3f-html),
+:global(div[style*="transform: translate3d"]) {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:global(:root) {
+  --sector-self: #10B981;
+  --sector-maternal: #8B5CF6;
+  --sector-paternal: #3B82F6;
+  --sector-spouse: #EC4899;
+  --sector-siblings: #F59E0B;
+  --sector-children: #14B8A6;
+}

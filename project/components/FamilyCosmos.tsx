@@ -4,6 +4,7 @@ import { useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
+import './FamilyCosmos.module.css';
 
 import CosmosNode from './CosmosNode';
 import CosmosEdge from './CosmosEdge';

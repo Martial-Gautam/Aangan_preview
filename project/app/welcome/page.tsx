@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 type Mode = 'landing' | 'signin' | 'signup';
+type OrbitStyle = CSSProperties & { ['--float-y']?: string };
 
 const DeferredLandingSections = dynamic(
   () => import('@/components/welcome/DeferredLandingSections'),
@@ -206,6 +207,12 @@ export default function WelcomePage() {
       }
     };
   }, []);
+
+  const getOrbitStyle = (index: number): OrbitStyle => ({
+    '--float-y': index % 2 === 0 ? '-8px' : '7px',
+    animationDuration: `${5.8 + index * 0.18}s`,
+    animationDelay: `${index * 0.08}s`,
+  });
 
   // --- Auth form screen ---
   if (mode !== 'landing') {
@@ -406,11 +413,7 @@ export default function WelcomePage() {
                 <g
                   key={`${cx}-${cy}`}
                   className={styles.orbitFloat}
-                  style={{
-                    ['--float-y' as const]: index % 2 === 0 ? '-8px' : '7px',
-                    animationDuration: `${5.8 + index * 0.18}s`,
-                    animationDelay: `${index * 0.08}s`,
-                  }}
+                  style={getOrbitStyle(index)}
                 >
                   <circle cx={cx} cy={cy} r={r + 8} fill="#ffffff" fillOpacity="0.08" />
                   <circle cx={cx} cy={cy} r={r} fill="#f8fcff" fillOpacity="0.9" />

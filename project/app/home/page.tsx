@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth-context';
 import { useFamilyStore } from '@/lib/family-store';
 import BrandLogo from '@/components/BrandLogo';
+import { TopRightMenu } from '@/components/TopRightMenu';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
 import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -601,12 +602,6 @@ export default function HomePage() {
               <Download size={14} />
             </button>
             <Link
-              href="/add-member"
-              className="w-8 h-8 rounded-full bg-[#2A4365] flex items-center justify-center hover:bg-[#2A4365]/90 transition-all active:scale-95 shadow-lg shadow-[#2A4365]/20"
-            >
-              <UserPlus size={14} className="text-white" />
-            </Link>
-            <Link
               href="/notifications"
               className="w-8 h-8 rounded-full bg-gray-100/60 flex items-center justify-center hover:bg-gray-200/60 transition-all active:scale-95 relative"
             >
@@ -617,6 +612,7 @@ export default function HomePage() {
                 </span>
               )}
             </Link>
+            <TopRightMenu />
           </div>
         </div>
         {installHint && (

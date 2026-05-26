@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/google": "^0.0.51",
+    "@ai-sdk/react": "^0.0.51",
     "@dagrejs/dagre": "^1.1.4",
+    "@google/genai": "^2.6.0",
     "@hookform/resolvers": "^3.9.0",
     "@netlify/plugin-nextjs": "^5.15.1",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -51,6 +54,7 @@
     "@types/react-dom": "18.2.7",
     "@types/three": "^0.184.1",
     "@xyflow/react": "^12.10.2",
+    "ai": "^3.3.36",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

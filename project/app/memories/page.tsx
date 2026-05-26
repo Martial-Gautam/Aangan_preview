@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import { TopRightMenu } from '@/components/TopRightMenu';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import {
   ArrowLeft,
@@ -359,27 +360,30 @@ export default function MemoriesPage() {
     <div className="min-h-screen pb-24 animate-pageEnter" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         <div className="glass-header px-5 pt-11 pb-4">
-          <div className="flex items-center gap-2">
-            {mode !== 'choose' && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (mode === 'join') setMode('choose');
-                  if (mode === 'albums') setMode('choose');
-                }}
-                className="w-8 h-8 rounded-full bg-white/40 backdrop-blur-md text-gray-500 flex items-center justify-center"
-              >
-                <ArrowLeft size={17} />
-              </button>
-            )}
-            <div>
-              <h1 className="screen-title text-xl text-gray-900">Shared Memory</h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {mode === 'choose' && 'Capture and organize family moments'}
-                {mode === 'join' && 'Join an existing shared album'}
-                {mode === 'albums' && 'Browse memories by album type'}
-              </p>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              {mode !== 'choose' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (mode === 'join') setMode('choose');
+                    if (mode === 'albums') setMode('choose');
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/40 backdrop-blur-md text-gray-500 flex items-center justify-center"
+                >
+                  <ArrowLeft size={17} />
+                </button>
+              )}
+              <div>
+                <h1 className="screen-title text-xl text-gray-900">Shared Memory</h1>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {mode === 'choose' && 'Capture and organize family moments'}
+                  {mode === 'join' && 'Join an existing shared album'}
+                  {mode === 'albums' && 'Browse memories by album type'}
+                </p>
+              </div>
             </div>
+            <TopRightMenu />
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import { TopRightMenu } from '@/components/TopRightMenu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Heart, MessageCircle, Send, Plus, Loader2, ArrowUp, ArrowDown,
@@ -421,6 +422,7 @@ function FeedContent() {
         <div className="glass-header px-5 pt-12 pb-3">
           <div className="flex items-center justify-between mb-3">
             <h1 className="screen-title text-xl text-gray-900">Feed</h1>
+            <TopRightMenu />
           </div>
 
           {/* Two-Section Tabs */}

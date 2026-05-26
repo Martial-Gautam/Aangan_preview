@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import { TopRightMenu } from '@/components/TopRightMenu';
 import { ArrowLeft, Send, Search, MessageCircle, Loader2 } from 'lucide-react';
 import { StreamChat } from 'stream-chat';
 import type { Channel as StreamChannel } from 'stream-chat';
@@ -764,11 +765,14 @@ function MessagesContent() {
     <div className="min-h-screen pb-24 animate-pageEnter" style={{ background: 'transparent' }}>
       <div className="max-w-sm mx-auto">
         {/* Header */}
-        <div className="glass-header px-6 pt-12 pb-4">
-          <h1 className="screen-title text-xl text-gray-900">Messages</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Chat with your family members
-          </p>
+        <div className="glass-header px-6 pt-12 pb-4 flex items-start justify-between">
+          <div>
+            <h1 className="screen-title text-xl text-gray-900">Messages</h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Chat with your family members
+            </p>
+          </div>
+          <TopRightMenu />
         </div>
 
         {/* Search */}

@@ -20,7 +20,7 @@ export function TopRightMenu() {
               <User className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-[15px] text-gray-900 dark:text-gray-100">Profile & Settings</span>
+              <span className="font-semibold text-[15px] text-gray-900 dark:text-gray-100">Profile</span>
             </div>
           </Link>
         </DropdownMenuItem>

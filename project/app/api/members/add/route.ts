@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { runInferenceEngine } from '@/lib/inference-engine';
+import { Neo4jService } from '@/lib/neo4j-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -10,6 +11,8 @@ type PersonRow = {
   full_name: string;
   gender: string | null;
   date_of_birth: string | null;
+  photo_url?: string | null;
+  created_at?: string | null;
   email: string | null;
   phone_number: string | null;
   is_self?: boolean;
@@ -300,6 +303,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to add member' }, { status: 500 });
       }
       person = insertedPerson;
+
+      // Neo4j Dual-Write (Non-blocking)
+      if (person) {
+        Neo4jService.syncPerson({
+          id: person.id,
+          userId: user.id,
+          name: person.full_name || 'Unknown',
+          gender: person.gender ?? undefined,
+          birthDate: person.date_of_birth ?? undefined,
+          profileImage: person.photo_url ?? undefined,
+          createdAt: person.created_at || new Date().toISOString(),
+        }).catch(err => console.error('Dual-write to Neo4j failed for Person:', err));
+      }
     }
 
     if (!person) {
@@ -315,6 +331,15 @@ export async function POST(req: NextRequest) {
         person.id,
         semanticResolution.finalEdgeType
       );
+      
+      // Neo4j Dual-Write (Non-blocking)
+      if (relationshipCreated) {
+        Neo4jService.syncRelationship(
+          semanticResolution.anchorId,
+          person.id,
+          semanticResolution.finalEdgeType
+        ).catch(err => console.error('Dual-write to Neo4j failed for Relationship:', err));
+      }
     }
 
     let requestCreated = false;

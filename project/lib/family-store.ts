@@ -70,9 +70,23 @@ export const useFamilyStore = create<FamilyState>()(
     try {
       let token = accessToken;
 
-      let res = await fetch('/api/tree/full', {
+      // NEO4J FALLBACK LOGIC (Feature Flagged)
+      let apiUrl = '/api/tree/full'; // Default SQL source
+      if (process.env.NEXT_PUBLIC_ENABLE_NEO4J_COSMOS === 'true') {
+        apiUrl = '/api/family/tree';
+      }
+
+      let res = await fetch(apiUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Neo4j API fails and we tried Neo4j, attempt graceful fallback to SQL
+      if (!res.ok && apiUrl === '/api/family/tree') {
+        console.warn('Neo4j tree fetch failed, falling back to SQL /api/tree/full');
+        res = await fetch('/api/tree/full', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
 
       // Handle token refresh race — wrapped in try-catch to prevent
       // "Failed to fetch" when Supabase is unreachable
@@ -81,13 +95,21 @@ export const useFamilyStore = create<FamilyState>()(
           const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
           if (!refreshError && refreshed.session?.access_token) {
             token = refreshed.session.access_token;
-            res = await fetch('/api/tree/full', {
+            
+            // Re-run fallback check for token refresh
+            let refreshedRes = await fetch(apiUrl, {
               headers: { Authorization: `Bearer ${token}` },
             });
+            if (!refreshedRes.ok && apiUrl === '/api/family/tree') {
+               refreshedRes = await fetch('/api/tree/full', {
+                 headers: { Authorization: `Bearer ${token}` },
+               });
+            }
+            res = refreshedRes;
           }
         } catch {
           // Refresh failed (network error) — continue with fallback
-          console.warn('Session refresh failed, using fallback.');
+          console.warn('Session refresh failed, using DB fallback.');
         }
       }
 

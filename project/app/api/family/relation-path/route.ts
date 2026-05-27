@@ -22,6 +22,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (process.env.NEXT_PUBLIC_ENABLE_NEO4J_COSMOS === 'false') {
+      return NextResponse.json({ error: 'Neo4j disabled' }, { status: 503 });
+    }
+
     const { searchParams } = new URL(req.url);
     const fromId = searchParams.get('from');
     const toId = searchParams.get('to');

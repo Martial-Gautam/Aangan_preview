@@ -5,18 +5,16 @@ import { Neo4jService } from '@/lib/neo4j-service';
 export const dynamic = 'force-dynamic';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.split(' ')[1];
-
     const supabaseUser = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,19 +24,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Neo4j disabled' }, { status: 503 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const fromId = searchParams.get('from');
-    const toId = searchParams.get('to');
+    const body = await req.json();
+    const { fromPersonId, toPersonId, relationshipType } = body;
 
-    if (!fromId || !toId) {
-      return NextResponse.json({ error: 'Missing from or to parameters' }, { status: 400 });
+    if (!fromPersonId || !toPersonId || !relationshipType) {
+      return NextResponse.json(
+        { error: 'fromPersonId, toPersonId, and relationshipType are required' },
+        { status: 400 }
+      );
     }
 
-    const degree = await Neo4jService.getDegree(fromId, toId);
+    if (fromPersonId === toPersonId) {
+      return NextResponse.json(
+        { error: 'Cannot create a relationship to self' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ degree });
+    await Neo4jService.syncRelationship(fromPersonId, toPersonId, relationshipType);
+
+    return NextResponse.json({ success: true, fromPersonId, toPersonId, relationshipType });
   } catch (error: any) {
-    console.error('Neo4j Degree API Error:', error);
+    console.error('Neo4j Connect API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

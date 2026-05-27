@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Neo4jService } from '@/lib/neo4j-service';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -78,6 +79,17 @@ export async function POST(req: NextRequest) {
       console.error('Update member error:', updateError);
       return NextResponse.json({ error: 'Failed to update member' }, { status: 500 });
     }
+
+    // Neo4j Dual-Write (Non-blocking)
+    Neo4jService.syncPerson({
+      id: updated.id,
+      userId: user.id,
+      name: updated.full_name || 'Unknown',
+      gender: updated.gender ?? undefined,
+      birthDate: updated.date_of_birth ?? undefined,
+      profileImage: updated.photo_url ?? undefined,
+      createdAt: updated.created_at || new Date().toISOString(),
+    }).catch(err => console.error('Dual-write to Neo4j failed for Person update:', err));
 
     return NextResponse.json({ person: updated });
   } catch (error) {

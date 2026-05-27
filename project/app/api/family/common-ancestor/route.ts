@@ -12,11 +12,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const token = authHeader.split(' ')[1];
-
     const supabaseUser = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,18 +25,18 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const fromId = searchParams.get('from');
-    const toId = searchParams.get('to');
+    const personAId = searchParams.get('personA');
+    const personBId = searchParams.get('personB');
 
-    if (!fromId || !toId) {
-      return NextResponse.json({ error: 'Missing from or to parameters' }, { status: 400 });
+    if (!personAId || !personBId) {
+      return NextResponse.json({ error: 'Missing personA or personB parameters' }, { status: 400 });
     }
 
-    const degree = await Neo4jService.getDegree(fromId, toId);
+    const ancestors = await Neo4jService.getCommonAncestors(personAId, personBId);
 
-    return NextResponse.json({ degree });
+    return NextResponse.json({ ancestors: ancestors || [] });
   } catch (error: any) {
-    console.error('Neo4j Degree API Error:', error);
+    console.error('Neo4j Common Ancestor API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

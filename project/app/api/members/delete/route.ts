@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Neo4jService } from '@/lib/neo4j-service';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -54,6 +55,10 @@ export async function POST(req: NextRequest) {
       .delete()
       .eq('id', person_id)
       .eq('owner_id', user.id);
+
+    // Neo4j Dual-Write: Remove person from graph (Non-blocking)
+    Neo4jService.deletePerson(person_id)
+      .catch(err => console.error('Dual-write to Neo4j failed for Person delete:', err));
 
     return NextResponse.json({ success: true });
   } catch (error) {

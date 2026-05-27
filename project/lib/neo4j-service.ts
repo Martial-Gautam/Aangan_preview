@@ -68,7 +68,7 @@ export const Neo4jService = {
 
     const session = driver.session();
     try {
-      const cypherRelType = relType.toUpperCase().replace(/\s+/g, '_');
+      const cypherRelType = relType.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
       
       // Dynamic relationship types require raw string construction but we use valid sanitize above
       await session.executeWrite((tx) =>
@@ -99,106 +99,51 @@ export const Neo4jService = {
 
     const session = driver.session();
     try {
-      // Find all people connected to the root user's Person node
-      // Note: We use [*..10] to prevent unbounded traversals while grabbing a large tree
-      const result = await session.executeRead((tx) =>
+      // Get all connected nodes
+      const nodeResult = await session.executeRead((tx) =>
         tx.run(
-          `
-        MATCH path = (root:Person {userId: $rootUserId})-[*..10]-(connected:Person)
-        RETURN nodes(path) as pathNodes, relationships(path) as pathRels
-        `,
+          `MATCH (root:Person {userId: $rootUserId})
+           OPTIONAL MATCH (root)-[*..10]-(b:Person)
+           WITH root, collect(DISTINCT b) AS connected
+           RETURN root, connected`,
           { rootUserId }
         )
       );
+      if (nodeResult.records.length === 0) return null;
+      const rootNode = nodeResult.records[0].get('root').properties;
+      const connectedNodes = nodeResult.records[0].get('connected')
+        .filter((n: any) => n !== null)
+        .map((n: any) => n.properties);
+      const allNodes = [rootNode, ...connectedNodes.filter((n: any) => n.id !== rootNode.id)];
 
-      const nodesMap = new Map<string, any>();
-      const edgesMap = new Map<string, any>();
-
-      // Also get the root node in case it's solitary
-      const rootResult = await session.executeRead((tx) =>
-        tx.run('MATCH (root:Person {userId: $rootUserId}) RETURN root', { rootUserId })
-      );
-
-      if (rootResult.records.length > 0) {
-        const rNode = rootResult.records[0].get('root').properties;
-        nodesMap.set(rNode.id, rNode);
-      }
-
-      result.records.forEach((record) => {
-        const pathNodes = record.get('pathNodes');
-        const pathRels = record.get('pathRels');
-        
-        pathNodes.forEach((node: any) => {
-          if (!nodesMap.has(node.properties.id)) {
-            nodesMap.set(node.properties.id, node.properties);
-          }
-        });
-
-        pathRels.forEach((rel: any) => {
-          // Unique key for edge map to avoid duplicates
-          const uniqueEdgeId = `${rel.start.toString()}-${rel.type}-${rel.end.toString()}`;
-          if (!edgesMap.has(uniqueEdgeId)) {
-            edgesMap.set(uniqueEdgeId, {
-              sourceId: nodesMap.get(rel.start.toString())?.id, // Requires manual map resolution if we didn't index properly, 
-              // Wait, in Neo4j driver, rel.start and rel.end are node identity integers.
-              // To get string ids safely, we can query them directly or use graph structure.
-              _rawRel: rel
-            });
-          }
-        });
-      });
-
-      // Let's do a better query to get exact nodes and edges safely mapped with IDs
-      const safeResult = await session.executeRead((tx) =>
+      // Get all edges between these nodes
+      const edgeResult = await session.executeRead((tx) =>
         tx.run(
-          `
-          MATCH (root:Person {userId: $rootUserId})
-          OPTIONAL MATCH (root)-[*..10]-(b:Person)
-          WITH collect(DISTINCT root) + collect(DISTINCT b) AS allNodes
-          UNWIND allNodes AS n
-          OPTIONAL MATCH (n)-[r]->(m:Person)
-          WHERE m IN allNodes
-          RETURN collect(DISTINCT n) as nodes, collect(DISTINCT r) as rels, root.id as selfPersonId
-          `,
+          `MATCH (root:Person {userId: $rootUserId})
+           OPTIONAL MATCH (root)-[*..10]-(b:Person)
+           WITH collect(DISTINCT root) + collect(DISTINCT b) AS allNodes
+           UNWIND allNodes AS n
+           OPTIONAL MATCH (n)-[r]->(m:Person)
+           WHERE m IN allNodes
+           RETURN n.id AS source, type(r) AS type, m.id AS target`,
           { rootUserId }
         )
       );
-
-      if (safeResult.records.length === 0) return null;
-
-      const record = safeResult.records[0];
-      const resNodes = record.get('nodes').map((n: any) => n.properties);
-      const resRels = record.get('rels').filter((r: any) => r !== null).map((r: any) => ({
-        type: r.type,
-        startNodeId: resNodes.find((n: any) => n.id === r.start.toString())?.id, // This identity matching is tricky, let's fix it below.
-      }));
-
-      // A bulletproof edge extraction
-      const edgeResult = await session.executeRead(tx => tx.run(`
-          MATCH (root:Person {userId: $rootUserId})
-          OPTIONAL MATCH (root)-[*..10]-(b:Person)
-          WITH collect(DISTINCT root) + collect(DISTINCT b) AS allNodes
-          UNWIND allNodes AS n
-          OPTIONAL MATCH (n)-[r]->(m:Person)
-          WHERE m IN allNodes
-          RETURN n.id AS source, type(r) AS type, m.id AS target
-      `, { rootUserId }));
-
-      const finalEdges = edgeResult.records
-        .filter(rec => rec.get('type') !== null)
-        .map(rec => ({
+      const edges = edgeResult.records
+        .filter((rec) => rec.get('type') !== null)
+        .map((rec) => ({
           person_id: rec.get('source'),
           related_person_id: rec.get('target'),
           type: rec.get('type'),
         }));
 
       return {
-        self_person_id: record.get('selfPersonId'),
-        nodes: resNodes.map((n: any) => ({
+        self_person_id: rootNode.id,
+        nodes: allNodes.map((n: any) => ({
           ...n,
-          is_self: n.userId === rootUserId
+          is_self: n.userId === rootUserId,
         })),
-        edges: finalEdges
+        edges,
       };
     } catch (e) {
       console.error('Neo4j getFamilyTree error:', e);
@@ -220,7 +165,7 @@ export const Neo4jService = {
       const result = await session.executeRead((tx) =>
         tx.run(
           `
-          MATCH p = shortestPath((a:Person {id: $fromId})-[*]-(b:Person {id: $toId}))
+          MATCH p = shortestPath((a:Person {id: $fromId})-[*..15]-(b:Person {id: $toId}))
           RETURN p
           `,
           { fromId, toId }
@@ -243,5 +188,117 @@ export const Neo4jService = {
     const path = await this.getRelationPath(fromId, toId);
     if (!path) return -1;
     return path.segments ? path.segments.length : 0;
-  }
+  },
+
+  /**
+   * Sync a family node to Neo4j.
+   */
+  async syncFamily(family: { id: string; familyName: string; createdAt?: string }) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite((tx) =>
+        tx.run(
+          `MERGE (f:Family {id: $id})
+           SET f.familyName = $familyName,
+               f.createdAt = $createdAt
+           RETURN f`,
+          {
+            id: family.id,
+            familyName: family.familyName,
+            createdAt: family.createdAt || new Date().toISOString(),
+          }
+        )
+      );
+    } catch (e) {
+      console.error('Neo4j syncFamily error:', e);
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Link a person to a family.
+   */
+  async addPersonToFamily(personId: string, familyId: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite((tx) =>
+        tx.run(
+          `MATCH (p:Person {id: $personId})
+           MATCH (f:Family {id: $familyId})
+           MERGE (p)-[:BELONGS_TO]->(f)
+           RETURN p, f`,
+          { personId, familyId }
+        )
+      );
+    } catch (e) {
+      console.error('Neo4j addPersonToFamily error:', e);
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Find common ancestors between two people.
+   */
+  async getCommonAncestors(personAId: string, personBId: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      const result = await session.executeRead((tx) =>
+        tx.run(
+          `MATCH (a:Person {id: $personAId})
+           MATCH (b:Person {id: $personBId})
+           MATCH pathA = (a)-[:CHILD_OF|FATHER|MOTHER|PARENT_OF*1..10]->(ancestor:Person)
+           MATCH pathB = (b)-[:CHILD_OF|FATHER|MOTHER|PARENT_OF*1..10]->(ancestor)
+           RETURN DISTINCT ancestor.id AS id, ancestor.name AS name,
+                  ancestor.gender AS gender, ancestor.profileImage AS profileImage,
+                  length(pathA) AS distanceFromA, length(pathB) AS distanceFromB
+           ORDER BY distanceFromA + distanceFromB ASC
+           LIMIT 5`,
+          { personAId, personBId }
+        )
+      );
+      return result.records.map((rec) => ({
+        id: rec.get('id'),
+        name: rec.get('name'),
+        gender: rec.get('gender'),
+        profileImage: rec.get('profileImage'),
+        distanceFromA: (rec.get('distanceFromA') as any)?.toNumber?.() ?? rec.get('distanceFromA'),
+        distanceFromB: (rec.get('distanceFromB') as any)?.toNumber?.() ?? rec.get('distanceFromB'),
+      }));
+    } catch (e) {
+      console.error('Neo4j getCommonAncestors error:', e);
+      return null;
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Delete a person node and all its relationships.
+   */
+  async deletePerson(personId: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite((tx) =>
+        tx.run(
+          `MATCH (p:Person {id: $personId})
+           DETACH DELETE p`,
+          { personId }
+        )
+      );
+    } catch (e) {
+      console.error('Neo4j deletePerson error:', e);
+    } finally {
+      await session.close();
+    }
+  },
 };

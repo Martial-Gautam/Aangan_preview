@@ -345,7 +345,7 @@ export default function WelcomePage() {
 
   // --- Landing page ---
   return (
-    <div className="welcome-page min-h-screen" style={{ background: 'transparent' }}>
+    <div className="welcome-page min-h-screen relative" style={{ background: 'transparent' }}>
       {/* Sticky header — appears on scroll */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled

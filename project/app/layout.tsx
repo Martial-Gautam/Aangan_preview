@@ -29,6 +29,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  ),
   title: 'Familiar — Your Family Tree',
   description: 'Connect with your family. Build your tree. Cherish your roots.',
   manifest: '/manifest.json',
@@ -36,6 +40,27 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'Familiar',
+  },
+  openGraph: {
+    title: 'Familiar — Your Family Tree',
+    description: 'Connect with your family. Build your tree. Cherish your roots.',
+    siteName: 'Familiar',
+    images: [
+      {
+        url: '/brand/familiar-logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'Familiar Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Familiar — Your Family Tree',
+    description: 'Connect with your family. Build your tree. Cherish your roots.',
+    images: ['/brand/familiar-logo.png'],
   },
 };
 

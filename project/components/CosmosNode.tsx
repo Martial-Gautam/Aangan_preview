@@ -157,54 +157,7 @@ export default function CosmosNode({
     <group
       position={[position.x, position.z, position.y]}
     >
-      {/* Outer glow sphere (self only) */}
-      {isSelf && (
-        <mesh ref={glowRef}>
-          <sphereGeometry args={[baseSize * 2.0, 24, 24]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={0.06}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
-
-      {/* Secondary glow halo (self only) */}
-      {isSelf && (
-        <mesh>
-          <sphereGeometry args={[baseSize * 2.8, 16, 16]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={0.025}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
-
-      {/* Center person ring indicator — animated rotation */}
-      {isCenterPerson && !isSelf && (
-        <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -baseSize * 0.6, 0]}>
-          <ringGeometry args={[baseSize * 1.3, baseSize * 1.5, 6]} />
-          <meshBasicMaterial color={color} transparent opacity={0.45} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-
-      {/* Sector glow — subtle colored halo for all nodes */}
-      {detailLevel !== 'far' && (
-        <mesh>
-          <sphereGeometry args={[baseSize * 1.5, 16, 16]} />
-          <meshBasicMaterial
-            color={color}
-            transparent
-            opacity={hovered ? 0.08 : 0.03}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      )}
-
-      {/* Main sphere */}
+      {/* Invisible Hit Target for Interactions */}
       <mesh
         ref={meshRef}
         onClick={handleClick}
@@ -212,16 +165,8 @@ export default function CosmosNode({
         onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerLeave={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'default'; }}
       >
-        <sphereGeometry args={[baseSize, detailLevel === 'far' ? 8 : 32, detailLevel === 'far' ? 8 : 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={emissiveColor}
-          emissiveIntensity={0.4}
-          roughness={0.3}
-          metalness={0.15}
-          transparent
-          opacity={opacity}
-        />
+        <sphereGeometry args={[baseSize, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
       {/* Linked indicator dot */}
@@ -243,120 +188,147 @@ export default function CosmosNode({
               opacity: opacity,
               pointerEvents: 'none',
             }}
-            position={[0, baseSize + 0.5, 0]}
+            position={[0, 0, 0]}
           >
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '3px',
-              transform: 'scale(1)',
+              gap: '6px',
+              transform: hovered ? 'scale(1.15)' : 'scale(1)',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
               userSelect: 'none',
             }}>
-              {/* Photo or initials */}
-              {photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt={safeName}
-                  style={{
-                    width: 42, height: 42,
-                    borderRadius: '50%',
-                    border: `2.5px solid ${color}`,
-                    objectFit: 'cover',
-                    boxShadow: `0 0 12px ${color}44, 0 2px 8px rgba(0,0,0,0.3)`,
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: 42, height: 42,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${color}, ${color}88)`,
-                  border: `2.5px solid ${color}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  boxShadow: `0 0 12px ${color}44, 0 2px 8px rgba(0,0,0,0.3)`,
-                  letterSpacing: '0.5px',
-                }}>
-                  {initials}
-                </div>
-              )}
-
-              {/* Name */}
+              
+              {/* Relationship badge — Top */}
               <div style={{
-                fontSize: 13,
-                fontWeight: 500,
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#ffffff',
+                background: `${color}cc`,
+                padding: '3px 10px',
+                borderRadius: 12,
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                boxShadow: `0 2px 8px ${color}55`,
+                backdropFilter: 'blur(8px)',
+                border: `1px solid ${color}`,
+                marginBottom: '2px',
+              }}>
+                {relationshipLabel}
+              </div>
+
+              {/* Photo or initials — Center (replacing sphere) */}
+              <div style={{ position: 'relative' }}>
+                {photoUrl ? (
+                  <img
+                    src={photoUrl}
+                    alt={safeName}
+                    style={{
+                      width: 56, height: 56,
+                      borderRadius: '50%',
+                      border: `3px solid ${color}`,
+                      objectFit: 'cover',
+                      boxShadow: `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.4)`,
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 56, height: 56,
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${color}, ${color}99)`,
+                    border: `3px solid ${color}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: 20,
+                    fontWeight: 700,
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    boxShadow: `0 0 20px ${color}66, 0 4px 12px rgba(0,0,0,0.4)`,
+                    letterSpacing: '0.5px',
+                  }}>
+                    {initials}
+                  </div>
+                )}
+                
+                {/* Self Ring / Indicator */}
+                {isSelf && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: -6,
+                    borderRadius: '50%',
+                    border: `2px dashed ${color}`,
+                    animation: 'spin 10s linear infinite',
+                    opacity: 0.6,
+                  }} />
+                )}
+              </div>
+
+              {/* Name — Bottom */}
+              <div style={{
+                fontSize: 14,
+                fontWeight: 600,
                 color: '#ffffff',
                 textAlign: 'center',
-                maxWidth: 100,
+                maxWidth: 120,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.4)',
+                textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.6)',
                 fontFamily: 'Inter, system-ui, sans-serif',
                 letterSpacing: '-0.01em',
+                marginTop: '2px',
               }}>
                 {safeName}
-              </div>
-
-              {/* Relationship badge — frosted glass */}
-              <div style={{
-                fontSize: 12,
-                fontWeight: 400,
-                color: '#ffffff',
-                background: `${color}cc`,
-                padding: '2px 8px',
-                borderRadius: 8,
-                textTransform: 'uppercase',
-                letterSpacing: '0.6px',
-                fontFamily: 'Inter, system-ui, sans-serif',
-                boxShadow: `0 1px 4px ${color}55`,
-                backdropFilter: 'blur(8px)',
-              }}>
-                {relationshipLabel}{age !== null ? ` · ${age}y` : ''}
               </div>
             </div>
           </Html>
         </Billboard>
       )}
 
-      {/* Medium LOD — name + small badge */}
+      {/* Medium LOD — just initials and name, smaller */}
       {detailLevel === 'medium' && (
         <Billboard follow lockX={false} lockY={false} lockZ={false}>
           <Html
             center
             distanceFactor={10}
             style={{ opacity: opacity * 0.9, pointerEvents: 'none' }}
-            position={[0, baseSize + 0.3, 0]}
+            position={[0, 0, 0]}
           >
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '2px',
+              gap: '4px',
               userSelect: 'none',
             }}>
               <div style={{
+                width: 24, height: 24,
+                borderRadius: '50%',
+                background: color,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
                 fontSize: 10,
+                fontWeight: 600,
+                boxShadow: `0 0 8px ${color}88`,
+              }}>
+                {initials}
+              </div>
+              <div style={{
+                fontSize: 11,
                 fontWeight: 500,
                 color: '#ffffff',
-                textShadow: '0 1px 4px rgba(0,0,0,0.7)',
+                textShadow: '0 1px 6px rgba(0,0,0,0.8)',
                 textAlign: 'center',
                 whiteSpace: 'nowrap',
                 fontFamily: 'Inter, system-ui, sans-serif',
               }}>
                 {safeName}
               </div>
-              <div style={{
-                width: 6, height: 6,
-                borderRadius: '50%',
-                background: color,
-                boxShadow: `0 0 6px ${color}88`,
-              }} />
             </div>
           </Html>
         </Billboard>

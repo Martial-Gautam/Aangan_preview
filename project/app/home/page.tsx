@@ -9,6 +9,7 @@ import { useFamilyStore } from '@/lib/family-store';
 import BrandLogo from '@/components/BrandLogo';
 import { TopRightMenu } from '@/components/TopRightMenu';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
+import type { ViewMode } from '@/components/FamilyCosmos';
 import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import BottomNav from '@/components/BottomNav';
@@ -344,6 +345,7 @@ export default function HomePage() {
   const [showInstallSheet, setShowInstallSheet] = useState(false);
   const [cosmosReady, setCosmosReady] = useState(false);
   const [showCosmos, setShowCosmos] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('fpp');
   const [showNearbySheet, setShowNearbySheet] = useState(false);
   const [nearbyCityQuery, setNearbyCityQuery] = useState('');
   const [nearbyLoading, setNearbyLoading] = useState(false);
@@ -684,6 +686,7 @@ export default function HomePage() {
                 centerKey={centerKey}
                 maxHops={focusHops}
                 searchQuery={searchQuery}
+                viewMode={viewMode}
                 onReady={() => setCosmosReady(true)}
               />
             </div>
@@ -702,6 +705,18 @@ export default function HomePage() {
                 >
                   <Home size={13} />
                   <span>{centerPersonId && centerPersonId !== selfPerson.id ? 'Go Home' : 'My View'}</span>
+                </button>
+
+                {/* Divider */}
+                <div className="h-px bg-white/[0.06] mx-2" />
+
+                {/* View Mode Toggle */}
+                <button
+                  onClick={() => setViewMode(viewMode === 'fpp' ? 'tpp' : 'fpp')}
+                  className="flex items-center gap-2 px-3.5 py-2.5 text-[11px] font-bold w-full transition-all active:scale-95 text-white/70 hover:text-white"
+                >
+                  <Navigation size={13} className={viewMode === 'fpp' ? 'text-blue-400' : ''} />
+                  <span>{viewMode === 'fpp' ? 'FPP Mode' : 'TPP Mode'}</span>
                 </button>
 
                 {/* Divider */}

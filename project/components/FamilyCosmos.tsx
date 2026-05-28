@@ -1,10 +1,13 @@
 'use client';
 
-import { useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
+import { useMemo, useRef, useCallback, useEffect, Suspense, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
+import gsap from 'gsap';
 import './FamilyCosmos.module.css';
+
+export type ViewMode = 'fpp' | 'tpp';
 
 import CosmosNode from './CosmosNode';
 import CosmosEdge from './CosmosEdge';
@@ -12,27 +15,6 @@ import CosmosRings from './CosmosRings';
 import { computeCosmosLayout, type CosmosPosition } from '@/lib/cosmos-layout';
 import type { Person, Relationship } from '@/lib/tree-to-flow';
 import { resolveRelationshipLabel } from '@/lib/relationship-resolver';
-
-// ─── Camera Controller ───────────────────────────────────────
-
-/**
- * Smoothly animate camera to look at a target position.
- * Uses lerp for cinematic movement.
- */
-function CameraAnimator({
-  targetPosition,
-}: {
-  targetPosition: [number, number, number];
-}) {
-  const { camera } = useThree();
-  const targetRef = useRef(new THREE.Vector3(...targetPosition));
-
-  useMemo(() => {
-    targetRef.current.set(...targetPosition);
-  }, [targetPosition]);
-
-  return null;
-}
 
 // ─── Scene Content ───────────────────────────────────────────
 
@@ -46,6 +28,7 @@ interface SceneProps {
   centerKey: number;
   maxHops: number;
   searchQuery: string;
+  viewMode: ViewMode;
   onReady?: () => void;
 }
 
@@ -72,6 +55,7 @@ function Scene({
   centerKey,
   maxHops,
   searchQuery,
+  viewMode,
   onReady,
 }: SceneProps) {
   const controlsRef = useRef<any>(null);
@@ -111,34 +95,69 @@ function Scene({
   const searchLower = searchQuery.toLowerCase().trim();
   const searchActive = searchLower.length > 0;
 
-  // Smooth camera animation target
-  const cameraTargetRef = useRef(new THREE.Vector3(0, 0, 0));
-  const isAnimatingRef = useRef(false);
-
-  // Animate camera to center when centerPersonId changes
+  // Animate camera to center when centerPersonId or viewMode changes
   useEffect(() => {
     const pos = cosmosPositions.get(centerPersonId);
     if (pos && controlsRef.current) {
-      cameraTargetRef.current.set(pos.x, pos.z, pos.y);
-      isAnimatingRef.current = true;
-    }
-  }, [centerPersonId, centerKey, cosmosPositions]);
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+      
+      let camPosX, camPosY, camPosZ;
+      let tgtPosX, tgtPosY, tgtPosZ;
+      let targetFov = 55;
 
-  // Smooth lerp camera animation each frame
-  useFrame(() => {
-    if (isAnimatingRef.current && controlsRef.current) {
-      const controls = controlsRef.current;
-      controls.target.lerp(cameraTargetRef.current, 0.08);
-      controls.update();
-
-      // Stop animating once close enough
-      if (controls.target.distanceTo(cameraTargetRef.current) < 0.01) {
-        controls.target.copy(cameraTargetRef.current);
-        controls.update();
-        isAnimatingRef.current = false;
+      if (viewMode === 'fpp') {
+        // FPP: camera at center node, looking outward
+        // On mobile, we increase the FOV significantly to show more nodes horizontally
+        targetFov = isMobile ? 95 : 75;
+        
+        camPosX = pos.x;
+        camPosY = pos.z + 0.5;
+        camPosZ = pos.y;
+        
+        // Target is slightly in front of the camera, so OrbitControls rotates the camera around this close point
+        tgtPosX = pos.x;
+        tgtPosY = pos.z + 0.5;
+        tgtPosZ = pos.y - 0.1;
+      } else {
+        // TPP: camera above, looking at the center node
+        targetFov = isMobile ? 65 : 55;
+        
+        tgtPosX = pos.x;
+        tgtPosY = pos.z;
+        tgtPosZ = pos.y;
+        
+        camPosX = pos.x;
+        camPosY = 12;
+        camPosZ = pos.y + 10;
       }
+
+      // Animate Camera Position
+      gsap.to(camera.position, {
+        x: camPosX,
+        y: camPosY,
+        z: camPosZ,
+        duration: 1.2,
+        ease: 'power3.inOut',
+      });
+
+      // Animate OrbitControls Target
+      gsap.to(controlsRef.current.target, {
+        x: tgtPosX,
+        y: tgtPosY,
+        z: tgtPosZ,
+        duration: 1.2,
+        ease: 'power3.inOut',
+      });
+
+      // Animate FOV for dramatic transition
+      gsap.to(camera, {
+        fov: targetFov,
+        duration: 1.2,
+        ease: 'power3.inOut',
+        onUpdate: () => camera.updateProjectionMatrix(),
+      });
     }
-  });
+  }, [centerPersonId, centerKey, cosmosPositions, viewMode, camera]);
 
   // Handle center change + camera animation
   const handleCenterChange = useCallback((personId: string) => {
@@ -215,21 +234,21 @@ function Scene({
         speed={0.2}
       />
 
-      {/* Camera controls — Google Maps style traversal */}
+      {/* Camera controls — adapts to FPP/TPP mode */}
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enablePan={true}
+        enablePan={viewMode === 'tpp'}
         enableZoom={true}
         enableRotate={true}
         screenSpacePanning={true}
-        minPolarAngle={Math.PI / 8}
-        maxPolarAngle={Math.PI / 2.2}
-        minDistance={2}
-        maxDistance={30}
+        minPolarAngle={viewMode === 'fpp' ? Math.PI / 6 : Math.PI / 8}
+        maxPolarAngle={viewMode === 'fpp' ? Math.PI / 1.2 : Math.PI / 2.2}
+        minDistance={viewMode === 'fpp' ? 0.1 : 2}
+        maxDistance={viewMode === 'fpp' ? 0.1 : 30}
         enableDamping={true}
         dampingFactor={0.08}
-        rotateSpeed={0.4}
+        rotateSpeed={viewMode === 'fpp' ? 0.3 : 0.4}
         zoomSpeed={0.6}
         panSpeed={0.8}
         touches={{
@@ -239,7 +258,7 @@ function Scene({
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE,
           MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: THREE.MOUSE.PAN,
+          RIGHT: viewMode === 'fpp' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
         }}
         target={[0, 0, 0]}
       />
@@ -299,8 +318,6 @@ function Scene({
         );
       })}
 
-      {/* Camera position animator */}
-      <CameraAnimator targetPosition={[0, 0, 0]} />
       <SceneReady onReady={onReady} />
     </>
   );
@@ -318,6 +335,7 @@ interface FamilyCosmosProps {
   centerKey: number;
   maxHops: number;
   searchQuery: string;
+  viewMode: ViewMode;
   onReady?: () => void;
 }
 

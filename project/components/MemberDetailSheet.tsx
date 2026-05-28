@@ -173,7 +173,7 @@ export default function MemberDetailSheet({
 
   const safeName = person.full_name || 'Unknown';
   const initials = safeName.split(' ').map(n => n ? n[0] : '').join('').toUpperCase().slice(0, 2);
-  const label = relationshipMeta?.term.hindi || LABEL_MAP[relationshipType] || relationshipType;
+  const label = relationshipMeta?.term.english || LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
   const isLinked = person.user_id !== null || !!messageTargetId;
   const canEdit = !isSelf;
@@ -261,9 +261,7 @@ export default function MemberDetailSheet({
               </span>
             )}
           </div>
-          {relationshipMeta?.term.english && relationshipMeta.term.english !== label && (
-            <p className="text-[11px] text-gray-500 mt-1">{relationshipMeta.term.english}</p>
-          )}
+
           {relationshipMeta?.multiplePaths && (
             <p className="text-[10px] text-amber-600 mt-1">Multiple relations detected - showing nearest</p>
           )}
@@ -273,9 +271,8 @@ export default function MemberDetailSheet({
               <div className="mt-2 space-y-2">
                 {relationshipMeta.alternatives.map((alt, index) => (
                   <div key={`${alt.chainEnglish}-${index}`} className="bg-gray-100/50 px-3 py-2 rounded-xl">
-                    <p className="font-semibold text-gray-700">{alt.term.hindi} - {alt.term.english}</p>
+                    <p className="font-semibold text-gray-700">{alt.term.english}</p>
                     <p className="mt-1">{alt.chainEnglish}</p>
-                    <p className="mt-0.5">{alt.chainHindi}</p>
                   </div>
                 ))}
               </div>

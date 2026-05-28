@@ -94,7 +94,7 @@ function Scene({
 
     for (const personId of Array.from(visibleIds)) {
       const result = resolveRelationshipLabel(selfPersonId, personId, people, relationships);
-      const label = result.term.hindi || result.term.english || 'Relative';
+      const label = result.term.english || 'Relative';
       labels.set(personId, label);
     }
 

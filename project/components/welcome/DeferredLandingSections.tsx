@@ -196,8 +196,12 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
 
           <div className="grid sm:grid-cols-2 gap-4">
             {problemItems.map((item, index) => (
-              <button
+              <motion.button
                 key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.4, ease: 'easeOut', delay: index * 0.1 }}
                 onMouseEnter={() => setHoveredProblem(index)}
                 onFocus={() => setHoveredProblem(index)}
                 className={`text-left rounded-2xl border p-5 transition-all duration-200 ${
@@ -213,7 +217,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
                 </div>
                 <h3 className="font-bold text-gray-950 text-sm mb-1">{item.title}</h3>
                 <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -232,8 +236,12 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {featureItems.map((item, index) => (
-                  <button
+                  <motion.button
                     key={item.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.4, ease: 'easeOut', delay: index * 0.1 }}
                     onMouseEnter={() => setHoveredFeature(index)}
                     onFocus={() => setHoveredFeature(index)}
                     className={`group text-left rounded-2xl border p-5 transition-all duration-200 ${
@@ -247,7 +255,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
                     </div>
                     <h3 className={`font-bold text-base mb-2 ${hoveredFeature === index ? 'text-white' : 'text-gray-950'}`}>{item.title}</h3>
                     <p className={`text-sm leading-relaxed ${hoveredFeature === index ? 'text-white/75' : 'text-gray-600'}`}>{item.desc}</p>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>

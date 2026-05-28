@@ -159,6 +159,27 @@ function Scene({
     }
   }, [centerPersonId, centerKey, cosmosPositions, viewMode, camera]);
 
+  // Handle manual interaction to stop GSAP animations
+  useEffect(() => {
+    const handlePointerDown = () => {
+      // Instantly kill any ongoing cinematic camera flights if the user touches/clicks the screen
+      gsap.killTweensOf(camera.position);
+      gsap.killTweensOf(camera);
+      if (controlsRef.current) {
+        gsap.killTweensOf(controlsRef.current.target);
+      }
+    };
+    
+    // Attach to the canvas parent document
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
+    
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [camera]);
+
   // Handle center change + camera animation
   const handleCenterChange = useCallback((personId: string) => {
     onCenterChange(personId);
@@ -248,9 +269,9 @@ function Scene({
         maxDistance={viewMode === 'fpp' ? 0.1 : 30}
         enableDamping={true}
         dampingFactor={0.08}
-        rotateSpeed={viewMode === 'fpp' ? -0.4 : -0.5}
-        zoomSpeed={0.8}
-        panSpeed={-0.8}
+        rotateSpeed={viewMode === 'fpp' ? -0.7 : -0.8}
+        zoomSpeed={1.2}
+        panSpeed={-1.2}
         touches={{
           ONE: THREE.TOUCH.ROTATE,
           TWO: THREE.TOUCH.DOLLY_PAN,

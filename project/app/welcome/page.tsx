@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
-import { motion } from 'motion/react';
+import Lenis from 'lenis';
+import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield,
   Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network
@@ -35,6 +36,32 @@ export default function WelcomePage() {
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const heroMeasureFrameRef = useRef<number | null>(null);
+
+  const { scrollY } = useScroll();
+  const heroBackgroundY = useTransform(scrollY, [0, 1000], [0, 350]);
+  const heroTextY = useTransform(scrollY, [0, 500], [0, 120]);
+  const heroTextOpacity = useTransform(scrollY, [0, 350], [1, 0]);
+  const floatingCuesY = useTransform(scrollY, [0, 800], [0, -200]);
+
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => lenis.destroy();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -372,6 +399,7 @@ export default function WelcomePage() {
         <motion.div
           className="absolute inset-0 z-[1] pointer-events-none opacity-65"
           aria-hidden="true"
+          style={{ y: heroBackgroundY }}
           animate={enableMotion ? { scale: [1, 1.018, 1], opacity: [0.46, 0.58, 0.5] } : false}
           transition={enableMotion ? { duration: 16, repeat: Infinity, ease: 'easeInOut' } : undefined}
         >
@@ -447,38 +475,43 @@ export default function WelcomePage() {
         </div>
 
         {/* Floating family cues */}
-        <motion.div
-          className="absolute z-[3] top-24 left-7 w-10 h-10 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={enableMotion ? { y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] } : false}
-          transition={enableMotion ? { duration: 6, repeat: Infinity, ease: 'easeInOut' } : undefined}
-        >
-          <TreePine size={16} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] top-32 right-12 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          style={{ animationDelay: '1s' }}
-          animate={enableMotion ? { y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] } : false}
-          transition={enableMotion ? { duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 } : undefined}
-        >
-          <MessageCircle size={15} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] bottom-40 left-14 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          style={{ animationDelay: '2s' }}
-          animate={enableMotion ? { y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] } : false}
-          transition={enableMotion ? { duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 } : undefined}
-        >
-          <CalendarDays size={15} className="text-white/75" />
-        </motion.div>
-        <motion.div
-          className="absolute z-[3] bottom-32 right-8 w-11 h-11 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
-          animate={enableMotion ? { y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] } : false}
-          transition={enableMotion ? { duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 } : undefined}
-        >
-          <Network size={17} className="text-white/75" />
+        <motion.div style={{ y: floatingCuesY }} className="absolute inset-0 pointer-events-none z-[3]">
+          <motion.div
+            className="absolute top-24 left-7 w-10 h-10 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+            animate={enableMotion ? { y: [0, -10, 0], opacity: [0.55, 0.9, 0.65] } : false}
+            transition={enableMotion ? { duration: 6, repeat: Infinity, ease: 'easeInOut' } : undefined}
+          >
+            <TreePine size={16} className="text-white/75" />
+          </motion.div>
+          <motion.div
+            className="absolute top-32 right-12 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+            style={{ animationDelay: '1s' }}
+            animate={enableMotion ? { y: [0, -8, 0], opacity: [0.45, 0.85, 0.55] } : false}
+            transition={enableMotion ? { duration: 5.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 } : undefined}
+          >
+            <MessageCircle size={15} className="text-white/75" />
+          </motion.div>
+          <motion.div
+            className="absolute bottom-40 left-14 w-9 h-9 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+            style={{ animationDelay: '2s' }}
+            animate={enableMotion ? { y: [0, -9, 0], opacity: [0.5, 0.9, 0.6] } : false}
+            transition={enableMotion ? { duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.9 } : undefined}
+          >
+            <CalendarDays size={15} className="text-white/75" />
+          </motion.div>
+          <motion.div
+            className="absolute bottom-32 right-8 w-11 h-11 rounded-full bg-white/[0.16] backdrop-blur-md border border-white/25 flex items-center justify-center shadow-lg shadow-black/10"
+            animate={enableMotion ? { y: [0, -11, 0], opacity: [0.45, 0.9, 0.6] } : false}
+            transition={enableMotion ? { duration: 6.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 } : undefined}
+          >
+            <Network size={17} className="text-white/75" />
+          </motion.div>
         </motion.div>
 
-        <div className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28">
+        <motion.div
+          className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28"
+          style={{ y: heroTextY, opacity: heroTextOpacity }}
+        >
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07121e]/60 px-3.5 py-2 text-white/90 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
               <Sparkles size={15} className="text-[#ffd98f]" />
@@ -591,7 +624,7 @@ export default function WelcomePage() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Scroll indicator */}
         <button onClick={scrollToFeatures} className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 text-[#17324f]/60 hover:text-[#17324f] transition-colors animate-bounce">

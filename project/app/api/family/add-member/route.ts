@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { personId, name, gender, birthDate, profileImage, familyId } = body;
+    const { personId, name, gender, birthDate, profileImage, familyId, isSelf } = body;
 
     if (!personId || !name) {
       return NextResponse.json({ error: 'personId and name are required' }, { status: 400 });
@@ -33,7 +33,9 @@ export async function POST(req: NextRequest) {
 
     await Neo4jService.syncPerson({
       id: personId,
-      userId: user.id,
+      userId: null,
+      ownerId: user.id,
+      isSelf: isSelf || false,
       name,
       gender: gender || undefined,
       birthDate: birthDate || undefined,

@@ -2,7 +2,9 @@ import { getNeo4jDriver } from './neo4j';
 
 export interface Neo4jPerson {
   id: string;
-  userId?: string;
+  userId?: string | null;
+  ownerId: string;
+  isSelf: boolean;
   name: string;
   gender?: string;
   birthDate?: string;
@@ -34,6 +36,8 @@ export const Neo4jService = {
           `
         MERGE (p:Person {id: $id})
         SET p.userId = $userId,
+            p.ownerId = $ownerId,
+            p.isSelf = $isSelf,
             p.name = $name,
             p.gender = $gender,
             p.birthDate = $birthDate,
@@ -44,6 +48,8 @@ export const Neo4jService = {
           {
             id: person.id,
             userId: person.userId || null,
+            ownerId: person.ownerId,
+            isSelf: person.isSelf,
             name: person.name,
             gender: person.gender || null,
             birthDate: person.birthDate || null,
@@ -102,7 +108,7 @@ export const Neo4jService = {
       // Get all connected nodes
       const nodeResult = await session.executeRead((tx) =>
         tx.run(
-          `MATCH (root:Person {userId: $rootUserId})
+          `MATCH (root:Person {ownerId: $rootUserId, isSelf: true})
            OPTIONAL MATCH (root)-[*..10]-(b:Person)
            WITH root, collect(DISTINCT b) AS connected
            RETURN root, connected`,
@@ -119,7 +125,7 @@ export const Neo4jService = {
       // Get all edges between these nodes
       const edgeResult = await session.executeRead((tx) =>
         tx.run(
-          `MATCH (root:Person {userId: $rootUserId})
+          `MATCH (root:Person {ownerId: $rootUserId, isSelf: true})
            OPTIONAL MATCH (root)-[*..10]-(b:Person)
            WITH collect(DISTINCT root) + collect(DISTINCT b) AS allNodes
            UNWIND allNodes AS n
@@ -134,14 +140,20 @@ export const Neo4jService = {
         .map((rec) => ({
           person_id: rec.get('source'),
           related_person_id: rec.get('target'),
-          type: rec.get('type'),
+          relationship_type: String(rec.get('type')).toLowerCase(),
         }));
 
       return {
         self_person_id: rootNode.id,
         nodes: allNodes.map((n: any) => ({
           ...n,
-          is_self: n.userId === rootUserId,
+          full_name: n.name,
+          date_of_birth: n.birthDate,
+          photo_url: n.profileImage,
+          user_id: n.userId,
+          owner_id: n.ownerId,
+          created_at: n.createdAt,
+          is_self: n.isSelf,
         })),
         edges,
       };

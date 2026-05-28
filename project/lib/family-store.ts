@@ -136,8 +136,8 @@ export const useFamilyStore = create<FamilyState>()(
         relationships: edges,
         familyCount: Math.max(0, nodes.length - 1),
         dataLoading: false,
-        // Initialize center to self on first load, keep it if already set
-        centerPersonId: prev.centerPersonId || self.id,
+        // Always reset center to self on data load — the logged-in user is always the center
+        centerPersonId: self.id,
       }));
     } catch (err) {
       console.warn('Family tree API unavailable, using fallback.', err);
@@ -161,14 +161,14 @@ export const useFamilyStore = create<FamilyState>()(
         ? relationshipRows.filter((r) => r.person_id === selfRow.id).length
         : Math.max(0, peopleRows.length - 1);
 
-      set((prev) => ({
+      set((state) => ({
         selfPerson: selfRow,
         selfPersonId: selfRow?.id || null,
         people: peopleRows,
         relationships: relationshipRows,
         familyCount: Math.max(0, directFamilyCount),
         dataLoading: false,
-        centerPersonId: prev.centerPersonId || selfRow?.id || null,
+        centerPersonId: selfRow?.id || null,
       }));
     } catch (err) {
       console.error('Fallback family query failed:', err);

@@ -30,7 +30,8 @@ export default function TreeNode({ nodeData }: TreeNodeProps) {
   const relType = attributes.relationshipType;
   const colors = RELATIONSHIP_COLORS[relType] || RELATIONSHIP_COLORS.self;
   const label = RELATIONSHIP_LABELS[relType] || relType;
-  const initials = name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+  const safeName = name || 'Unknown';
+  const initials = safeName.split(' ').map((n) => n ? n[0] : '').join('').toUpperCase().slice(0, 2) || '?';
   const isSelf = attributes.isSelf;
 
   return (

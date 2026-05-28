@@ -171,7 +171,8 @@ export default function MemberDetailSheet({
 
   if (!person) return null;
 
-  const initials = person.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const safeName = person.full_name || 'Unknown';
+  const initials = safeName.split(' ').map(n => n ? n[0] : '').join('').toUpperCase().slice(0, 2);
   const label = relationshipMeta?.term.hindi || LABEL_MAP[relationshipType] || relationshipType;
   const badgeColor = COLOR_MAP[relationshipType] || COLOR_MAP.relative;
   const isLinked = person.user_id !== null || !!messageTargetId;
@@ -304,12 +305,12 @@ export default function MemberDetailSheet({
           {immediateFamily.length > 0 && (
             <div className="w-full mt-5">
               <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-3 text-left px-1">
-                {isSelf ? 'Your Family' : `${person.full_name.split(' ')[0]}'s Family`}
+                {isSelf ? 'Your Family' : `${safeName.split(' ')[0]}'s Family`}
               </h3>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-                {immediateFamily.slice(0, 8).map(({ person: familyMember, relType }) => (
+                {immediateFamily.slice(0, 8).map(({ person: familyMember, relType }, idx) => (
                   <button
-                    key={familyMember.id}
+                    key={`${familyMember.id}-${relType}-${idx}`}
                     onClick={() => {
                       onClose();
                       setTimeout(() => useFamilyStore.getState().setSelectedPerson(familyMember.id), 300);
@@ -320,11 +321,11 @@ export default function MemberDetailSheet({
                       {familyMember.photo_url ? (
                         <img src={familyMember.photo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        familyMember.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                        (familyMember.full_name || 'Unknown').split(' ').map(n => n ? n[0] : '').join('').toUpperCase().slice(0, 2)
                       )}
                     </div>
                     <span className="text-[10px] font-semibold text-gray-700 truncate max-w-[60px] text-center">
-                      {familyMember.full_name.split(' ')[0]}
+                      {(familyMember.full_name || 'Unknown').split(' ')[0]}
                     </span>
                     <span className="meta-text text-gray-400 uppercase tracking-wider">
                       {relType}

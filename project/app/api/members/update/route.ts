@@ -83,7 +83,9 @@ export async function POST(req: NextRequest) {
     // Neo4j Dual-Write (Non-blocking)
     Neo4jService.syncPerson({
       id: updated.id,
-      userId: user.id,
+      userId: updated.user_id || null,
+      ownerId: updated.owner_id,
+      isSelf: updated.is_self || false,
       name: updated.full_name || 'Unknown',
       gender: updated.gender ?? undefined,
       birthDate: updated.date_of_birth ?? undefined,

@@ -25,7 +25,9 @@ async function runMigration() {
   for (const person of people) {
     await Neo4jService.syncPerson({
       id: person.id,
-      userId: person.owner_id,
+      userId: person.user_id,
+      ownerId: person.owner_id,
+      isSelf: person.is_self || false,
       name: person.full_name || 'Unknown',
       gender: person.gender,
       birthDate: person.date_of_birth,

@@ -308,7 +308,9 @@ export async function POST(req: NextRequest) {
       if (person) {
         Neo4jService.syncPerson({
           id: person.id,
-          userId: user.id,
+          userId: (person as any).user_id || null,
+          ownerId: user.id,
+          isSelf: person.is_self || false,
           name: person.full_name || 'Unknown',
           gender: person.gender ?? undefined,
           birthDate: person.date_of_birth ?? undefined,

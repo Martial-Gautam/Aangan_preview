@@ -71,6 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    // Clear the persisted family store so stale data doesn't bleed across accounts
+    try {
+      localStorage.removeItem('familiar-family-cache');
+    } catch {}
     await supabase.auth.signOut();
   };
 

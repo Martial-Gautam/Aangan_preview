@@ -94,7 +94,8 @@ export default function CosmosNode({
   const color = SECTOR_COLORS[position.sector] || '#9ca3af';
   const emissiveColor = SECTOR_EMISSIVE[position.sector] || '#555';
   const age = useMemo(() => calculateAge(dateOfBirth), [dateOfBirth]);
-  const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  const safeName = name || 'Unknown';
+  const initials = safeName.split(' ').map((n: string) => n ? n[0] : '').join('').toUpperCase().slice(0, 2);
 
   // Node size based on relationship
   const baseSize = isSelf ? 0.6 : isCenterPerson ? 0.5 : 0.4;
@@ -256,7 +257,7 @@ export default function CosmosNode({
               {photoUrl ? (
                 <img
                   src={photoUrl}
-                  alt={name}
+                  alt={safeName}
                   style={{
                     width: 42, height: 42,
                     borderRadius: '50%',
@@ -299,7 +300,7 @@ export default function CosmosNode({
                 fontFamily: 'Inter, system-ui, sans-serif',
                 letterSpacing: '-0.01em',
               }}>
-                {name}
+                {safeName}
               </div>
 
               {/* Relationship badge — frosted glass */}
@@ -348,7 +349,7 @@ export default function CosmosNode({
                 whiteSpace: 'nowrap',
                 fontFamily: 'Inter, system-ui, sans-serif',
               }}>
-                {name}
+                {safeName}
               </div>
               <div style={{
                 width: 6, height: 6,

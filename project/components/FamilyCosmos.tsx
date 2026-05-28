@@ -111,12 +111,12 @@ function Scene({
         targetFov = isMobile ? 95 : 75;
         
         camPosX = pos.x;
-        camPosY = pos.z + 0.5;
+        camPosY = pos.z + 0.1;
         camPosZ = pos.y;
         
         // Target is slightly in front of the camera, so OrbitControls rotates the camera around this close point
         tgtPosX = pos.x;
-        tgtPosY = pos.z + 0.5;
+        tgtPosY = pos.z + 0.1;
         tgtPosZ = pos.y - 0.1;
       } else {
         // TPP: camera above, looking at the center node
@@ -314,6 +314,7 @@ function Scene({
             onDoubleClick={handleCenterChange}
             isHighlighted={isHighlighted}
             searchActive={searchActive}
+            viewMode={viewMode}
           />
         );
       })}

@@ -52,6 +52,7 @@ interface CosmosNodeProps {
   onDoubleClick: (personId: string) => void;
   isHighlighted?: boolean;
   searchActive?: boolean;
+  viewMode: 'fpp' | 'tpp';
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -84,10 +85,9 @@ export default function CosmosNode({
   onDoubleClick,
   isHighlighted,
   searchActive,
+  viewMode,
 }: CosmosNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { camera } = useThree();
 
@@ -100,38 +100,7 @@ export default function CosmosNode({
   // Node size based on relationship
   const baseSize = isSelf ? 0.6 : isCenterPerson ? 0.5 : 0.4;
 
-  // Pulse animation for self node + hover
-  useFrame((state) => {
-    if (!meshRef.current) return;
 
-    // Hover scale
-    const targetScale = hovered ? 1.18 : 1.0;
-    meshRef.current.scale.lerp(
-      new THREE.Vector3(targetScale, targetScale, targetScale),
-      0.1
-    );
-
-    // Self pulsing glow
-    if (glowRef.current && isSelf) {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 1.5) * 0.18;
-      glowRef.current.scale.set(pulse, pulse, pulse);
-    }
-
-    // Center person ring rotation
-    if (ringRef.current && isCenterPerson) {
-      ringRef.current.rotation.z += 0.005;
-    }
-
-    // Emissive intensity based on hover
-    const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-    if (mat && mat.emissiveIntensity !== undefined) {
-      mat.emissiveIntensity = THREE.MathUtils.lerp(
-        mat.emissiveIntensity,
-        hovered ? 1.0 : 0.4,
-        0.1
-      );
-    }
-  });
 
   // LOD: compute detail level based on hop distance
   const detailLevel: 'full' | 'medium' | 'far' = useMemo(() => {
@@ -142,6 +111,9 @@ export default function CosmosNode({
 
   // Search dimming
   const opacity = searchActive && isHighlighted === false ? 0.12 : 1;
+
+  // In FPP mode, the camera is inside the center person's node, so we hide their UI to prevent it from blocking the screen
+  const hideLabels = isCenterPerson && viewMode === 'fpp';
 
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
@@ -169,16 +141,10 @@ export default function CosmosNode({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Linked indicator dot */}
-      {isLinked && !isSelf && detailLevel !== 'far' && (
-        <mesh position={[baseSize * 0.7, baseSize * 0.5, 0]}>
-          <sphereGeometry args={[0.09, 12, 12]} />
-          <meshBasicMaterial color="#22c55e" />
-        </mesh>
-      )}
+
 
       {/* HTML Labels — LOD controlled */}
-      {detailLevel === 'full' && (
+      {!hideLabels && detailLevel === 'full' && (
         <Billboard follow lockX={false} lockY={false} lockZ={false}>
           <Html
             center
@@ -264,6 +230,21 @@ export default function CosmosNode({
                     opacity: 0.6,
                   }} />
                 )}
+
+                {/* Linked User Indicator */}
+                {isLinked && !isSelf && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 14,
+                    height: 14,
+                    backgroundColor: '#22c55e',
+                    borderRadius: '50%',
+                    border: '2px solid #060b16',
+                    boxShadow: '0 0 6px rgba(34, 197, 94, 0.6)'
+                  }} title="Registered User" />
+                )}
               </div>
 
               {/* Name — Bottom */}
@@ -289,7 +270,7 @@ export default function CosmosNode({
       )}
 
       {/* Medium LOD — just initials and name, smaller */}
-      {detailLevel === 'medium' && (
+      {!hideLabels && detailLevel === 'medium' && (
         <Billboard follow lockX={false} lockY={false} lockZ={false}>
           <Html
             center

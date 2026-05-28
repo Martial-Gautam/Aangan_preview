@@ -44,7 +44,7 @@ function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef
   const isHovered = hoveredIndex === index;
 
   return (
-    <motion.div style={{ y: ySpring, opacity: opacityRaw }} className={`relative ${isOddColumn ? 'mt-10' : ''}`}>
+    <motion.div style={{ y: ySpring, opacity: opacityRaw }} className={`relative ${isOddColumn ? 'mt-10' : ''}`} onViewportLeave={() => { if (hoveredIndex === index) setHovered(-1); }}>
       <motion.button
         animate={{ 
           y: isHovered ? -12 : [0, -4 - (index % 3), 0],
@@ -57,6 +57,7 @@ function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef
         }
         onMouseEnter={() => setHovered(index)}
         onFocus={() => setHovered(index)}
+        onClick={() => setHovered(isHovered ? -1 : index)}
         className={`w-full text-left rounded-2xl border p-5 transition-colors duration-200 ${
           isHovered
             ? 'bg-white border-[#2A4365]/25 shadow-2xl shadow-gray-900/12 z-10'
@@ -75,12 +76,13 @@ function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="lg:hidden overflow-hidden w-full mt-4 rounded-[1.35rem]"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden w-full mt-4 rounded-[1.35rem] overflow-hidden"
           >
-            <FeatureSnapshot activeFeature={item} />
+            <ProblemSnapshot activeProblem={item} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -156,6 +158,59 @@ function FeatureScrollCard({ item, index, hoveredIndex, setHovered, containerRef
   );
 }
 
+
+function ProblemSnapshot({ activeProblem }: { activeProblem: any }) {
+  return (
+
+              <motion.div
+                key={activeProblem.title}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="rounded-3xl border border-gray-200 bg-white shadow-xl shadow-gray-900/6 overflow-hidden"
+              >
+                <div className="bg-[#07121e] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Problem to product</p>
+                    <h3 className="text-white font-bold text-lg mt-1">{activeProblem.previewTitle}</h3>
+                  </div>
+                  <activeProblem.icon size={22} className="text-white/70" />
+                </div>
+
+                <div className="relative h-56 rounded-2xl bg-[linear-gradient(145deg,rgba(31,64,96,0.88),rgba(8,21,34,0.96))] border border-white/10 overflow-hidden">
+                  <svg viewBox="0 0 360 230" className="absolute inset-0 h-full w-full">
+                    <path d="M70 68 C128 94 156 116 180 138" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" fill="none" />
+                    <path d="M180 138 C218 105 254 84 304 62" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" fill="none" />
+                    <path d="M180 138 L110 184" stroke="#8edbff" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+                    <path d="M180 138 L250 184" stroke="#ffd98f" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+                    {activeProblem.from.map((label: string, index: number) => {
+                      const points = [[70, 68], [180, 40], [304, 62]][index] || [70 + index * 100, 70];
+                      return (
+                        <g key={label}>
+                          <circle cx={points[0]} cy={points[1]} r="24" fill="#ffffff" fillOpacity="0.92" />
+                          <text x={points[0]} y={points[1] + 4} textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#17324f">{label}</text>
+                        </g>
+                      );
+                    })}
+                    <circle cx="180" cy="138" r="31" fill="#ffd98f" fillOpacity="0.96" />
+                    <text x="180" y="135" textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">Familiar</text>
+                    <text x="180" y="147" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Core</text>
+                    <circle cx="110" cy="184" r="20" fill="#b7e5ff" />
+                    <circle cx="250" cy="184" r="20" fill="#bff3d5" />
+                    <text x="110" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Tree</text>
+                    <text x="250" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">{activeProblem.to}</text>
+                  </svg>
+                </div>
+              </div>
+              <div className="p-5">
+                  <p className="text-sm font-semibold text-gray-950 mb-1">{activeProblem.title}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{activeProblem.solution}</p>
+                </div>
+              </motion.div>
+  );
+}
 
 function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
   return (
@@ -383,12 +438,12 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
         className="fixed top-0 right-2 md:right-6 z-[5] pointer-events-none hidden md:flex items-center justify-center h-screen"
         style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', y: watermarkY }}
       >
-        <span className="text-[16vh] font-black uppercase tracking-[0.25em] brand-wordmark whitespace-nowrap text-[#2A4365]/[0.07] dark:text-white/[0.05]" style={{ mixBlendMode: 'multiply' }}>
+        <span className="text-[16vh] font-black uppercase tracking-[0.25em] brand-wordmark whitespace-nowrap text-[#2A4365]/[0.15] dark:text-white/[0.12]" style={{ mixBlendMode: 'multiply' }}>
           Familiar
         </span>
       </motion.div>
       <motion.div 
-        className="fixed bottom-4 left-0 right-0 z-[15] pointer-events-none md:hidden flex items-center whitespace-nowrap overflow-hidden" style={{ mixBlendMode: 'multiply' }}
+        className="fixed bottom-0 left-0 right-0 z-[15] pointer-events-none md:hidden flex flex-col justify-end whitespace-nowrap overflow-hidden pt-12 pb-2 bg-gradient-to-t from-white via-white/80 to-transparent" style={{ mixBlendMode: 'multiply' }}
       >
         <motion.span 
           style={{ x: watermarkX }} 
@@ -417,55 +472,11 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
               </p>
             </motion.div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeProblem.title}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="rounded-3xl border border-gray-200 bg-white shadow-xl shadow-gray-900/6 overflow-hidden"
-              >
-                <div className="bg-[#07121e] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Problem to product</p>
-                    <h3 className="text-white font-bold text-lg mt-1">{activeProblem.previewTitle}</h3>
-                  </div>
-                  <activeProblem.icon size={22} className="text-white/70" />
-                </div>
-
-                <div className="relative h-56 rounded-2xl bg-[linear-gradient(145deg,rgba(31,64,96,0.88),rgba(8,21,34,0.96))] border border-white/10 overflow-hidden">
-                  <svg viewBox="0 0 360 230" className="absolute inset-0 h-full w-full">
-                    <path d="M70 68 C128 94 156 116 180 138" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 C218 105 254 84 304 62" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 L110 184" stroke="#8edbff" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 L250 184" stroke="#ffd98f" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-                    {activeProblem.from.map((label, index) => {
-                      const points = [[70, 68], [180, 40], [304, 62]][index] || [70 + index * 100, 70];
-                      return (
-                        <g key={label}>
-                          <circle cx={points[0]} cy={points[1]} r="24" fill="#ffffff" fillOpacity="0.92" />
-                          <text x={points[0]} y={points[1] + 4} textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#17324f">{label}</text>
-                        </g>
-                      );
-                    })}
-                    <circle cx="180" cy="138" r="31" fill="#ffd98f" fillOpacity="0.96" />
-                    <text x="180" y="135" textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">Familiar</text>
-                    <text x="180" y="147" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Core</text>
-                    <circle cx="110" cy="184" r="20" fill="#b7e5ff" />
-                    <circle cx="250" cy="184" r="20" fill="#bff3d5" />
-                    <text x="110" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Tree</text>
-                    <text x="250" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">{activeProblem.to}</text>
-                  </svg>
-                </div>
-              </div>
-              <div className="p-5">
-                  <p className="text-sm font-semibold text-gray-950 mb-1">{activeProblem.title}</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{activeProblem.solution}</p>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            <div className="hidden lg:block">
+              <AnimatePresence mode="wait">
+                <ProblemSnapshot activeProblem={activeProblem} />
+              </AnimatePresence>
+            </div>
           </div>
 
           <div ref={problemGridRef} className="grid sm:grid-cols-2 gap-x-4 gap-y-2 relative -mt-5">

@@ -248,9 +248,9 @@ function Scene({
         maxDistance={viewMode === 'fpp' ? 0.1 : 30}
         enableDamping={true}
         dampingFactor={0.08}
-        rotateSpeed={viewMode === 'fpp' ? 0.3 : 0.4}
-        zoomSpeed={0.6}
-        panSpeed={0.8}
+        rotateSpeed={viewMode === 'fpp' ? -0.4 : -0.5}
+        zoomSpeed={0.8}
+        panSpeed={-0.8}
         touches={{
           ONE: THREE.TOUCH.ROTATE,
           TWO: THREE.TOUCH.DOLLY_PAN,

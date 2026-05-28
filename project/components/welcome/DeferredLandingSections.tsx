@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'motion/react';
+import { useState, useRef, useEffect as import_react_useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView as import_framer_useInView } from 'motion/react';
 import BrandLogo from '@/components/BrandLogo';
 import {
   ArrowRight,
@@ -39,6 +39,15 @@ function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef
   // Zig-zag: odd-column cards (index 1,3,5) get a top offset
   const isOddColumn = index % 2 === 1;
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = import_framer_useInView(cardRef, { margin: "-20%" });
+  
+  import_react_useEffect(() => {
+    if (!isInView && hoveredIndex === index) {
+      setHovered(-1);
+    }
+  }, [isInView, hoveredIndex, index, setHovered]);
+
   const isHovered = hoveredIndex === index;
 
   return (
@@ -69,6 +78,19 @@ function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef
         <h3 className="font-bold text-gray-950 text-sm mb-1">{item.title}</h3>
         <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
       </motion.button>
+
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="lg:hidden overflow-hidden w-full mt-4 rounded-[1.35rem]"
+          >
+            <FeatureSnapshot activeFeature={item} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -85,11 +107,19 @@ function FeatureScrollCard({ item, index, hoveredIndex, setHovered, containerRef
   const yRaw = useTransform(scrollYProgress, [entryStart, entryEnd, 1], [-80, 0, 30 + index * 8]);
   const opacityRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.08], [0, 1]);
   const ySpring = useSpring(yRaw, { stiffness: 80, damping: 18, mass: 1 + index * 0.12 });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isInView = import_framer_useInView(cardRef, { margin: "-20%" });
   
+  import_react_useEffect(() => {
+    if (!isInView && hoveredIndex === index) {
+      setHovered(-1);
+    }
+  }, [isInView, hoveredIndex, index, setHovered]);
+
   const isHovered = hoveredIndex === index;
 
   return (
-    <motion.div style={{ y: ySpring, opacity: opacityRaw }} className="relative">
+    <motion.div ref={cardRef} style={{ y: ySpring, opacity: opacityRaw }} className="relative">
       <motion.button
         animate={{ 
           y: isHovered ? -12 : [0, -4 - (index % 3), 0],
@@ -119,6 +149,13 @@ function FeatureScrollCard({ item, index, hoveredIndex, setHovered, containerRef
         </p>
       </motion.button>
     </motion.div>
+  );
+}
+
+
+function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
+  return (
+    <FeatureSnapshot activeFeature={activeFeature} />
   );
 }
 
@@ -258,7 +295,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
         </span>
       </motion.div>
       <motion.div 
-        className="fixed bottom-0 left-0 right-0 z-[5] pointer-events-none md:hidden text-[#2A4365]/[0.08] dark:text-white/[0.06] flex items-center whitespace-nowrap overflow-hidden"
+        className="fixed bottom-4 left-0 right-0 z-[15] pointer-events-none md:hidden flex items-center whitespace-nowrap overflow-hidden" style={{ mixBlendMode: 'multiply' }}
       >
         <motion.span 
           style={{ x: watermarkX }} 
@@ -380,7 +417,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -14, scale: 0.98 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="rounded-[2rem] border border-gray-200 bg-[#07121e] p-4 shadow-2xl shadow-gray-900/16 max-w-3xl ml-auto"
+                  className="hidden lg:block rounded-[2rem] border border-gray-200 bg-[#07121e] p-4 shadow-2xl shadow-gray-900/16 max-w-3xl ml-auto"
                 >
                 <div className="rounded-[1.35rem] bg-[linear-gradient(145deg,rgba(22,49,77,0.98),rgba(8,21,34,0.98))] border border-white/10 overflow-hidden">
                   <div className="flex items-center justify-between p-5 border-b border-white/8">

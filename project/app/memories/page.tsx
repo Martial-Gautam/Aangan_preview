@@ -258,7 +258,7 @@ function CreateMemorySheet(props: CreateMemorySheetProps) {
   }, [sheetHeight]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px] flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-black/45 backdrop-blur-[1px] flex items-end justify-center" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-sm bg-white/90 backdrop-blur-2xl rounded-t-3xl border border-white/30 flex flex-col"

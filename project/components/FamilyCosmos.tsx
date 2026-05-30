@@ -16,6 +16,100 @@ import { computeCosmosLayout, type CosmosPosition } from '@/lib/cosmos-layout';
 import type { Person, Relationship } from '@/lib/tree-to-flow';
 import { resolveRelationshipLabel } from '@/lib/relationship-resolver';
 
+// ─── FPP FOV-based Zoom (Pinch + Scroll Wheel) ──────────────
+
+const FPP_FOV_MIN = 30;  // fully zoomed in
+const FPP_FOV_MAX = 110; // fully zoomed out
+const FPP_FOV_SENSITIVITY_WHEEL = 1.8;
+const FPP_FOV_SENSITIVITY_PINCH = 0.35;
+const FPP_FOV_LERP_SPEED = 0.12;
+
+function FppFovZoom({ enabled }: { enabled: boolean }) {
+  const { camera, gl } = useThree();
+  const targetFovRef = useRef((camera as THREE.PerspectiveCamera).fov);
+  const pinchRef = useRef({ active: false, startDist: 0, startFov: 0 });
+
+  // Sync target FOV when mode changes
+  useEffect(() => {
+    if (enabled) {
+      targetFovRef.current = (camera as THREE.PerspectiveCamera).fov;
+    }
+  }, [enabled, camera]);
+
+  // Scroll-wheel handler for desktop zoom
+  useEffect(() => {
+    if (!enabled) return;
+    const canvas = gl.domElement;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? FPP_FOV_SENSITIVITY_WHEEL : -FPP_FOV_SENSITIVITY_WHEEL;
+      targetFovRef.current = Math.max(FPP_FOV_MIN, Math.min(FPP_FOV_MAX, targetFovRef.current + delta));
+    };
+
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', onWheel);
+  }, [enabled, gl]);
+
+  // Touch pinch handler for mobile zoom
+  useEffect(() => {
+    if (!enabled) return;
+    const canvas = gl.domElement;
+
+    const getTouchDist = (e: TouchEvent) => {
+      const [a, b] = [e.touches[0], e.touches[1]];
+      return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchRef.current = {
+          active: true,
+          startDist: getTouchDist(e),
+          startFov: targetFovRef.current,
+        };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pinchRef.current.active || e.touches.length !== 2) return;
+      const dist = getTouchDist(e);
+      const scale = pinchRef.current.startDist / dist; // pinch-in => scale > 1 => zoom out (wider FOV)
+      const newFov = pinchRef.current.startFov * scale;
+      targetFovRef.current = Math.max(FPP_FOV_MIN, Math.min(FPP_FOV_MAX, newFov));
+    };
+
+    const onTouchEnd = () => {
+      pinchRef.current.active = false;
+    };
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: true });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+    canvas.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [enabled, gl]);
+
+  // Smooth lerp every frame
+  useFrame(() => {
+    if (!enabled) return;
+    const cam = camera as THREE.PerspectiveCamera;
+    const diff = targetFovRef.current - cam.fov;
+    if (Math.abs(diff) > 0.05) {
+      cam.fov += diff * FPP_FOV_LERP_SPEED;
+      cam.updateProjectionMatrix();
+    }
+  });
+
+  return null;
+}
+
 // ─── Scene Content ───────────────────────────────────────────
 
 interface SceneProps {
@@ -260,7 +354,7 @@ function Scene({
         ref={controlsRef}
         makeDefault
         enablePan={viewMode === 'tpp'}
-        enableZoom={true}
+        enableZoom={viewMode !== 'fpp'}
         enableRotate={true}
         screenSpacePanning={true}
         minPolarAngle={viewMode === 'fpp' ? Math.PI / 6 : Math.PI / 8}
@@ -274,15 +368,18 @@ function Scene({
         panSpeed={-1.2}
         touches={{
           ONE: THREE.TOUCH.ROTATE,
-          TWO: THREE.TOUCH.DOLLY_PAN,
+          TWO: viewMode === 'fpp' ? THREE.TOUCH.ROTATE : THREE.TOUCH.DOLLY_PAN,
         }}
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE,
-          MIDDLE: THREE.MOUSE.DOLLY,
+          MIDDLE: viewMode === 'fpp' ? THREE.MOUSE.ROTATE : THREE.MOUSE.DOLLY,
           RIGHT: viewMode === 'fpp' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
         }}
         target={[0, 0, 0]}
       />
+
+      {/* FPP-mode FOV zoom via pinch / scroll wheel */}
+      <FppFovZoom enabled={viewMode === 'fpp'} />
 
       {/* Ring indicators */}
       <CosmosRings />

@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { TopRightMenu } from '@/components/TopRightMenu';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
+
+const AlbumCosmos = lazy(() => import('@/components/AlbumCosmos'));
 import {
   ArrowLeft,
   CalendarDays,
@@ -14,6 +16,7 @@ import {
   Cake,
   Heart,
   ImagePlus,
+  Images,
   Loader2,
   Plus,
   QrCode,
@@ -39,7 +42,7 @@ type MemoryPost = {
 };
 
 type ParsedMemory = {
-  imageUrl: string;
+  imageUrls: string[];
   caption: string;
 };
 
@@ -99,18 +102,22 @@ const ALBUM_CATEGORIES: AlbumCategory[] = [
 
 function parseMemoryContent(content: string): ParsedMemory | null {
   if (!content.startsWith(MEMORY_PREFIX)) return null;
-  const payload = content.slice(MEMORY_PREFIX.length).trimStart();
-  const firstNewLine = payload.indexOf('\n');
-  if (firstNewLine === -1) {
-    // No caption — entire payload is the image URL
-    const imageUrl = payload.trim();
-    if (!imageUrl) return null;
-    return { imageUrl, caption: '' };
+  const lines = content.split('\n');
+  const imageUrls: string[] = [];
+  const captionLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith(MEMORY_PREFIX)) {
+      const url = trimmed.slice(MEMORY_PREFIX.length).trim();
+      if (url) imageUrls.push(url);
+    } else if (trimmed) {
+      captionLines.push(trimmed);
+    }
   }
-  const imageUrl = payload.slice(0, firstNewLine).trim();
-  const caption = payload.slice(firstNewLine + 1).trim();
-  if (!imageUrl) return null;
-  return { imageUrl, caption };
+
+  if (imageUrls.length === 0) return null;
+  return { imageUrls, caption: captionLines.join('\n') };
 }
 
 function parseMemoryTitle(rawTitle: string | null): { category: AlbumCategoryKey; title: string } {
@@ -148,15 +155,23 @@ export default function MemoriesPage() {
   const [eventTitle, setEventTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [joinCode, setJoinCode] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState('');
   const [joinError, setJoinError] = useState('');
   const [audienceDegree, setAudienceDegree] = useState<string[]>(['All']);
   const [audienceSide, setAudienceSide] = useState<string[]>(['All']);
   const [includeUserIds, setIncludeUserIds] = useState<string[]>([]);
   const [excludeUserIds, setExcludeUserIds] = useState<string[]>([]);
+
+  // Album cosmos viewer state
+  const [selectedMemory, setSelectedMemory] = useState<{
+    imageUrls: string[];
+    title: string;
+    caption: string;
+  } | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -209,11 +224,10 @@ export default function MemoriesPage() {
   });
 
   useEffect(() => {
-    if (previewUrl) {
-      return () => URL.revokeObjectURL(previewUrl);
-    }
-    return undefined;
-  }, [previewUrl]);
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
 
   const memoryCards = useMemo(
@@ -226,7 +240,7 @@ export default function MemoriesPage() {
 
           return {
             ...m,
-            imageUrl: parsed.imageUrl,
+            imageUrls: parsed.imageUrls,
             caption: parsed.caption,
             cleanTitle: parsedTitle.title,
             albumCategory: parsedTitle.category,
@@ -234,7 +248,7 @@ export default function MemoriesPage() {
         })
         .filter(Boolean) as Array<
         MemoryPost & {
-          imageUrl: string;
+          imageUrls: string[];
           caption: string;
           cleanTitle: string;
           albumCategory: AlbumCategoryKey;
@@ -271,20 +285,31 @@ export default function MemoriesPage() {
     [activeCategory]
   );
 
-  const handlePhotoChange = (file: File | null) => {
-    if (!file) return;
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  const handlePhotosChange = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newFiles = Array.from(files);
+    const newPreviews = newFiles.map(f => URL.createObjectURL(f));
 
-    setPhoto(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    setPhotos(prev => [...prev, ...newFiles]);
+    setPreviewUrls(prev => [...prev, ...newPreviews]);
   };
+
+  const removePhoto = useCallback((index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed);
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
 
   const resetForm = () => {
     setEventTitle('');
     setCaption('');
-    setPhoto(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl('');
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setPhotos([]);
+    setPreviewUrls([]);
+    setUploadProgress(null);
     setError('');
     setAudienceDegree(['All']);
     setAudienceSide(['All']);
@@ -298,18 +323,29 @@ export default function MemoriesPage() {
       setError('Please add a memory title.');
       return;
     }
-    if (!photo) {
-      setError('Please upload a photo.');
+    if (photos.length === 0) {
+      setError('Please upload at least one photo.');
       return;
     }
 
     setUploading(true);
     setError('');
+    setUploadProgress({ done: 0, total: photos.length });
     try {
-      const imageUrl = await uploadImageToCloudinaryViaApi(photo, session.access_token, 'memories');
+      // Upload all photos sequentially
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        setUploadProgress({ done: i, total: photos.length });
+        const url = await uploadImageToCloudinaryViaApi(photos[i], session.access_token, 'memories');
+        uploadedUrls.push(url);
+      }
+      setUploadProgress({ done: photos.length, total: photos.length });
+
+      // Pack content: each image URL on its own line with prefix, caption at end
+      const imageLines = uploadedUrls.map(url => `${MEMORY_PREFIX}${url}`);
       const packedContent = caption.trim()
-        ? `${MEMORY_PREFIX}${imageUrl}\n${caption.trim()}`
-        : `${MEMORY_PREFIX}${imageUrl}`;
+        ? [...imageLines, caption.trim()].join('\n')
+        : imageLines.join('\n');
 
       const createRes = await fetch('/api/posts/create', {
         method: 'POST',
@@ -343,6 +379,7 @@ export default function MemoriesPage() {
       setError(err instanceof Error ? err.message : 'Failed to create memory');
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -645,8 +682,24 @@ export default function MemoriesPage() {
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
                     {filteredMemories.map((memory) => (
-                      <article key={memory.id} className="glass-card rounded-xl overflow-hidden">
-                        <img src={memory.imageUrl} alt={memory.cleanTitle} className="w-full h-28 object-cover" />
+                      <article
+                        key={memory.id}
+                        className="glass-card rounded-xl overflow-hidden cursor-pointer active:scale-[0.97] transition-transform"
+                        onClick={() => setSelectedMemory({
+                          imageUrls: memory.imageUrls,
+                          title: memory.cleanTitle,
+                          caption: memory.caption,
+                        })}
+                      >
+                        <div className="relative">
+                          <img src={memory.imageUrls[0]} alt={memory.cleanTitle} className="w-full h-28 object-cover" />
+                          {memory.imageUrls.length > 1 && (
+                            <div className="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                              <Images size={10} />
+                              {memory.imageUrls.length}
+                            </div>
+                          )}
+                        </div>
                         <div className="p-2.5">
                           <p className="text-xs font-bold text-gray-900 line-clamp-1">{memory.cleanTitle}</p>
                           {memory.caption && <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{memory.caption}</p>}
@@ -691,15 +744,31 @@ export default function MemoriesPage() {
                   />
                   <label className="w-full rounded-xl border border-dashed border-gray-300 px-3.5 py-3 text-sm text-gray-500 flex items-center gap-2 cursor-pointer hover:bg-white/40">
                     <UploadCloud size={16} className="text-[#2A4365]" />
-                    {photo ? photo.name : 'Upload memory photo'}
+                    {photos.length > 0 ? `${photos.length} photo${photos.length > 1 ? 's' : ''} selected` : 'Upload memory photos'}
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       className="hidden"
-                      onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+                      onChange={(e) => handlePhotosChange(e.target.files)}
                     />
                   </label>
-                  {previewUrl && <img src={previewUrl} alt="Preview" className="w-full h-28 object-cover rounded-xl border border-gray-200/30" />}
+                  {previewUrls.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                      {previewUrls.map((url, idx) => (
+                        <div key={idx} className="relative flex-shrink-0">
+                          <img src={url} alt={`Preview ${idx + 1}`} className="w-20 h-20 object-cover rounded-lg border border-gray-200/30" />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(idx)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-md"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Audience Picker */}
                   <div className="pt-1">
@@ -814,7 +883,11 @@ export default function MemoriesPage() {
                   disabled={uploading}
                   className="flex-1 py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90 disabled:opacity-50 active:scale-[0.98] transition-all"
                 >
-                  {uploading ? 'Saving...' : 'Share Memory'}
+                  {uploading
+                    ? uploadProgress
+                      ? `Uploading ${uploadProgress.done}/${uploadProgress.total}...`
+                      : 'Saving...'
+                    : 'Share Memory'}
                 </button>
                 <button
                   onClick={() => {
@@ -828,6 +901,22 @@ export default function MemoriesPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Album Cosmos 3D Viewer */}
+        {selectedMemory && (
+          <Suspense fallback={
+            <div className="fixed inset-0 z-60 bg-[#060b16] flex items-center justify-center">
+              <Loader2 size={28} className="text-[#10B981] animate-spin" />
+            </div>
+          }>
+            <AlbumCosmos
+              imageUrls={selectedMemory.imageUrls}
+              title={selectedMemory.title}
+              caption={selectedMemory.caption}
+              onBack={() => setSelectedMemory(null)}
+            />
+          </Suspense>
         )}
       </div>
 

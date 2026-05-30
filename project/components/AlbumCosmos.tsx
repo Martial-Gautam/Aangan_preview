@@ -6,9 +6,11 @@ import { OrbitControls, Html, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { ArrowLeft, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
 
-// ─── Fibonacci Sphere Layout ─────────────────────────────────
+// ─── Progressive Spiral Layout ───────────────────────────────
+// Photos start clustered together at the front of the sphere with uniform
+// angular spacing.  As more photos are added they progressively spread
+// outward to cover more of the sphere surface.
 
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 const SPHERE_RADIUS = 7;
 
 interface SpherePoint {
@@ -23,28 +25,57 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
+/**
+ * Place `count` photos on the sphere using a Fibonacci spiral that starts
+ * from the front-center (+Z axis) and expands outward.
+ *
+ * `maxTheta` controls how far the distribution reaches from the pole:
+ *   - For 1–4 photos  → small cap  (≈30°–50°)
+ *   - For ~20 photos  → hemisphere (90°)
+ *   - For 50+ photos  → full sphere (170°)
+ *
+ * This keeps a small collection tight and uniform, while large collections
+ * naturally fill the sphere.
+ */
 function fibonacciSphere(count: number, radius: number = SPHERE_RADIUS): SpherePoint[] {
   if (count === 0) return [];
-  if (count === 1) return [{ x: 0, y: 0, z: radius, rotation: -3 }];
+  if (count === 1) return [{ x: 0, y: 0, z: radius, rotation: 0 }];
 
+  // Progressive cap angle: starts small, grows with count
+  // lerp from ~35° (few photos) up to ~170° (many photos)
+  const minCapDeg = 35;
+  const maxCapDeg = 170;
+  // Sigmoid-ish ramp: reaches ~90° around 15 photos, ~150° around 40
+  const t = 1 - Math.exp(-count / 18);
+  const capDeg = minCapDeg + (maxCapDeg - minCapDeg) * t;
+  const maxTheta = (capDeg * Math.PI) / 180;
+
+  const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
   const points: SpherePoint[] = [];
-  for (let i = 0; i < count; i++) {
-    const y = 1 - (2 * i) / (count - 1);
-    const radiusAtY = Math.sqrt(1 - y * y);
-    const theta = GOLDEN_ANGLE * i;
-    const x = Math.cos(theta) * radiusAtY;
-    const z = Math.sin(theta) * radiusAtY;
-    const rotation = (seededRandom(i) - 0.5) * 24;
 
-    points.push({
-      x: x * radius,
-      y: y * radius,
-      z: z * radius,
-      rotation,
-    });
+  for (let i = 0; i < count; i++) {
+    // Distribute uniformly within the spherical cap [0, maxTheta]
+    // Using equal-area spacing: cosθ ranges from 1 to cos(maxTheta)
+    const cosMax = Math.cos(maxTheta);
+    const cosTheta = 1 - (i / Math.max(count - 1, 1)) * (1 - cosMax);
+    const theta = Math.acos(Math.max(-1, Math.min(1, cosTheta)));
+
+    // Golden-angle azimuth for even spread
+    const phi = GOLDEN_ANGLE * i;
+
+    const sinTheta = Math.sin(theta);
+    const x = sinTheta * Math.cos(phi) * radius;
+    const y = sinTheta * Math.sin(phi) * radius;
+    const z = cosTheta * radius;
+
+    // Subtle, uniform rotation jitter (±6°)
+    const rotation = (seededRandom(i) - 0.5) * 12;
+
+    points.push({ x, y, z, rotation });
   }
   return points;
 }
+
 
 /**
  * Compute the average direction where photos are concentrated.

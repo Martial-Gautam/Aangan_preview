@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
@@ -141,6 +141,322 @@ function parseMemoryTitle(rawTitle: string | null): { category: AlbumCategoryKey
 
 function buildMemoryTitle(category: AlbumCategoryKey, title: string) {
   return `${category}${TITLE_SEPARATOR}${title.trim()}`;
+}
+
+// ─── Draggable Bottom Sheet for "Add Memory" ────────────────
+
+const SHEET_SNAP_COLLAPSED = 40;  // vh
+const SHEET_SNAP_DEFAULT = 70;    // vh
+const SHEET_SNAP_FULL = 94;       // vh
+
+interface CreateMemorySheetProps {
+  activeCategoryMeta: AlbumCategory;
+  eventTitle: string;
+  setEventTitle: (v: string) => void;
+  caption: string;
+  setCaption: (v: string) => void;
+  photos: File[];
+  previewUrls: string[];
+  handlePhotosChange: (files: FileList | null) => void;
+  removePhoto: (index: number) => void;
+  audienceDegree: string[];
+  setAudienceDegree: React.Dispatch<React.SetStateAction<string[]>>;
+  audienceSide: string[];
+  setAudienceSide: React.Dispatch<React.SetStateAction<string[]>>;
+  sharePeople: SharePerson[];
+  includeUserIds: string[];
+  setIncludeUserIds: React.Dispatch<React.SetStateAction<string[]>>;
+  excludeUserIds: string[];
+  setExcludeUserIds: React.Dispatch<React.SetStateAction<string[]>>;
+  error: string;
+  uploading: boolean;
+  uploadProgress: { done: number; total: number } | null;
+  handleCreateMemory: () => void;
+  onClose: () => void;
+}
+
+function CreateMemorySheet(props: CreateMemorySheetProps) {
+  const {
+    activeCategoryMeta, eventTitle, setEventTitle, caption, setCaption,
+    photos, previewUrls, handlePhotosChange, removePhoto,
+    audienceDegree, setAudienceDegree, audienceSide, setAudienceSide,
+    sharePeople, includeUserIds, setIncludeUserIds, excludeUserIds, setExcludeUserIds,
+    error, uploading, uploadProgress, handleCreateMemory, onClose,
+  } = props;
+
+  const [sheetHeight, setSheetHeight] = useState(SHEET_SNAP_DEFAULT);
+  const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
+
+  // Snap to nearest height
+  const snapTo = useCallback((vh: number) => {
+    const snaps = [SHEET_SNAP_COLLAPSED, SHEET_SNAP_DEFAULT, SHEET_SNAP_FULL];
+    let nearest = snaps[0];
+    let minDist = Math.abs(vh - snaps[0]);
+    for (const s of snaps) {
+      const dist = Math.abs(vh - s);
+      if (dist < minDist) { minDist = dist; nearest = s; }
+    }
+    // If dragged below collapsed, close the sheet
+    if (vh < SHEET_SNAP_COLLAPSED - 10) {
+      onClose();
+      return;
+    }
+    setSheetHeight(nearest);
+  }, [onClose]);
+
+  // Touch drag handlers
+  const onHandleTouchStart = useCallback((e: React.TouchEvent) => {
+    dragRef.current = { startY: e.touches[0].clientY, startHeight: sheetHeight };
+  }, [sheetHeight]);
+
+  const onHandleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragRef.current) return;
+    const deltaY = dragRef.current.startY - e.touches[0].clientY;
+    const deltaPct = (deltaY / window.innerHeight) * 100;
+    const newH = Math.max(25, Math.min(96, dragRef.current.startHeight + deltaPct));
+    setSheetHeight(newH);
+  }, []);
+
+  const onHandleTouchEnd = useCallback(() => {
+    if (dragRef.current) {
+      snapTo(sheetHeight);
+      dragRef.current = null;
+    }
+  }, [sheetHeight, snapTo]);
+
+  // Mouse drag handlers (for desktop testing)
+  const onHandleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragRef.current = { startY: e.clientY, startHeight: sheetHeight };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const deltaY = dragRef.current.startY - ev.clientY;
+      const deltaPct = (deltaY / window.innerHeight) * 100;
+      const newH = Math.max(25, Math.min(96, dragRef.current.startHeight + deltaPct));
+      setSheetHeight(newH);
+    };
+    const onUp = () => {
+      snapTo(sheetHeight);
+      dragRef.current = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [sheetHeight, snapTo]);
+
+  // Tap handle to toggle between collapsed/default/full
+  const onHandleTap = useCallback(() => {
+    if (sheetHeight <= SHEET_SNAP_COLLAPSED + 2) {
+      setSheetHeight(SHEET_SNAP_DEFAULT);
+    } else if (sheetHeight <= SHEET_SNAP_DEFAULT + 2) {
+      setSheetHeight(SHEET_SNAP_FULL);
+    } else {
+      setSheetHeight(SHEET_SNAP_DEFAULT);
+    }
+  }, [sheetHeight]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px] flex items-end justify-center" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm bg-white/90 backdrop-blur-2xl rounded-t-3xl border border-white/30 flex flex-col"
+        style={{
+          height: `${sheetHeight}vh`,
+          transition: dragRef.current ? 'none' : 'height 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        {/* ── Drag Handle ── */}
+        <div
+          className="flex-shrink-0 flex items-center justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing select-none"
+          onTouchStart={onHandleTouchStart}
+          onTouchMove={onHandleTouchMove}
+          onTouchEnd={onHandleTouchEnd}
+          onMouseDown={onHandleMouseDown}
+          onClick={onHandleTap}
+        >
+          <div className="w-9 h-1 rounded-full bg-gray-300" />
+        </div>
+
+        {/* ── Header ── */}
+        <div className="px-5 pb-2 flex-shrink-0">
+          <h3 className="text-lg font-bold text-gray-900">Add Memory</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Album: {activeCategoryMeta.label}</p>
+        </div>
+
+        {/* ── Scrollable Body ── */}
+        <div className="flex-1 overflow-y-auto px-5 pb-2 overscroll-contain">
+          <div className="space-y-3">
+            <input
+              value={eventTitle}
+              onChange={(e) => setEventTitle(e.target.value)}
+              placeholder="Memory title"
+              className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none focus:ring-1 focus:ring-[#2A4365]/20"
+            />
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Caption (optional)"
+              rows={2}
+              className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none resize-none focus:ring-1 focus:ring-[#2A4365]/20"
+            />
+            <label className="w-full rounded-xl border border-dashed border-gray-300 px-3.5 py-3 text-sm text-gray-500 flex items-center gap-2 cursor-pointer hover:bg-white/40">
+              <UploadCloud size={16} className="text-[#2A4365]" />
+              {photos.length > 0 ? `${photos.length} photo${photos.length > 1 ? 's' : ''} selected` : 'Upload memory photos'}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handlePhotosChange(e.target.files)}
+              />
+            </label>
+            {previewUrls.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {previewUrls.map((url, idx) => (
+                  <div key={idx} className="relative flex-shrink-0">
+                    <img src={url} alt={`Preview ${idx + 1}`} className="w-20 h-20 object-cover rounded-lg border border-gray-200/30" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(idx)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-md"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Audience Picker */}
+            <div className="pt-1">
+              <p className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-1.5">
+                <Users size={13} className="text-[#2A4365]" /> Share With
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Degree</p>
+                  {['1st Degree', '2nd Degree', '3rd+ Degree', 'All'].map(deg => (
+                    <button
+                      key={deg}
+                      type="button"
+                      onClick={() => setAudienceDegree(prev =>
+                        prev.includes(deg) ? prev.filter(d => d !== deg) : [...prev, deg]
+                      )}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                        audienceDegree.includes(deg)
+                          ? 'bg-[#2A4365] text-white shadow-sm'
+                          : 'glass-input text-gray-900 hover:bg-white/60'
+                      }`}
+                    >
+                      {deg}
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Side</p>
+                  {['Maternal', 'Paternal', 'In-Laws', 'Spouse', 'All'].map(side => (
+                    <button
+                      key={side}
+                      type="button"
+                      onClick={() => setAudienceSide(prev =>
+                        prev.includes(side) ? prev.filter(s => s !== side) : [...prev, side]
+                      )}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                        audienceSide.includes(side)
+                          ? 'bg-[#2A4365] text-white shadow-sm'
+                          : 'glass-input text-gray-900 hover:bg-white/60'
+                      }`}
+                    >
+                      {side}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {sharePeople.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Individuals</p>
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {sharePeople.map((person: SharePerson) => (
+                      <div key={person.user_id} className="rounded-lg border border-gray-200/60 bg-white/55 px-2.5 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center">
+                            {person.photo_url ? (
+                              <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Users size={12} className="text-[#2A4365]/70" />
+                            )}
+                          </div>
+                          <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIncludeUserIds((prev) =>
+                                prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                              );
+                              setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                            }}
+                            className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                              includeUserIds.includes(person.user_id) ? 'bg-[#2A4365] text-white' : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            Include
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExcludeUserIds((prev) =>
+                                prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
+                              );
+                              setIncludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
+                            }}
+                            className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
+                              excludeUserIds.includes(person.user_id) ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            Exclude
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <p className="text-xs text-red-600 bg-red-500/8 border border-red-500/15 rounded-lg px-2.5 py-2">
+                {error}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Footer Buttons — always visible ── */}
+        <div className="px-5 pt-2 pb-4 flex gap-2 flex-shrink-0 border-t border-gray-200/30">
+          <button
+            onClick={handleCreateMemory}
+            disabled={uploading}
+            className="flex-1 py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90 disabled:opacity-50 active:scale-[0.98] transition-all"
+          >
+            {uploading
+              ? uploadProgress
+                ? `Uploading ${uploadProgress.done}/${uploadProgress.total}...`
+                : 'Saving...'
+              : 'Share Memory'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl bg-white/40 backdrop-blur-md text-gray-500 text-sm font-semibold hover:bg-white/60 active:scale-[0.98] transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function MemoriesPage() {
@@ -718,189 +1034,34 @@ export default function MemoriesPage() {
         </div>
 
         {showCreate && (
-          <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px] flex items-end sm:items-center justify-center">
-            <div className="w-full max-w-sm bg-white/80 backdrop-blur-2xl rounded-t-3xl sm:rounded-3xl border border-white/30 max-h-[90vh] flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-              {/* Fixed header */}
-              <div className="px-5 pt-5 pb-2 flex-shrink-0">
-                <h3 className="text-lg font-bold text-gray-900">Add Memory</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Album: {activeCategoryMeta.label}</p>
-              </div>
-
-              {/* Scrollable body */}
-              <div className="flex-1 overflow-y-auto px-5 pb-2">
-                <div className="space-y-3">
-                  <input
-                    value={eventTitle}
-                    onChange={(e) => setEventTitle(e.target.value)}
-                    placeholder="Memory title"
-                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none focus:ring-1 focus:ring-[#2A4365]/20"
-                  />
-                  <textarea
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Caption (optional)"
-                    rows={2}
-                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm outline-none resize-none focus:ring-1 focus:ring-[#2A4365]/20"
-                  />
-                  <label className="w-full rounded-xl border border-dashed border-gray-300 px-3.5 py-3 text-sm text-gray-500 flex items-center gap-2 cursor-pointer hover:bg-white/40">
-                    <UploadCloud size={16} className="text-[#2A4365]" />
-                    {photos.length > 0 ? `${photos.length} photo${photos.length > 1 ? 's' : ''} selected` : 'Upload memory photos'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => handlePhotosChange(e.target.files)}
-                    />
-                  </label>
-                  {previewUrls.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-                      {previewUrls.map((url, idx) => (
-                        <div key={idx} className="relative flex-shrink-0">
-                          <img src={url} alt={`Preview ${idx + 1}`} className="w-20 h-20 object-cover rounded-lg border border-gray-200/30" />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(idx)}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-md"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Audience Picker */}
-                  <div className="pt-1">
-                    <p className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-1.5">
-                      <Users size={13} className="text-[#2A4365]" /> Share With
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Column 1: Degree */}
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Degree</p>
-                        {['1st Degree', '2nd Degree', '3rd+ Degree', 'All'].map(deg => (
-                          <button
-                            key={deg}
-                            type="button"
-                            onClick={() => setAudienceDegree(prev =>
-                              prev.includes(deg) ? prev.filter(d => d !== deg) : [...prev, deg]
-                            )}
-                            className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                              audienceDegree.includes(deg)
-                                ? 'bg-[#2A4365] text-white shadow-sm'
-                                : 'glass-input text-gray-900 hover:bg-white/60'
-                            }`}
-                          >
-                            {deg}
-                          </button>
-                        ))}
-                      </div>
-                      {/* Column 2: Side */}
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Side</p>
-                        {['Maternal', 'Paternal', 'In-Laws', 'Spouse', 'All'].map(side => (
-                          <button
-                            key={side}
-                            type="button"
-                            onClick={() => setAudienceSide(prev =>
-                              prev.includes(side) ? prev.filter(s => s !== side) : [...prev, side]
-                            )}
-                            className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                              audienceSide.includes(side)
-                                ? 'bg-[#2A4365] text-white shadow-sm'
-                                : 'glass-input text-gray-900 hover:bg-white/60'
-                            }`}
-                          >
-                            {side}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {sharePeople.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Individuals</p>
-                        <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                          {sharePeople.map((person: SharePerson) => (
-                            <div key={person.user_id} className="rounded-lg border border-gray-200/60 bg-white/55 px-2.5 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-[#2A4365]/10 overflow-hidden flex items-center justify-center">
-                                  {person.photo_url ? (
-                                    <img src={person.photo_url} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <Users size={12} className="text-[#2A4365]/70" />
-                                  )}
-                                </div>
-                                <p className="text-xs font-medium text-gray-800 flex-1 truncate">{person.full_name}</p>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setIncludeUserIds((prev) =>
-                                      prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
-                                    );
-                                    setExcludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
-                                  }}
-                                  className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
-                                    includeUserIds.includes(person.user_id) ? 'bg-[#2A4365] text-white' : 'bg-gray-100 text-gray-600'
-                                  }`}
-                                >
-                                  Include
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setExcludeUserIds((prev) =>
-                                      prev.includes(person.user_id) ? prev.filter((id) => id !== person.user_id) : [...prev, person.user_id]
-                                    );
-                                    setIncludeUserIds((prev) => prev.filter((id) => id !== person.user_id));
-                                  }}
-                                  className={`px-2 py-1 rounded-md text-[10px] font-semibold ${
-                                    excludeUserIds.includes(person.user_id) ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
-                                  }`}
-                                >
-                                  Exclude
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {error && (
-                    <p className="text-xs text-red-600 bg-red-500/8 border border-red-500/15 rounded-lg px-2.5 py-2">
-                      {error}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Fixed footer buttons */}
-              <div className="px-5 pt-2 pb-4 flex gap-2 flex-shrink-0 border-t border-gray-200/30">
-                <button
-                  onClick={handleCreateMemory}
-                  disabled={uploading}
-                  className="flex-1 py-2.5 rounded-xl bg-[#2A4365] text-white text-sm font-semibold hover:bg-[#2A4365]/90 disabled:opacity-50 active:scale-[0.98] transition-all"
-                >
-                  {uploading
-                    ? uploadProgress
-                      ? `Uploading ${uploadProgress.done}/${uploadProgress.total}...`
-                      : 'Saving...'
-                    : 'Share Memory'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreate(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-white/40 backdrop-blur-md text-gray-500 text-sm font-semibold hover:bg-white/60 active:scale-[0.98] transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+          <CreateMemorySheet
+            activeCategoryMeta={activeCategoryMeta}
+            eventTitle={eventTitle}
+            setEventTitle={setEventTitle}
+            caption={caption}
+            setCaption={setCaption}
+            photos={photos}
+            previewUrls={previewUrls}
+            handlePhotosChange={handlePhotosChange}
+            removePhoto={removePhoto}
+            audienceDegree={audienceDegree}
+            setAudienceDegree={setAudienceDegree}
+            audienceSide={audienceSide}
+            setAudienceSide={setAudienceSide}
+            sharePeople={sharePeople}
+            includeUserIds={includeUserIds}
+            setIncludeUserIds={setIncludeUserIds}
+            excludeUserIds={excludeUserIds}
+            setExcludeUserIds={setExcludeUserIds}
+            error={error}
+            uploading={uploading}
+            uploadProgress={uploadProgress}
+            handleCreateMemory={handleCreateMemory}
+            onClose={() => {
+              setShowCreate(false);
+              resetForm();
+            }}
+          />
         )}
 
         {/* Album Cosmos 3D Viewer */}

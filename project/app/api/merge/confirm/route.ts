@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Neo4jService } from '@/lib/neo4j-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,6 +123,10 @@ export async function POST(req: NextRequest) {
       .from('merge_suggestions')
       .update({ status: 'accepted' })
       .eq('id', suggestion_id);
+
+      // Neo4j Dual-Write (Non-blocking)
+      Neo4jService.mergePersonNodes(canonical.id, duplicate.id)
+        .catch(err => console.error('Neo4j mergePersonNodes dual-write failed:', err));
 
     return NextResponse.json({
       success: true,

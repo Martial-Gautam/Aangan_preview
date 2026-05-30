@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Neo4jService } from '@/lib/neo4j-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
         console.error('Failed to create user connection:', connectionUpsertError);
         return NextResponse.json({ error: 'Failed to connect trees' }, { status: 500 });
       }
+
+      // Neo4j Dual-Write (Non-blocking)
+      Neo4jService.connectTrees(user.id, to_user_id)
+        .catch(err => console.error('Neo4j connectTrees dual-write failed:', err));
 
       return NextResponse.json({ success: true, merged: true });
     }

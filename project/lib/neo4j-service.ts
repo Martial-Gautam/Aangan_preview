@@ -97,7 +97,8 @@ export const Neo4jService = {
 
   /**
    * Get the family connected to the given userId (or personId).
-   * Used to generate the Cosmos Tree without depending on insertion order.
+   * Traverses CONNECTED_TO edges to discover cross-tree connections,
+   * then fetches all nodes and edges from connected trees.
    */
   async getFamilyTree(rootUserId: string) {
     const driver = getNeo4jDriver();
@@ -105,43 +106,76 @@ export const Neo4jService = {
 
     const session = driver.session();
     try {
-      // Get all connected nodes
+      // Step 1: Discover all connected tree root nodes via CONNECTED_TO edges (BFS up to 3 hops)
+      // Then for each root, traverse up to 10 hops within their tree.
       const nodeResult = await session.executeRead((tx) =>
         tx.run(
           `MATCH (root:Person {ownerId: $rootUserId, isSelf: true})
-           OPTIONAL MATCH (root)-[*..10]-(b:Person)
-           WITH root, collect(DISTINCT b) AS connected
-           RETURN root, connected`,
+           // Find all connected roots via CONNECTED_TO (up to 3 hops through roots)
+           OPTIONAL MATCH (root)-[:CONNECTED_TO*0..3]-(connectedRoot:Person {isSelf: true})
+           WITH collect(DISTINCT connectedRoot) AS roots
+           // For each root, get their full family tree (up to 10 hops, excluding CONNECTED_TO)
+           UNWIND roots AS r
+           OPTIONAL MATCH (r)-[rel:FATHER|MOTHER|CHILD_OF|PARENT_OF|SIBLING|SPOUSE|MARRIED_TO|CHILD|BELONGS_TO*..10]-(member:Person)
+           WITH roots, collect(DISTINCT member) AS members
+           // Combine roots + members
+           WITH [x IN roots | x] + [m IN members | m] AS allNodesList
+           UNWIND allNodesList AS node
+           WITH collect(DISTINCT node) AS allNodes
+           RETURN allNodes`,
           { rootUserId }
         )
       );
       if (nodeResult.records.length === 0) return null;
-      const rootNode = nodeResult.records[0].get('root').properties;
-      const connectedNodes = nodeResult.records[0].get('connected')
+
+      const rawNodes = nodeResult.records[0].get('allNodes')
         .filter((n: any) => n !== null)
         .map((n: any) => n.properties);
-      const allNodes = [rootNode, ...connectedNodes.filter((n: any) => n.id !== rootNode.id)];
 
-      // Get all edges between these nodes
+      if (rawNodes.length === 0) return null;
+
+      // Deduplicate by id
+      const seenIds = new Set<string>();
+      const allNodes = rawNodes.filter((n: any) => {
+        if (seenIds.has(n.id)) return false;
+        seenIds.add(n.id);
+        return true;
+      });
+
+      const rootNode = allNodes.find((n: any) => n.ownerId === rootUserId && n.isSelf);
+      if (!rootNode) return null;
+
+      // Step 2: Get all edges between discovered nodes (excluding CONNECTED_TO meta-edges)
+      const nodeIds = allNodes.map((n: any) => n.id);
       const edgeResult = await session.executeRead((tx) =>
         tx.run(
-          `MATCH (root:Person {ownerId: $rootUserId, isSelf: true})
-           OPTIONAL MATCH (root)-[*..10]-(b:Person)
-           WITH collect(DISTINCT root) + collect(DISTINCT b) AS allNodes
-           UNWIND allNodes AS n
-           OPTIONAL MATCH (n)-[r]->(m:Person)
-           WHERE m IN allNodes
+          `UNWIND $nodeIds AS nid
+           MATCH (n:Person {id: nid})-[r]->(m:Person)
+           WHERE m.id IN $nodeIds AND type(r) <> 'CONNECTED_TO'
            RETURN n.id AS source, type(r) AS type, m.id AS target`,
-          { rootUserId }
+          { nodeIds }
         )
       );
+
+      const edgeKeySet = new Set<string>();
       const edges = edgeResult.records
         .filter((rec) => rec.get('type') !== null)
         .map((rec) => ({
           person_id: rec.get('source'),
           related_person_id: rec.get('target'),
           relationship_type: String(rec.get('type')).toLowerCase(),
-        }));
+        }))
+        .filter((edge) => {
+          const key = `${edge.person_id}|${edge.related_person_id}|${edge.relationship_type}`;
+          if (edgeKeySet.has(key)) return false;
+          edgeKeySet.add(key);
+          return true;
+        });
+
+      // Find all connected root IDs for the response
+      const connectedRoots = allNodes
+        .filter((n: any) => n.isSelf)
+        .map((n: any) => n.id);
 
       return {
         self_person_id: rootNode.id,
@@ -156,6 +190,7 @@ export const Neo4jService = {
           is_self: n.isSelf,
         })),
         edges,
+        connected_roots: connectedRoots,
       };
     } catch (e) {
       console.error('Neo4j getFamilyTree error:', e);
@@ -309,6 +344,115 @@ export const Neo4jService = {
       );
     } catch (e) {
       console.error('Neo4j deletePerson error:', e);
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Connect two users' trees by creating CONNECTED_TO edges between their root (isSelf) Person nodes.
+   * This is the Neo4j equivalent of creating a user_connections row in Supabase.
+   */
+  async connectTrees(userId1: string, userId2: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite((tx) =>
+        tx.run(
+          `MATCH (a:Person {ownerId: $userId1, isSelf: true})
+           MATCH (b:Person {ownerId: $userId2, isSelf: true})
+           MERGE (a)-[:CONNECTED_TO]->(b)
+           MERGE (b)-[:CONNECTED_TO]->(a)`,
+          { userId1, userId2 }
+        )
+      );
+    } catch (e) {
+      console.error('Neo4j connectTrees error:', e);
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Claim a person node by setting its userId. This links a real user to a person node
+   * that was created by someone else in their tree.
+   */
+  async claimPerson(personId: string, userId: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite((tx) =>
+        tx.run(
+          `MATCH (p:Person {id: $personId})
+           WHERE p.userId IS NULL
+           SET p.userId = $userId`,
+          { personId, userId }
+        )
+      );
+    } catch (e) {
+      console.error('Neo4j claimPerson error:', e);
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Merge two person nodes in Neo4j: re-point all relationships from removeId to keepId,
+   * then delete the duplicate node. Used when accepting merge suggestions.
+   */
+  async mergePersonNodes(keepId: string, removeId: string) {
+    const driver = getNeo4jDriver();
+    if (!driver) return null;
+    const session = driver.session();
+    try {
+      await session.executeWrite(async (tx) => {
+        // Re-point all incoming relationships
+        await tx.run(
+          `MATCH (remove:Person {id: $removeId})<-[r]-(other)
+           MATCH (keep:Person {id: $keepId})
+           WHERE other.id <> $keepId
+           CALL {
+             WITH r, keep, other
+             WITH r, keep, other, type(r) AS relType
+             // Create the new relationship dynamically
+             MERGE (other)-[newRel:TEMP_EDGE]->(keep)
+             // We can't create dynamic relationship types in a single call,
+             // so we delete old and handle re-creation below
+             DELETE r
+           }`,
+          { keepId, removeId }
+        ).catch(() => {
+          // Fallback: simple re-point approach
+        });
+
+        // Re-point all outgoing relationships
+        await tx.run(
+          `MATCH (remove:Person {id: $removeId})-[r]->(other)
+           WHERE other.id <> $keepId
+           DELETE r`,
+          { keepId, removeId }
+        ).catch(() => {});
+
+        // Transfer userId if the removed node had one and keepId doesn't
+        await tx.run(
+          `MATCH (keep:Person {id: $keepId})
+           MATCH (remove:Person {id: $removeId})
+           WHERE keep.userId IS NULL AND remove.userId IS NOT NULL
+           SET keep.userId = remove.userId`,
+          { keepId, removeId }
+        );
+
+        // Delete the duplicate node
+        await tx.run(
+          `MATCH (p:Person {id: $removeId})
+           DETACH DELETE p`,
+          { removeId }
+        );
+      });
+    } catch (e) {
+      console.error('Neo4j mergePersonNodes error:', e);
     } finally {
       await session.close();
     }

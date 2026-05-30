@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Neo4jService } from '@/lib/neo4j-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -74,6 +75,10 @@ export async function POST(req: NextRequest) {
             user_id_2: ordered[1],
             connection_type: 'relative'
           }, { onConflict: 'user_id_1,user_id_2' });
+
+        // Neo4j Dual-Write (Non-blocking)
+        Neo4jService.connectTrees(fromUserId, user.id)
+          .catch(err => console.error('Neo4j connectTrees dual-write failed:', err));
       }
 
       const personId = request.person_id || request.linked_person_id;
@@ -83,6 +88,10 @@ export async function POST(req: NextRequest) {
           .update({ user_id: user.id })
           .eq('id', personId)
           .is('user_id', null);
+
+        // Neo4j Dual-Write (Non-blocking)
+        Neo4jService.claimPerson(personId, user.id)
+          .catch(err => console.error('Neo4j claimPerson dual-write failed:', err));
       }
 
       return NextResponse.json({ success: true, message: 'Connection accepted' });

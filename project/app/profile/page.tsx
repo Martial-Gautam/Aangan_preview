@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import {
   Camera, LogOut, Check, CreditCard as Edit2, ChevronRight,
   Calendar, User, Users, Phone, Search, Loader2, Trash2, AlertTriangle,
-  BarChart3, Bell, MapPin
+  BarChart3, Bell, MapPin, Share2
 } from 'lucide-react';
+import { ShareInviteSheet } from '@/components/ShareInviteSheet';
 
 export default function ProfilePage() {
   const { user, session, profile, loading, signOut, refreshProfile } = useAuth();
@@ -38,6 +39,9 @@ export default function ProfilePage() {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimChecking, setClaimChecking] = useState(false);
   const [claimMessage, setClaimMessage] = useState('');
+
+  // Share state
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -310,15 +314,24 @@ export default function ProfilePage() {
         <div className="glass-header px-6 pt-12 pb-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="screen-title text-xl text-gray-900">Profile</h1>
-            <button
-              onClick={() => setEditing(!editing)}
-              className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-all ${
-                editing ? 'bg-gray-100 text-gray-500' : 'bg-[#2A4365]/8 text-[#2A4365] hover:bg-[#2A4365]/12'
-              }`}
-            >
-              <Edit2 size={14} />
-              {editing ? 'Cancel' : 'Edit'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowShareSheet(true)}
+                className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg bg-[#2A4365]/8 text-[#2A4365] hover:bg-[#2A4365]/12 transition-all"
+              >
+                <Share2 size={14} />
+                Share
+              </button>
+              <button
+                onClick={() => setEditing(!editing)}
+                className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                  editing ? 'bg-gray-100 text-gray-500' : 'bg-[#2A4365]/8 text-[#2A4365] hover:bg-[#2A4365]/12'
+                }`}
+              >
+                <Edit2 size={14} />
+                {editing ? 'Cancel' : 'Edit'}
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col items-center">
@@ -673,6 +686,12 @@ export default function ProfilePage() {
           </p>
         </SheetContent>
       </Sheet>
+
+      {/* Share Invite Sheet */}
+      <ShareInviteSheet
+        open={showShareSheet}
+        onOpenChange={setShowShareSheet}
+      />
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && (

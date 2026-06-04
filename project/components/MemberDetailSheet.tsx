@@ -4,7 +4,8 @@ import { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Person, Relationship } from '@/lib/tree-to-flow';
-import { Pencil, Trash2, LinkIcon, Route, MessageCircle, UserPlus, Calendar, Cake } from 'lucide-react';
+import { Pencil, Trash2, LinkIcon, Route, MessageCircle, UserPlus, Calendar, Cake, Share2 } from 'lucide-react';
+import { ShareInviteSheet } from '@/components/ShareInviteSheet';
 import { calculateDegree } from '@/lib/degree-calculator';
 import { useFamilyStore } from '@/lib/family-store';
 import { resolveRelationshipLabel } from '@/lib/relationship-resolver';
@@ -94,6 +95,7 @@ export default function MemberDetailSheet({
   const setQuickAddTarget = useFamilyStore(s => s.setQuickAddTarget);
   const [messageTargetId, setMessageTargetId] = useState<string | null>(null);
   const [resolvingTarget, setResolvingTarget] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   const person = useMemo(
     () => people.find(p => p.id === personId) || null,
@@ -415,9 +417,21 @@ export default function MemberDetailSheet({
                     Send Message
                   </button>
                   {!canMessage && !resolvingTarget && (
-                    <p className="text-[10px] text-gray-400 text-center px-4 pb-2 -mt-1">
-                      No linked Familiar account found yet
-                    </p>
+                    <>
+                      <div className="h-px bg-gray-200/50 mx-4" />
+                      <button
+                        onClick={() => setShowShareSheet(true)}
+                        className="w-full py-3.5 px-4 text-[13px] font-semibold flex items-center gap-3 hover:bg-gray-100/60 active:bg-gray-100 transition-all text-gray-900"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#2A4365] flex items-center justify-center flex-shrink-0">
+                          <Share2 size={14} className="text-white" />
+                        </div>
+                        Invite to Familiar
+                      </button>
+                      <p className="text-[10px] text-gray-400 text-center px-4 pb-2 -mt-1">
+                        Not on Familiar yet — invite them to join!
+                      </p>
+                    </>
                   )}
                 </>
               )}
@@ -434,6 +448,13 @@ export default function MemberDetailSheet({
             )}
           </div>
         </div>
+
+        {/* Share Invite Sheet for unlinked members */}
+        <ShareInviteSheet
+          open={showShareSheet}
+          onOpenChange={setShowShareSheet}
+          personName={person.full_name}
+        />
       </SheetContent>
     </Sheet>
   );

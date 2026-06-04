@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import BottomNav from '@/components/BottomNav';
-import { Camera, ChevronLeft, Check, User, Mail, Phone, Users } from 'lucide-react';
+import { Camera, ChevronLeft, Check, User, Mail, Phone, Users, Share2 } from 'lucide-react';
+import { ShareInviteSheet } from '@/components/ShareInviteSheet';
 import Link from 'next/link';
 
 type AddRelationshipType =
@@ -66,6 +67,8 @@ export default function AddMemberPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [addedPersonName, setAddedPersonName] = useState('');
+  const [showShareAfterAdd, setShowShareAfterAdd] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -127,7 +130,11 @@ export default function AddMemberPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to add member');
 
       setSuccess(true);
-      setTimeout(() => router.replace('/home'), 1200);
+      setAddedPersonName(name.trim());
+
+      // Show share button immediately for inviting the relative
+      // Only auto-redirect after a delay if user doesn't interact with share
+      setShowShareAfterAdd(true);
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -310,10 +317,56 @@ export default function AddMemberPage() {
                 : 'bg-[#2A4365] shadow-[#2A4365]/20 text-white hover:bg-[#2A4365]/90 active:scale-[0.98]'
             }`}
           >
-            {success ? <><Check size={18} /> Added successfully!</> : saving ? 'Saving...' : 'Add to Family Tree'}
+            {success ? (
+            <>
+              <Check size={18} /> Added successfully!
+            </>
+          ) : saving ? 'Saving...' : 'Add to Family Tree'}
           </button>
+
+          {/* Share invite section — appears after successful add */}
+          {success && (
+            <div className="glass-card rounded-3xl p-5 animate-slideUp">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#2A4365]/10 flex items-center justify-center">
+                  <Share2 size={18} className="text-[#2A4365]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900">Invite {addedPersonName.split(' ')[0]} to Familiar</h3>
+                  <p className="text-xs text-gray-500">They can join and connect with your family tree</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowShareAfterAdd(true)}
+                  className="flex-1 py-3 rounded-xl bg-[#2A4365] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#2A4365]/90 active:scale-[0.98] transition-all"
+                >
+                  <Share2 size={15} />
+                  Share Invite
+                </button>
+                <button
+                  onClick={() => router.replace('/home')}
+                  className="px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-500 text-sm font-semibold hover:bg-gray-50 transition-all"
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <ShareInviteSheet
+        open={showShareAfterAdd}
+        onOpenChange={(open) => {
+          setShowShareAfterAdd(open);
+          if (!open) {
+            // Navigate to home after closing share sheet
+            setTimeout(() => router.replace('/home'), 300);
+          }
+        }}
+        personName={addedPersonName}
+      />
 
       <BottomNav />
     </div>

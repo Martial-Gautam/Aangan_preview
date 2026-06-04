@@ -14,7 +14,8 @@ import type { ViewMode } from '@/components/FamilyCosmos';
 import QuickAddSheet from '@/components/QuickAddSheet';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import BottomNav from '@/components/BottomNav';
-import { Plus, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation } from 'lucide-react';
+import { Plus, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation, Share2 } from 'lucide-react';
+import { ShareInviteSheet } from '@/components/ShareInviteSheet';
 import Link from 'next/link';
 
 function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
@@ -348,6 +349,7 @@ export default function HomePage() {
   const [showCosmos, setShowCosmos] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('fpp');
   const [showNearbySheet, setShowNearbySheet] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [nearbyCityQuery, setNearbyCityQuery] = useState('');
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyRelatives, setNearbyRelatives] = useState<NearbyRelative[]>([]);
@@ -617,6 +619,13 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-gray-400/60 bg-gray-100/60 rounded-full px-2.5 py-1 mr-0.5 tabular-nums">
               {familyCount}
             </span>
+            <button
+              onClick={() => setShowShareSheet(true)}
+              className="w-8 h-8 rounded-full bg-[#2A4365]/8 flex items-center justify-center hover:bg-[#2A4365]/12 transition-all active:scale-95 text-[#2A4365]"
+              aria-label="Share Familiar"
+            >
+              <Share2 size={14} />
+            </button>
             <button
               onClick={() => setShowInstallSheet(true)}
               className="w-8 h-8 rounded-full bg-gray-100/60 flex items-center justify-center hover:bg-gray-200/60 transition-all active:scale-95 text-gray-400"
@@ -1006,6 +1015,12 @@ export default function HomePage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Share Invite Sheet */}
+      <ShareInviteSheet
+        open={showShareSheet}
+        onOpenChange={setShowShareSheet}
+      />
 
       <BottomNav />
     </div>

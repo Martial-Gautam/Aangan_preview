@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useConnectionNotifications } from '@/hooks/useConnectionNotifications';
+import { useFamilyStore } from '@/lib/family-store';
+import { toast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
-import { Bell, Loader2, User, CheckCircle2, XCircle, Users, UserPlus } from 'lucide-react';
+import { Bell, Loader2, User, CheckCircle2, XCircle, Users, UserPlus, TreePine } from 'lucide-react';
 
 type PendingRequest = {
   id: string;
@@ -23,8 +27,10 @@ type Suggestion = {
 };
 
 export default function NotificationsPage() {
-  const { user, session, loading } = useAuth();
+  const { user, session, profile, loading } = useAuth();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { fetchFamily } = useFamilyStore();
   
   // Connection Requests state
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
@@ -35,11 +41,32 @@ export default function NotificationsPage() {
   const pendingRequestsKey = ['notifications', 'pending', user?.id];
   const suggestionsKey = ['notifications', 'suggestions', user?.id];
 
+  // ─── Supabase Realtime: Instant notification delivery ───
+  const handleNewRequest = useCallback(() => {
+    // Instantly refresh the pending list when a new request arrives
+    queryClient.invalidateQueries({ queryKey: pendingRequestsKey });
+  }, [queryClient, pendingRequestsKey]);
+
+  const handleRequestUpdate = useCallback(() => {
+    // Refresh both pending and suggestions when any request status changes
+    queryClient.invalidateQueries({ queryKey: pendingRequestsKey });
+    queryClient.invalidateQueries({ queryKey: suggestionsKey });
+  }, [queryClient, pendingRequestsKey, suggestionsKey]);
+
+  useConnectionNotifications({
+    userId: user?.id,
+    userEmail: user?.email,
+    userPhone: profile?.phone,
+    onNewRequest: handleNewRequest,
+    onRequestUpdate: handleRequestUpdate,
+    enabled: Boolean(user?.id),
+  });
+
   const { data: pendingRequests = [], isLoading: requestsLoading } = useQuery<PendingRequest[]>({
     queryKey: pendingRequestsKey,
     enabled: Boolean(session?.access_token && user?.id),
-    staleTime: 15_000,
-    refetchInterval: 15_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000, // Reduced from 15s: Realtime is now primary
     refetchOnWindowFocus: true,
     retry: 2,
     queryFn: async () => {
@@ -53,7 +80,7 @@ export default function NotificationsPage() {
   });
 
   const handleConnectionResponse = async (requestId: string, action: 'accept' | 'reject') => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !user) return;
     setProcessingRequestId(requestId);
     try {
       const res = await fetch('/api/connections/respond', {
@@ -65,12 +92,38 @@ export default function NotificationsPage() {
         body: JSON.stringify({ request_id: requestId, action })
       });
       if (res.ok) {
+        // Remove from local list immediately
         queryClient.setQueryData(pendingRequestsKey, (prev: any[] | undefined) =>
           (prev || []).filter((r) => r.id !== requestId)
         );
+
+        if (action === 'accept') {
+          // Refresh the family tree so the merged tree is visible
+          fetchFamily(user.id, session.access_token);
+          // Also invalidate any React Query family caches
+          queryClient.invalidateQueries({ queryKey: ['familyData'] });
+          queryClient.invalidateQueries({ queryKey: ['family'] });
+
+          toast({
+            title: '🌳 Trees Connected!',
+            description: 'Your family trees have been linked. View your expanded tree.',
+          });
+
+          // Navigate to home after a short delay so user sees the toast
+          setTimeout(() => router.push('/home'), 1500);
+        } else {
+          toast({
+            title: 'Request declined',
+            description: 'The connection request has been declined.',
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to respond to request', err);
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     } finally {
       setProcessingRequestId(null);
     }
@@ -80,7 +133,7 @@ export default function NotificationsPage() {
     queryKey: suggestionsKey,
     enabled: Boolean(session?.access_token && user?.id),
     staleTime: 30_000,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000, // Reduced: Realtime handles fast updates
     refetchOnWindowFocus: true,
     retry: 2,
     queryFn: async () => {

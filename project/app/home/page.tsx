@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth-context';
 import { useFamilyStore } from '@/lib/family-store';
+import { useConnectionNotifications } from '@/hooks/useConnectionNotifications';
 import BrandLogo from '@/components/BrandLogo';
 import { TopRightMenu } from '@/components/TopRightMenu';
 import MemberDetailSheet from '@/components/MemberDetailSheet';
@@ -355,6 +356,24 @@ export default function HomePage() {
   const seedInFlightRef = useRef(false);
   const bootstrapUserRef = useRef<string | null>(null);
 
+  // ─── Supabase Realtime: Instant notification badge updates ───
+  useConnectionNotifications({
+    userId: user?.id,
+    userEmail: user?.email,
+    userPhone: profile?.phone,
+    onNewRequest: useCallback(() => {
+      fetchPendingAlerts();
+    }, []),
+    onRequestUpdate: useCallback(() => {
+      fetchPendingAlerts();
+      // Also refresh tree in case an accepted connection means a new tree merge
+      if (user?.id && session?.access_token) {
+        fetchFamily(user.id, session.access_token);
+      }
+    }, [user?.id, session?.access_token]),
+    enabled: Boolean(user?.id && session?.access_token),
+  });
+
   // ─── Effects ─────────────────────────────────────────────
 
   useEffect(() => {
@@ -496,7 +515,8 @@ export default function HomePage() {
 
     const onFocus = () => refreshAlerts();
 
-    const interval = window.setInterval(refreshAlerts, 15000);
+    // Reduced from 15s to 60s: Supabase Realtime is now primary
+    const interval = window.setInterval(refreshAlerts, 60000);
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('focus', onFocus);
 

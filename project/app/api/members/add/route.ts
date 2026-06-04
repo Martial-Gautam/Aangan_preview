@@ -352,11 +352,31 @@ export async function POST(req: NextRequest) {
 
       // Look up existing user by email (email lives in auth.users, not profiles)
       if (normalizedEmail && !matchedUserId) {
-        const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-        const matchedUser = (allUsers?.users || []).find(
-          (u) => u.email?.toLowerCase() === normalizedEmail && u.id !== user.id
-        );
-        matchedUserId = matchedUser?.id || null;
+        try {
+          // Use targeted lookup instead of listing all users (scales beyond 1000)
+          const { data: matchedUserData } = await supabaseAdmin.auth.admin
+            .listUsers({ page: 1, perPage: 1 });
+          // Search profiles table which has the email from the auth trigger
+          const { data: emailProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .ilike('email', normalizedEmail)
+            .neq('id', user.id)
+            .maybeSingle();
+          if (emailProfile?.id) {
+            matchedUserId = emailProfile.id;
+          } else {
+            // Fallback: check auth.users directly via admin API
+            const { data: { users: allUsers } } = await supabaseAdmin.auth.admin
+              .listUsers({ page: 1, perPage: 50 });
+            const matchedUser = (allUsers || []).find(
+              (u) => u.email?.toLowerCase() === normalizedEmail && u.id !== user.id
+            );
+            matchedUserId = matchedUser?.id || null;
+          }
+        } catch (emailLookupErr) {
+          console.error('Email lookup error:', emailLookupErr);
+        }
       }
 
       // Look up existing user by phone

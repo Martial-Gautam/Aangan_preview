@@ -329,100 +329,100 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
   const problemItems = [
     {
       icon: Users,
-      title: 'Dispersed Family Ties',
-      desc: 'Family updates are scattered across social apps, calls, and groups.',
-      solution: 'A unified family graph brings every person into one visible network.',
-      previewTitle: 'Scattered groups become one tree',
-      from: ['WhatsApp', 'Albums', 'Calls'],
-      to: 'Family Cosmos',
+      title: 'Invisible Relationships',
+      desc: 'The internet knows your friends, followers, and colleagues. But no platform knows your family.',
+      solution: 'A living Family Graph brings every relative into one visible, connected network.',
+      previewTitle: 'From invisible to visible',
+      from: ['Friends', 'Followers', 'Colleagues'],
+      to: 'Family Graph',
     },
     {
       icon: Shield,
-      title: 'Limited Privacy Control',
-      desc: 'It is hard to decide who should see sensitive family updates.',
-      solution: 'Share by relationship degree, side of family, and trusted circles.',
-      previewTitle: 'Privacy follows the relation',
-      from: ['Everyone', 'Friends', 'Unknown'],
-      to: '2nd degree only',
+      title: 'Fragmented Information',
+      desc: 'Family data is scattered across WhatsApp groups, wedding albums, memories, and government records.',
+      solution: 'One unified graph connects all family information in a single living network.',
+      previewTitle: 'Scattered data becomes one graph',
+      from: ['WhatsApp', 'Albums', 'Records'],
+      to: 'Family Graph',
     },
     {
       icon: TreePine,
-      title: 'No Universal Family Tree',
-      desc: 'Most families do not have a living, shared family map.',
-      solution: 'Add relatives once and let the app resolve direct and extended relations.',
-      previewTitle: 'Every new node teaches the tree',
-      from: ['Maa', 'Bua', 'Mama'],
-      to: 'Resolved Rishta',
+      title: 'No Family Graph Exists',
+      desc: 'Facebook built the Social Graph. LinkedIn built the Professional Graph. No one has built the Family Graph.',
+      solution: 'Familiar is building the world\'s first Family Graph — a living map of every relationship.',
+      previewTitle: 'The missing graph',
+      from: ['Social', 'Professional', 'Family?'],
+      to: 'Family Graph',
     },
     {
-      icon: Send,
-      title: 'Event Disorganization',
-      desc: 'Invites, guest lists, and event memories live in separate places.',
-      solution: 'Send invitations to family groups and collect shared memories together.',
-      previewTitle: 'One invite reaches the right branch',
-      from: ['Guest list', 'Photos', 'Updates'],
-      to: 'Family Event',
+      icon: Heart,
+      title: 'Lost Across Generations',
+      desc: 'With every generation, family connections become harder to trace and easier to lose.',
+      solution: 'The Family Graph preserves relationships across generations, ensuring no connection is forgotten.',
+      previewTitle: 'Generations stay connected',
+      from: ['Gen 1', 'Gen 2', 'Gen 3'],
+      to: 'Preserved',
     },
     {
       icon: MapPin,
-      title: 'Hard to Find Relatives',
-      desc: 'In new cities, people often do not know which relatives are nearby.',
-      solution: 'Discover trusted relatives around a place or gathering.',
+      title: 'Unknown Relatives Nearby',
+      desc: 'People move to new cities without knowing which relatives live nearby.',
+      solution: 'Discover trusted relatives around any place through the Family Graph.',
       previewTitle: 'New city, known people',
       from: ['Delhi', 'Pune', 'Jaipur'],
       to: 'Nearby Relatives',
     },
     {
-      icon: Heart,
-      title: 'Fear of Judgement',
-      desc: 'People hesitate to post personal family moments publicly.',
-      solution: 'A private courtyard makes emotional family sharing feel safer.',
-      previewTitle: 'Private moments stay in the family',
-      from: ['Public feed', 'Mixed audience', 'Noise'],
-      to: 'Family-only',
+      icon: Send,
+      title: 'No Dedicated Infrastructure',
+      desc: 'Families use tools built for strangers — messaging apps, social feeds, cloud storage — none designed for family relationships.',
+      solution: 'Familiar provides digital infrastructure designed specifically for family connections.',
+      previewTitle: 'Built for families',
+      from: ['Chat apps', 'Social media', 'Cloud'],
+      to: 'Family Network',
     },
   ];
 
   const featureItems = [
     {
       icon: TreePine,
-      title: 'Universal Family Tree',
-      desc: 'Add yourself once and Familiar maps relatives and degrees of relation.',
+      title: 'Family Graph',
+      desc: 'Add relatives and Familiar maps relationships and degrees of connection automatically.',
       gradient: 'from-[#ff7f63] to-[#2d81ff]',
       snapshot: 'tree',
     },
     {
-      icon: Shield,
-      title: 'Privacy Controls',
-      desc: 'Share posts, events, and announcements only up to the degree you choose.',
+      icon: Users,
+      title: 'Relative Discovery',
+      desc: 'Find family connections you didn\'t know existed. The graph reveals relationships as it grows.',
       gradient: 'from-[#2d81ff] to-[#1eb18a]',
-      snapshot: 'privacy',
-    },
-    {
-      icon: MapPin,
-      title: 'Find Relatives Nearby',
-      desc: 'Discover family in new cities, functions, or travel plans.',
-      gradient: 'from-[#1eb18a] to-[#ffc457]',
       snapshot: 'nearby',
     },
     {
+      icon: MessageCircle,
+      title: 'Family Feed',
+      desc: 'A private space for family-only interactions, updates, and conversations.',
+      gradient: 'from-[#1eb18a] to-[#ffc457]',
+      snapshot: 'privacy',
+    },
+    {
       icon: Send,
-      title: 'One-Tap Invitations',
-      desc: 'Invite entire family groups to weddings, rituals, and gatherings.',
+      title: 'Family Events',
+      desc: 'Coordinate weddings, functions, and gatherings — invite entire family branches at once.',
       gradient: 'from-[#ffc457] to-[#ff7f63]',
       snapshot: 'invite',
     },
     {
       icon: Image,
-      title: 'Family-First Media Sharing',
-      desc: 'Shared galleries where everyone contributes photos and videos.',
+      title: 'Family Memories',
+      desc: 'Shared family archives where everyone contributes photos, videos, and stories.',
       gradient: 'from-[#ff7f63] to-[#1eb18a]',
       snapshot: 'media',
     },
     {
       icon: Sparkles,
       title: 'Ancestor Mapping',
-      desc: 'Trace generations of lineage and preserve stories over time.',
+      desc: 'Trace generations of lineage and preserve family history over time.',
       gradient: 'from-[#2d81ff] to-[#ff7f63]',
       snapshot: 'ancestor',
     },
@@ -465,10 +465,10 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
             >
               <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">
-                Family life is rich. The tools around it are fragmented.
+                The internet digitized everything. Except families.
               </h2>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Hover a challenge to see how Familiar turns scattered family moments into a connected, private relation graph.
+                Hover a challenge to see how Familiar turns invisible family connections into a living, connected graph.
               </p>
             </motion.div>
 
@@ -505,10 +505,10 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               >
-                <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">All Challenges, One Answer</p>
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">Core Features</h2>
+                <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">One Graph, Every Answer</p>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">The Family Graph Powers Everything</h2>
                 <p className="text-gray-600 max-w-lg leading-relaxed">
-                  Hover a feature to preview the product moment behind it.
+                  Hover a feature to see how the Family Graph enables each experience.
                 </p>
               </motion.div>
             </div>
@@ -649,14 +649,14 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
               style={{ x: visionX, opacity: visionOpacity }}
               className="text-2xl sm:text-3xl font-bold text-white leading-snug mb-6"
             >
-              To build the world&apos;s first universal family network - a living digital courtyard where every person can trace their roots, celebrate family bonds, and connect with relatives anywhere.
+              Facebook mapped friendships. LinkedIn mapped professional relationships. Familiar is building the Family Graph.
             </motion.h2>
           </motion.div>
           <motion.p 
             style={{ x: visionX, opacity: visionOpacity }}
             className="text-white/60 text-base leading-relaxed max-w-xl mx-auto"
           >
-            Reviving the warmth of the traditional Indian courtyard, but on a global scale - creating a trusted, private space for generations to come.
+            Every Person. Every Relationship. Every Generation.
           </motion.p>
         </div>
       </section>
@@ -671,14 +671,14 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
           className="max-w-4xl mx-auto text-center mb-12"
         >
           <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Opportunity</p>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">A massive, untapped market</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">The most important graph hasn&apos;t been built</h2>
         </motion.div>
         <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { stat: '1.4B+', label: 'People in India', sub: 'with family at the core' },
-            { stat: '80%', label: 'Social Interactions', sub: 'are among family & friends' },
-            { stat: '$8B+', label: 'Ancestry Market', sub: 'expected by 2030' },
-            { stat: '∞', label: 'Family Events', sub: 'multi-billion dollar ecosystem' },
+            { stat: '1.4B+', label: 'People in India', sub: 'every person belongs to a family' },
+            { stat: '0', label: 'Family Networks', sub: 'no dominant one exists today' },
+            { stat: '8B+', label: 'Global Population', sub: 'families everywhere, disconnected' },
+            { stat: '100+', label: 'Relationships Mapped', sub: 'and growing every day' },
           ].map((item, index) => (
             <motion.div
               key={item.label}
@@ -736,7 +736,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
               onClick={onSignUp}
               className="w-full sm:w-auto bg-[#2A4365] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#2A4365]/90 active:scale-[0.97] transition-all shadow-xl shadow-[#2A4365]/20 flex items-center justify-center gap-2"
             >
-              Get Started Free <ArrowRight size={18} />
+              Add Your First Relative <ArrowRight size={18} />
             </button>
             <button
               onClick={onSignIn}
@@ -754,7 +754,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
           <div className="flex items-center gap-2">
             <BrandLogo size={16} />
             <span className="brand-wordmark text-sm text-gray-900">Familiar</span>
-            <span className="text-xs text-gray-500">- The Digital Courtyard</span>
+            <span className="text-xs text-gray-500">- Building the Family Graph</span>
           </div>
           <p className="text-xs text-gray-500">
             Built by Ranveer Gautam · ranveer.aangan@gmail.com

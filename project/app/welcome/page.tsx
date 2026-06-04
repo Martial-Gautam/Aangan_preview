@@ -8,7 +8,7 @@ import BrandLogo from '@/components/BrandLogo';
 import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
-  Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield,
+  Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield, Users,
   Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network
 } from 'lucide-react';
 
@@ -270,7 +270,7 @@ export default function WelcomePage() {
                 {mode === 'signup' ? 'Join Familiar' : 'Welcome back'}
               </h2>
               <p className="text-gray-500 dark:text-gray-300 mt-1 text-sm">
-                {mode === 'signup' ? 'Start building your family tree today' : 'Sign in to your digital courtyard'}
+                {mode === 'signup' ? 'Start building your Family Graph' : 'Sign in to your Family Graph'}
               </p>
             </div>
 
@@ -515,7 +515,7 @@ export default function WelcomePage() {
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07121e]/60 px-3.5 py-2 text-white/90 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
               <Sparkles size={15} className="text-[#ffd98f]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.14em]">The Digital Courtyard</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.14em]">Building the Family Graph</span>
             </div>
 
             <h1 className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-5 tracking-normal">
@@ -523,11 +523,11 @@ export default function WelcomePage() {
             </h1>
 
             <p className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
-              Your family tree, chats, memories, and invitations moving together.
+              The internet digitized friends, followers, and colleagues. But not families.
             </p>
 
             <p className="text-white/90 text-base sm:text-lg leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
-              Build a living cosmos of relatives, discover the right rishta, share family moments privately, and bring every generation into one warm space.
+              Discover relatives, understand relationships, preserve memories, and stay connected — all through a living family network that grows with every member.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
@@ -535,7 +535,7 @@ export default function WelcomePage() {
                 onClick={() => setMode('signup')}
                 className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
               >
-                Start Your Family Cosmos <ArrowRight size={18} />
+                Add Your First Relative <ArrowRight size={18} />
               </button>
               <button
                 onClick={() => setMode('signin')}
@@ -547,10 +547,10 @@ export default function WelcomePage() {
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
               {[
-                { icon: TreePine, label: 'Universal Tree' },
-                { icon: Shield, label: 'Private by degree' },
-                { icon: MessageCircle, label: 'Family chats' },
-                { icon: Image, label: 'Shared memories' },
+                { icon: Network, label: 'Family Graph' },
+                { icon: Users, label: 'Relative Discovery' },
+                { icon: CalendarDays, label: 'Family Events' },
+                { icon: Image, label: 'Family Memories' },
               ].map((item) => (
                 <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-[#07121e]/45 px-3 py-1.5 text-xs font-semibold text-white/85 backdrop-blur-md">
                   <item.icon size={13} />
@@ -574,7 +574,7 @@ export default function WelcomePage() {
               <div className="rounded-[1.45rem] bg-[#081522]/92 border border-white/10 overflow-hidden">
                 <div className="flex items-center justify-between px-5 pt-5 pb-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Live Family Cosmos</p>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Live Family Graph</p>
                     <p className="text-white font-bold text-lg">Ranveer&apos;s Family</p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-white/[0.12] border border-white/12 flex items-center justify-center">
@@ -599,16 +599,16 @@ export default function WelcomePage() {
                     ))}
                   </svg>
                   <div className="absolute left-4 bottom-4 right-4 flex items-center justify-between rounded-2xl bg-[#07121e]/70 border border-white/10 px-3 py-2 backdrop-blur-md">
-                    <span className="text-xs text-white/85 font-semibold">Imagine is your Maasi</span>
+                    <span className="text-xs text-white/85 font-semibold">Discovered: Sheela is your Maasi</span>
                     <span className="text-[10px] text-[#ffd98f] font-bold">2 hops</span>
                   </div>
                 </div>
 
                 <div className="p-4 space-y-2">
                   {[
-                    { icon: MessageCircle, title: 'Family Chat', text: 'Badhaiya Hoon', tone: 'text-[#8edbff]' },
-                    { icon: CalendarDays, title: 'Wedding Invite', text: 'Sent to 42 relatives', tone: 'text-[#ffd98f]' },
-                    { icon: Image, title: 'Memories', text: '18 new photos added', tone: 'text-[#8ff0c7]' },
+                    { icon: Users, title: 'Relative Discovery', text: '3 new connections found', tone: 'text-[#8edbff]' },
+                    { icon: CalendarDays, title: 'Family Events', text: 'Wedding invite sent to 42', tone: 'text-[#ffd98f]' },
+                    { icon: Image, title: 'Family Memories', text: '18 new photos shared', tone: 'text-[#8ff0c7]' },
                   ].map((item) => (
                     <div key={item.title} className="flex items-center gap-3 rounded-2xl border border-white/9 bg-white/[0.055] px-3 py-2.5">
                       <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">

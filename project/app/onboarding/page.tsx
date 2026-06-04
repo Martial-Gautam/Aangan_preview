@@ -157,11 +157,13 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex flex-col max-w-sm mx-auto" style={{ background: 'transparent' }}>
       <div className="px-6 pt-12 pb-2">
         <div className="flex items-center gap-3 mb-6">
-          {currentIndex > 0 && (
-            <button onClick={goBack} className="p-2 rounded-full hover:bg-gray-100 transition-colors -ml-2">
-              <ChevronLeft size={20} className="text-gray-600" />
-            </button>
-          )}
+          <button
+            onClick={currentIndex > 0 ? goBack : () => router.replace('/welcome')}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors -ml-2"
+            aria-label={currentIndex > 0 ? 'Go to previous step' : 'Back to welcome'}
+          >
+            <ChevronLeft size={20} className="text-gray-600" />
+          </button>
           <div className="flex-1 h-1.5 bg-gray-200/40 rounded-full overflow-hidden">
             <div className="h-full bg-[#2A4365] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}

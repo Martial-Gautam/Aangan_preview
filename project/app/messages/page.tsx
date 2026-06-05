@@ -106,7 +106,7 @@ export default function MessagesPage() {
 // ─── Messages Content ────────────────────────────────────────
 
 function MessagesContent() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isOffline } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -264,25 +264,25 @@ function MessagesContent() {
   ]);
 
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    if (!user?.id || !session?.access_token || isOffline) return;
     initStream();
-  }, [user?.id, session?.access_token]);
+  }, [user?.id, session?.access_token, isOffline]);
 
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    if (!user?.id || !session?.access_token || isOffline) return;
     fetchRelatives();
-  }, [user?.id, session?.access_token]);
+  }, [user?.id, session?.access_token, isOffline]);
 
   // Load durable Supabase data immediately, then let Stream enrich it when ready.
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    if (!user?.id || !session?.access_token || isOffline) return;
 
     if (chatPartnerId) {
       fetchSupabaseThread(chatPartnerId, messages.length > 0 || hasHydratedVisibleCacheRef.current);
     } else {
       fetchSupabaseConversations(conversations.length > 0 || hasHydratedVisibleCacheRef.current);
     }
-  }, [user?.id, session?.access_token, chatPartnerId]);
+  }, [user?.id, session?.access_token, chatPartnerId, isOffline]);
 
   useEffect(() => {
     if (!user?.id || !session?.access_token || !streamReady || !useStream || !streamClient) return;
@@ -736,7 +736,7 @@ function MessagesContent() {
             />
             <button
               onClick={handleSend}
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim() || sending || isOffline}
               className="w-10 h-10 rounded-xl bg-[#2A4365] flex items-center justify-center hover:bg-[#2A4365]/90 transition-colors disabled:opacity-40 active:scale-95"
             >
               {sending ? <Loader2 size={16} className="text-white animate-spin" /> : <Send size={16} className="text-white" />}

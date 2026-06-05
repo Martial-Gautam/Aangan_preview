@@ -65,6 +65,15 @@ export const useFamilyStore = create<FamilyState>()(
   setFocusHops: (n) => set({ focusHops: Math.max(1, Math.min(5, n)) }),
 
   fetchFamily: async (userId, accessToken) => {
+    // ─── Offline guard: keep cached tree data, skip network ───
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const hasCache = get().people.length > 0 && Boolean(get().selfPerson);
+      if (hasCache) {
+        set({ dataLoading: false, error: null });
+        return;
+      }
+    }
+
     const hasLoadedTree = get().people.length > 0 && Boolean(get().selfPerson);
     set({ dataLoading: hasLoadedTree ? false : true, error: null });
     try {

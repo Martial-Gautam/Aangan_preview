@@ -513,14 +513,12 @@ export default function WelcomePage() {
           style={{ y: heroTextY, opacity: heroTextOpacity }}
         >
           <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#07121e]/60 px-3.5 py-2 text-white/90 backdrop-blur-md shadow-lg shadow-black/10 mb-5">
-              <Sparkles size={15} className="text-[#ffd98f]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.14em]">Building the Family Graph</span>
-            </div>
-
-            <h1 className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-5 tracking-normal">
+            <h1 className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-2 tracking-normal">
               Familiar
             </h1>
+            <h2 className="text-xl sm:text-2xl text-[#ffd98f] font-medium tracking-wide mb-6">
+              Building the Family Graph
+            </h2>
 
             <p className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
               The internet digitized friends, followers, and colleagues. But not families.

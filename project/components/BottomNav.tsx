@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { TreePine, Newspaper, Images, MessageCircle, User, Sparkles } from 'lucide-react';
+import { TreePine, Newspaper, Images, MessageCircle, User, Sparkles, WifiOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { readSessionCache, writeSessionCache } from '@/lib/ui-cache';
 import { warmStreamConnection } from '@/lib/stream-client';
@@ -20,10 +20,11 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { session, user } = useAuth();
+  const { session, user, isOffline } = useAuth();
   const queryClient = useQueryClient();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isBhuchkiOpen, setIsBhuchkiOpen] = useState(false);
+  const [showOfflineToast, setShowOfflineToast] = useState(false);
 
   useEffect(() => {
     const cachedUnread = readSessionCache<number>('nav:unread-count', 45_000);
@@ -33,7 +34,7 @@ export default function BottomNav() {
   }, []);
 
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || isOffline) return;
     const fetchUnread = async () => {
       try {
         const res = await fetch('/api/messages/conversations', {
@@ -59,7 +60,7 @@ export default function BottomNav() {
   }, [router]);
 
   useEffect(() => {
-    if (!session?.access_token || typeof window === 'undefined') return;
+    if (!session?.access_token || typeof window === 'undefined' || isOffline) return;
     if (sessionStorage.getItem('familiar-nav-warm-v1') === '1') return;
     sessionStorage.setItem('familiar-nav-warm-v1', '1');
 
@@ -174,7 +175,14 @@ export default function BottomNav() {
               {/* Center Popped-Out Button */}
               <div className="absolute left-1/2 -translate-x-1/2 -top-[1.2rem]">
                 <button 
-                  onClick={() => setIsBhuchkiOpen(true)}
+                  onClick={() => {
+                    if (isOffline) {
+                      setShowOfflineToast(true);
+                      setTimeout(() => setShowOfflineToast(false), 2500);
+                      return;
+                    }
+                    setIsBhuchkiOpen(true);
+                  }}
                   className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-[#2A4365] to-[#3B5B88] text-white shadow-[0_8px_20px_rgba(42,67,101,0.3)] transition-transform active:scale-95 border-4 border-white dark:border-[#161616]"
                 >
                   <Sparkles size={24} className="animate-pulse" />
@@ -218,6 +226,16 @@ export default function BottomNav() {
         </div>
       </nav>
       
+      {/* Offline Toast */}
+      {showOfflineToast && (
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2 bg-gray-900/95 backdrop-blur-md text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl">
+            <WifiOff size={16} className="text-amber-400" />
+            <span>You&apos;re offline</span>
+          </div>
+        </div>
+      )}
+
       {/* Bhuchki Chat Overlay */}
       <BhuchkiChat open={isBhuchkiOpen} onOpenChange={setIsBhuchkiOpen} />
     </>

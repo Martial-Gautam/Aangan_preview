@@ -1,8 +1,10 @@
-const CACHE_NAME = 'aangan-v2';
+const CACHE_NAME = 'aangan-v3';
 const STATIC_ASSETS = [
   '/',
   '/welcome',
   '/home',
+  '/messages',
+  '/feed',
   '/manifest.json',
   '/icons/familiar-icon-192.webp',
   '/icons/familiar-icon-512.webp',
@@ -30,21 +32,73 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  if (url.origin !== location.origin) return;
 
   // Skip API routes — always go to network
   if (url.pathname.startsWith('/api/')) return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Only cache successful responses
-        if (response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
+  // Same-origin requests: network-first with cache fallback
+  if (url.origin === location.origin) {
+    // Next.js static chunks: cache aggressively (they're content-hashed)
+    if (url.pathname.startsWith('/_next/static/')) {
+      event.respondWith(
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          return fetch(event.request).then((response) => {
+            if (response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          }).catch(() => caches.match('/'));
+        })
+      );
+      return;
+    }
+
+    // All other same-origin: network-first
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            // For navigation requests, serve the cached home page as SPA fallback
+            if (event.request.mode === 'navigate') {
+              return caches.match('/home') || caches.match('/');
+            }
+            return undefined;
+          });
+        })
+    );
+    return;
+  }
+
+  // Third-party assets (fonts, images): stale-while-revalidate
+  if (
+    url.hostname.includes('fonts.googleapis.com') ||
+    url.hostname.includes('fonts.gstatic.com') ||
+    url.hostname.includes('res.cloudinary.com')
+  ) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((response) => {
+            if (response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          })
+          .catch(() => cached);
+        return cached || fetchPromise;
       })
-      .catch(() => caches.match(event.request))
-  );
+    );
+    return;
+  }
 });

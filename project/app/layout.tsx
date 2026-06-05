@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import OfflineBanner from '@/components/OfflineBanner';
 import { QueryProvider } from '@/lib/query-provider';
 
 const inter = Inter({
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} ${plusJakarta.variable}`}>
+        <OfflineBanner />
         <QueryProvider>
           <AuthProvider>
             <ServiceWorkerRegister />

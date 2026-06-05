@@ -281,16 +281,7 @@ function FamilyPageSkeleton() {
         <div className="flex-1 relative overflow-hidden min-h-0">
           <TreeAreaSkeleton />
         </div>
-        <div className="glass-nav px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="mx-auto max-w-sm flex items-center justify-between">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="flex flex-col items-center gap-1 w-14">
-                <div className="skeleton w-6 h-6 rounded-full" />
-                <div className="skeleton w-10 h-2 rounded-full" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <BottomNav />
       </div>
     </motion.div>
   );
@@ -322,7 +313,7 @@ interface NearbyRelative {
 // ─── Component ───────────────────────────────────────────────
 
 export default function HomePage() {
-  const { user, profile, session, loading } = useAuth();
+  const { user, profile, session, loading, isOffline } = useAuth();
   const router = useRouter();
 
   // Zustand store
@@ -385,9 +376,12 @@ export default function HomePage() {
     if (!session?.access_token) return;
 
     fetchFamily(user.id, session.access_token);
-    fetchSuggestions();
-    fetchPendingAlerts();
-  }, [user, profile, loading, session?.access_token]);
+    // Skip network-only operations when offline
+    if (!isOffline) {
+      fetchSuggestions();
+      fetchPendingAlerts();
+    }
+  }, [user, profile, loading, session?.access_token, isOffline]);
 
   useEffect(() => {
     setNearbyCityQuery(profile?.location_city || '');

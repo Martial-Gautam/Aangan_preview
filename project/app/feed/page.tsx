@@ -75,7 +75,7 @@ export default function FeedPage() {
 // ─── Feed Content ────────────────────────────────────────────
 
 function FeedContent() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isOffline } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [useStreamBackend, setUseStreamBackend] = useState(true);
@@ -133,12 +133,12 @@ function FeedContent() {
     if (!authLoading && !user) router.replace('/welcome');
   }, [authLoading, user]);
 
-  // Init: try Stream, fallback to Supabase
+  // Init: try Stream, fallback to Supabase (skip when offline)
   useEffect(() => {
-    if (!user?.id || !session?.access_token) return;
+    if (!user?.id || !session?.access_token || isOffline) return;
     initBackend();
     fetchSharePeople();
-  }, [user?.id, session?.access_token]);
+  }, [user?.id, session?.access_token, isOffline]);
 
   // Reload on tab change
   useEffect(() => {
@@ -407,8 +407,39 @@ function FeedContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'transparent' }}>
-        <Loader2 size={24} className="text-[#2A4365] animate-spin" />
+      <div className="min-h-screen pb-24" style={{ background: 'transparent' }}>
+        <div className="max-w-sm mx-auto">
+          <div className="glass-header px-5 pt-12 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="skeleton w-16 h-6 rounded-lg" />
+              <div className="skeleton w-9 h-9 rounded-full" />
+            </div>
+            <div className="flex bg-white/40 backdrop-blur-md rounded-xl p-0.5 border border-gray-200/30">
+              <div className="flex-1 py-2 rounded-lg bg-white/80 flex items-center justify-center">
+                <div className="skeleton w-16 h-3 rounded-full" />
+              </div>
+              <div className="flex-1 py-2 rounded-lg flex items-center justify-center">
+                <div className="skeleton w-20 h-3 rounded-full" />
+              </div>
+            </div>
+          </div>
+          <div className="px-4 space-y-3 mt-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="glass-card rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton w-9 h-9 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="skeleton w-24 h-2.5" />
+                    <div className="skeleton w-14 h-2" />
+                  </div>
+                </div>
+                <div className="skeleton w-full h-2.5" />
+                <div className="skeleton w-3/4 h-2.5" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <BottomNav />
       </div>
     );
   }

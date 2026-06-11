@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { supabase, RelationshipType } from '@/lib/supabase';
 import { uploadImageToCloudinaryViaApi } from '@/lib/cloudinary-upload';
 import BottomNav from '@/components/BottomNav';
+import Footer from '@/components/Footer';
 import ClaimProfileModal, { ClaimMatch } from '@/components/ClaimProfileModal';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -615,6 +616,9 @@ export default function ProfilePage() {
             <Trash2 size={18} />
             Delete Account
           </button>
+
+          {/* Profile Footer */}
+          <Footer variant="app" />
         </div>
       </div>
 

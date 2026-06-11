@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import BrandLogo from '@/components/BrandLogo';
+import Footer from '@/components/Footer';
 import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
@@ -339,6 +340,9 @@ export default function WelcomePage() {
             </p>
           </div>
         </div>
+
+        {/* Footer for Auth Screen */}
+        <Footer variant="app" />
       </motion.div>
     );
   }

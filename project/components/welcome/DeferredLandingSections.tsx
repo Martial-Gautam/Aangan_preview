@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect as import_react_useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView as import_framer_useInView } from 'motion/react';
 import BrandLogo from '@/components/BrandLogo';
+import Footer from '@/components/Footer';
 import {
   ArrowRight,
   TreePine,
@@ -749,18 +750,7 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-200/30 relative" style={{ background: 'transparent' }}>
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BrandLogo size={16} />
-            <span className="brand-wordmark text-sm text-gray-900">Familiar</span>
-            <span className="text-xs text-gray-500">- Building the Family Graph</span>
-          </div>
-          <p className="text-xs text-gray-500">
-            Built by Ranveer Gautam · ranveer.aangan@gmail.com
-          </p>
-        </div>
-      </footer>
+      <Footer variant="landing" />
     </div>
   );
 }

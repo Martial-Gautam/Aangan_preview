@@ -4,4 +4,4 @@ const nextConfig = {
   transpilePackages: ['@dagrejs/dagre', '@dagrejs/graphlib'],
 };
 
-module.exports = nextConfig;
+export default nextConfig;

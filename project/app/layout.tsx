@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import OfflineBanner from '@/components/OfflineBanner';
 import { QueryProvider } from '@/lib/query-provider';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -73,13 +74,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} ${plusJakarta.variable}`}>
-        <OfflineBanner />
-        <QueryProvider>
-          <AuthProvider>
-            <ServiceWorkerRegister />
-            {children}
-          </AuthProvider>
-        </QueryProvider>
+        <ErrorBoundary>
+          <OfflineBanner />
+          <QueryProvider>
+            <AuthProvider>
+              <ServiceWorkerRegister />
+              {children}
+            </AuthProvider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

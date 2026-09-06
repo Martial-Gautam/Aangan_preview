@@ -16,6 +16,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import BottomNav from '@/components/BottomNav';
 import { Plus, Search, Sparkles, CheckCircle2, XCircle, Loader2, Bell, UserPlus, Download, ZoomIn, ZoomOut, Home, X, MapPin, Navigation, Share2 } from 'lucide-react';
 import { ShareInviteSheet } from '@/components/ShareInviteSheet';
+import InstallAppSheet from '@/components/InstallAppSheet';
+import { useAppInstall } from '@/hooks/useAppInstall';
 import Link from 'next/link';
 
 function TreeAreaSkeleton({ showSearch = true }: { showSearch?: boolean }) {
@@ -295,10 +297,6 @@ const FamilyCosmos = dynamic(() => import('@/components/FamilyCosmos'), {
 
 // ─── Types ───────────────────────────────────────────────────
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-}
-
 interface NearbyRelative {
   user_id: string;
   full_name: string;
@@ -330,11 +328,9 @@ export default function HomePage() {
   const [processingSuggestionId, setProcessingSuggestionId] = useState<string | null>(null);
   const [pendingAlertCount, setPendingAlertCount] = useState(0);
 
-  // Install prompt
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [canInstall, setCanInstall] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [installHint, setInstallHint] = useState('');
+  // Install / download prompt — Android gets the APK, iOS and desktop get the PWA
+  const appInstall = useAppInstall();
+  const { isInstalled, wasDismissedRecently } = appInstall;
   const [showInstallSheet, setShowInstallSheet] = useState(false);
   const [cosmosReady, setCosmosReady] = useState(false);
   const [showCosmos, setShowCosmos] = useState(false);
@@ -348,6 +344,8 @@ export default function HomePage() {
 
   const seedInFlightRef = useRef(false);
   const bootstrapUserRef = useRef<string | null>(null);
+  const postLoginRef = useRef(false);
+  const installOfferedRef = useRef(false);
 
   // ─── Supabase Realtime: Instant notification badge updates ───
   useConnectionNotifications({
@@ -387,21 +385,6 @@ export default function HomePage() {
     setNearbyCityQuery(profile?.location_city || '');
   }, [profile?.location_city]);
 
-  useEffect(() => {
-    const handler = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-      setCanInstall(true);
-    };
-    window.addEventListener('beforeinstallprompt', handler as EventListener);
-
-    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone;
-    setIsInstalled(Boolean(standalone));
-
-    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
-  }, []);
-
   const seedDemoSocial = useCallback(async (force: boolean) => {
     if (!user?.id || !session?.access_token) return;
     if (seedInFlightRef.current) return;
@@ -440,12 +423,32 @@ export default function HomePage() {
       sessionStorage.removeItem('aangan_post_login_bootstrap');
     }
 
+    postLoginRef.current = postLoginBootstrap;
     seedDemoSocial(postLoginBootstrap);
+  }, [loading, user, profile, session?.access_token, seedDemoSocial]);
 
-    if (postLoginBootstrap && !isInstalled) {
+  // Install popup. Kept separate from the bootstrap effect above so it re-evaluates
+  // once useAppInstall has determined install state, and offered at most once per
+  // visit so dismissing it does not simply re-arm the timer.
+  useEffect(() => {
+    if (loading || !user || !profile?.onboarding_completed) return;
+    if (installOfferedRef.current || isInstalled || wasDismissedRecently()) return;
+
+    const offer = () => {
+      installOfferedRef.current = true;
       setShowInstallSheet(true);
+    };
+
+    if (postLoginRef.current) {
+      postLoginRef.current = false;
+      offer();
+      return;
     }
-  }, [loading, user, profile, session?.access_token, isInstalled, seedDemoSocial]);
+
+    // On an ordinary visit, let the tree paint before interrupting with the popup.
+    const timer = setTimeout(offer, 2500);
+    return () => clearTimeout(timer);
+  }, [loading, user, profile, isInstalled, wasDismissedRecently]);
 
   const hasTreeData = Boolean(selfPerson && people.length > 1);
 
@@ -549,23 +552,6 @@ export default function HomePage() {
     }
   };
 
-  const handleInstall = async () => {
-    if (isInstalled) {
-      setInstallHint('App is already installed on this device.');
-      setShowInstallSheet(false);
-      return;
-    }
-    if (installPrompt) {
-      await installPrompt.prompt();
-      setInstallPrompt(null);
-      setCanInstall(false);
-      setInstallHint('');
-      setShowInstallSheet(false);
-      return;
-    }
-    setInstallHint('Use your browser menu and tap "Add to Home Screen" for the best app experience.');
-  };
-
   const fetchNearbyRelatives = async (cityOverride?: string) => {
     if (!session?.access_token) return;
     const city = (cityOverride ?? nearbyCityQuery).trim();
@@ -640,11 +626,6 @@ export default function HomePage() {
             <TopRightMenu />
           </div>
         </div>
-        {installHint && (
-          <p className="text-[11px] text-gray-500 mt-1.5 max-w-lg mx-auto px-1">
-            {installHint}
-          </p>
-        )}
       </div>
 
       {/* Suggestions Banner */}
@@ -828,43 +809,12 @@ export default function HomePage() {
       {/* Quick Add Sheet */}
       <QuickAddSheet />
 
-      {/* Install Sheet */}
-      <Sheet open={showInstallSheet} onOpenChange={setShowInstallSheet}>
-        <SheetContent side="bottom" className="rounded-t-3xl px-6 pb-8 pt-4 max-h-[80vh]">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Install Familiar</SheetTitle>
-          </SheetHeader>
-          <div className="flex justify-center mb-4">
-            <div className="w-10 h-1 bg-gray-200 rounded-full" />
-          </div>
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Install Familiar for the best experience</h2>
-            <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-              Familiar works better when downloaded. Install the app for a smoother, faster family and messaging experience.
-            </p>
-            {!canInstall && !isInstalled && (
-              <p className="text-xs text-gray-400 mt-2">
-                If the install prompt does not open, use your browser menu and tap &quot;Add to Home Screen&quot;.
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <button
-              onClick={handleInstall}
-              className="w-full py-3.5 rounded-2xl bg-[#2A4365] hover:bg-[#2A4365]/90 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-            >
-              <Download size={16} />
-              {isInstalled ? 'Installed' : canInstall ? 'Install Now' : 'Show Install Steps'}
-            </button>
-            <button
-              onClick={() => setShowInstallSheet(false)}
-              className="w-full py-3 text-sm text-gray-500 font-medium"
-            >
-              Maybe later
-            </button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Install / Download Popup */}
+      <InstallAppSheet
+        open={showInstallSheet}
+        onOpenChange={setShowInstallSheet}
+        appInstall={appInstall}
+      />
 
       {/* Suggestions Sheet */}
       <Sheet open={showSuggestionsSheet} onOpenChange={setShowSuggestionsSheet}>

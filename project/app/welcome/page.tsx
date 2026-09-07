@@ -90,18 +90,15 @@ export default function WelcomePage() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  // Install popup. Only on the landing view — it must not cover the auth form —
-  // and offered at most once per visit so dismissing it does not re-arm the timer.
+  // Install popup — opens immediately on arrival. Only on the landing view, so it
+  // cannot cover the auth form, and offered at most once per visit so dismissing
+  // it does not immediately reopen it.
   useEffect(() => {
     if (mode !== 'landing') return;
     if (installOfferedRef.current || appInstall.wasDismissedRecently()) return;
 
-    // Let the hero paint before interrupting with the popup.
-    const timer = setTimeout(() => {
-      installOfferedRef.current = true;
-      setShowInstallSheet(true);
-    }, 2500);
-    return () => clearTimeout(timer);
+    installOfferedRef.current = true;
+    setShowInstallSheet(true);
   }, [mode, appInstall]);
 
   const handleAuth = async (e: React.FormEvent) => {

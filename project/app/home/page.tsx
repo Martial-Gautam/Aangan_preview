@@ -427,27 +427,16 @@ export default function HomePage() {
     seedDemoSocial(postLoginBootstrap);
   }, [loading, user, profile, session?.access_token, seedDemoSocial]);
 
-  // Install popup. Kept separate from the bootstrap effect above so it re-evaluates
-  // once useAppInstall has determined install state, and offered at most once per
-  // visit so dismissing it does not simply re-arm the timer.
+  // Install popup — opens as soon as the session resolves. Kept separate from the
+  // bootstrap effect above, which is guarded to run once per user, and offered at
+  // most once per visit so dismissing it does not immediately reopen it.
   useEffect(() => {
     if (loading || !user || !profile?.onboarding_completed) return;
     if (installOfferedRef.current || wasDismissedRecently()) return;
 
-    const offer = () => {
-      installOfferedRef.current = true;
-      setShowInstallSheet(true);
-    };
-
-    if (postLoginRef.current) {
-      postLoginRef.current = false;
-      offer();
-      return;
-    }
-
-    // On an ordinary visit, let the tree paint before interrupting with the popup.
-    const timer = setTimeout(offer, 2500);
-    return () => clearTimeout(timer);
+    postLoginRef.current = false;
+    installOfferedRef.current = true;
+    setShowInstallSheet(true);
   }, [loading, user, profile, wasDismissedRecently]);
 
   const hasTreeData = Boolean(selfPerson && people.length > 1);

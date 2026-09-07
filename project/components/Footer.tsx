@@ -16,10 +16,12 @@ const SITEMAP_LINKS = [
   { label: 'Profile', href: '/profile', icon: User },
 ];
 
+// No Cookie Policy entry: the privacy policy states there are no ad networks,
+// no third-party analytics and no cross-site tracking, so there is nothing for
+// such a page to disclose. Linking to one would imply tracking that does not exist.
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy', href: '#' },
-  { label: 'Terms of Use', href: '#' },
-  { label: 'Cookie Policy', href: '#' },
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Terms of Use', href: '/terms' },
 ];
 
 const SOCIAL_LINKS = [
@@ -148,9 +150,9 @@ export default function Footer({ variant = 'app' }: FooterProps) {
             </span>
           </div>
           <div className={`flex items-center gap-4 text-[11px] ${mutedClass}`}>
-            <a href="#" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Privacy</a>
+            <a href="/privacy" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Privacy</a>
             <span>·</span>
-            <a href="#" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Terms</a>
+            <a href="/terms" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Terms</a>
             <span>·</span>
             <a href="mailto:ranveer.aangan@gmail.com" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Contact</a>
           </div>

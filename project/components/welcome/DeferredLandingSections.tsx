@@ -5,7 +5,6 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView 
 import BrandLogo from '@/components/BrandLogo';
 import Footer from '@/components/Footer';
 import {
-  ArrowRight,
   TreePine,
   Users,
   Shield,
@@ -17,11 +16,12 @@ import {
   MessageCircle,
   CalendarDays,
   Sparkles,
+  Download,
 } from 'lucide-react';
 
 interface DeferredLandingSectionsProps {
-  onSignIn: () => void;
-  onSignUp: () => void;
+  /** Downloads the APK on Android, or opens the PWA install steps elsewhere. */
+  onDownload: () => void;
 }
 
 // ---------- Problem Card with scroll-linked hanging physics ----------
@@ -308,7 +308,7 @@ function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
   );
 }
 
-export default function DeferredLandingSections({ onSignIn, onSignUp }: DeferredLandingSectionsProps) {
+export default function DeferredLandingSections({ onDownload }: DeferredLandingSectionsProps) {
   const [hoveredProblem, setHoveredProblem] = useState(0);
   const [hoveredFeature, setHoveredFeature] = useState(0);
 
@@ -734,16 +734,10 @@ export default function DeferredLandingSections({ onSignIn, onSignUp }: Deferred
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onSignUp}
+              onClick={onDownload}
               className="w-full sm:w-auto bg-[#2A4365] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#2A4365]/90 active:scale-[0.97] transition-all shadow-xl shadow-[#2A4365]/20 flex items-center justify-center gap-2"
             >
-              Add Your First Relative <ArrowRight size={18} />
-            </button>
-            <button
-              onClick={onSignIn}
-              className="w-full sm:w-auto border-2 border-gray-300 text-gray-500 px-8 py-4 rounded-2xl font-semibold text-base hover:border-[#2A4365]/40 hover:text-[#2A4365] active:scale-[0.97] transition-all"
-            >
-              Sign In
+              <Download size={18} /> Download the App
             </button>
           </div>
         </motion.div>

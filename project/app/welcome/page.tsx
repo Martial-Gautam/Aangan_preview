@@ -10,8 +10,10 @@ import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield, Users,
-  Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network
+  Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network, Download
 } from 'lucide-react';
+import InstallAppSheet from '@/components/InstallAppSheet';
+import { useAppInstall } from '@/hooks/useAppInstall';
 
 type Mode = 'landing' | 'signin' | 'signup';
 
@@ -37,6 +39,21 @@ export default function WelcomePage() {
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const heroMeasureFrameRef = useRef<number | null>(null);
+
+  // App download — Android gets the APK, iOS and desktop get the PWA install steps
+  const appInstall = useAppInstall();
+  const [showInstallSheet, setShowInstallSheet] = useState(false);
+  const installOfferedRef = useRef(false);
+
+  const handleDownload = useCallback(async () => {
+    // On Android this navigates straight to the APK; elsewhere an APK is useless,
+    // so the sheet explains how to install the web app instead.
+    if (appInstall.isAndroid) {
+      await appInstall.install();
+      return;
+    }
+    setShowInstallSheet(true);
+  }, [appInstall]);
 
   const { scrollY } = useScroll();
   const heroBackgroundY = useTransform(scrollY, [0, 1000], [0, 350]);
@@ -77,6 +94,20 @@ export default function WelcomePage() {
     const frame = window.requestAnimationFrame(() => setEnableMotion(true));
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  // Install popup. Only on the landing view — it must not cover the auth form —
+  // and offered at most once per visit so dismissing it does not re-arm the timer.
+  useEffect(() => {
+    if (mode !== 'landing') return;
+    if (installOfferedRef.current || appInstall.isInstalled || appInstall.wasDismissedRecently()) return;
+
+    // Let the hero paint before interrupting with the popup.
+    const timer = setTimeout(() => {
+      installOfferedRef.current = true;
+      setShowInstallSheet(true);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [mode, appInstall]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,16 +402,11 @@ export default function WelcomePage() {
           </div>
           <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <button
-              onClick={() => setMode('signin')}
-              className="text-sm font-semibold text-gray-500 hover:text-[#2A4365] px-3 py-2 rounded-xl transition-colors"
+              onClick={handleDownload}
+              className="text-sm font-semibold bg-[#2A4365] text-white px-4 py-2 rounded-xl hover:bg-[#2A4365]/90 transition-all shadow-sm flex items-center gap-1.5"
             >
-              Sign In
-            </button>
-            <button
-              onClick={() => setMode('signup')}
-              className="text-sm font-semibold bg-[#2A4365] text-white px-4 py-2 rounded-xl hover:bg-[#2A4365]/90 transition-all shadow-sm"
-            >
-              Get Started
+              <Download size={15} />
+              Download the App
             </button>
           </div>
         </div>
@@ -534,16 +560,10 @@ export default function WelcomePage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
               <button
-                onClick={() => setMode('signup')}
+                onClick={handleDownload}
                 className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
               >
-                Add Your First Relative <ArrowRight size={18} />
-              </button>
-              <button
-                onClick={() => setMode('signin')}
-                className="w-full sm:w-auto bg-[#10243a]/50 backdrop-blur-md text-white border border-white/24 px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/[0.18] active:scale-[0.97] transition-all"
-              >
-                Sign In
+                <Download size={18} /> Download the App
               </button>
             </div>
 
@@ -635,8 +655,15 @@ export default function WelcomePage() {
       </section>
 
       {showDeferred ? (
-        <DeferredLandingSections onSignIn={() => setMode('signin')} onSignUp={() => setMode('signup')} />
+        <DeferredLandingSections onDownload={handleDownload} />
       ) : null}
+
+      {/* Install / Download Popup */}
+      <InstallAppSheet
+        open={showInstallSheet}
+        onOpenChange={setShowInstallSheet}
+        appInstall={appInstall}
+      />
     </div>
   );
 }

@@ -330,7 +330,7 @@ export default function HomePage() {
 
   // Install / download prompt — Android gets the APK, iOS and desktop get the PWA
   const appInstall = useAppInstall();
-  const { isInstalled, wasDismissedRecently } = appInstall;
+  const { wasDismissedRecently } = appInstall;
   const [showInstallSheet, setShowInstallSheet] = useState(false);
   const [cosmosReady, setCosmosReady] = useState(false);
   const [showCosmos, setShowCosmos] = useState(false);
@@ -432,7 +432,7 @@ export default function HomePage() {
   // visit so dismissing it does not simply re-arm the timer.
   useEffect(() => {
     if (loading || !user || !profile?.onboarding_completed) return;
-    if (installOfferedRef.current || isInstalled || wasDismissedRecently()) return;
+    if (installOfferedRef.current || wasDismissedRecently()) return;
 
     const offer = () => {
       installOfferedRef.current = true;
@@ -448,7 +448,7 @@ export default function HomePage() {
     // On an ordinary visit, let the tree paint before interrupting with the popup.
     const timer = setTimeout(offer, 2500);
     return () => clearTimeout(timer);
-  }, [loading, user, profile, isInstalled, wasDismissedRecently]);
+  }, [loading, user, profile, wasDismissedRecently]);
 
   const hasTreeData = Boolean(selfPerson && people.length > 1);
 

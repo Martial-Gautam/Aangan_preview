@@ -45,14 +45,9 @@ export default function WelcomePage() {
   const [showInstallSheet, setShowInstallSheet] = useState(false);
   const installOfferedRef = useRef(false);
 
-  const handleDownload = useCallback(async () => {
-    // On Android this navigates straight to the APK; elsewhere an APK is useless,
-    // so the sheet explains how to install the web app instead.
-    if (appInstall.isAndroid) {
-      await appInstall.install();
-      return;
-    }
-    setShowInstallSheet(true);
+  // Every CTA downloads the APK directly, on every platform.
+  const handleDownload = useCallback(() => {
+    appInstall.download();
   }, [appInstall]);
 
   const { scrollY } = useScroll();
@@ -99,7 +94,7 @@ export default function WelcomePage() {
   // and offered at most once per visit so dismissing it does not re-arm the timer.
   useEffect(() => {
     if (mode !== 'landing') return;
-    if (installOfferedRef.current || appInstall.isInstalled || appInstall.wasDismissedRecently()) return;
+    if (installOfferedRef.current || appInstall.wasDismissedRecently()) return;
 
     // Let the hero paint before interrupting with the popup.
     const timer = setTimeout(() => {

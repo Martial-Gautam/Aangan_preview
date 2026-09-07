@@ -23,8 +23,9 @@ export const DOWNLOAD_PATH = '/download';
 export type Platform = 'android' | 'ios' | 'desktop';
 
 /**
- * An APK only installs on Android; iOS and desktop are steered to the PWA
- * install flow instead so nobody downloads a file they cannot open.
+ * Used only to tailor the wording of the download popup — every platform gets
+ * the same APK, but Android needs an "unknown sources" warning and the others
+ * need telling that the file will not install locally.
  */
 export function detectPlatform(): Platform {
   if (typeof navigator === 'undefined') return 'desktop';
@@ -35,13 +36,4 @@ export function detectPlatform(): Platform {
     return 'ios';
   }
   return 'desktop';
-}
-
-/** True when the site is already running as an installed PWA. */
-export function isStandalone(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    Boolean((window.navigator as unknown as { standalone?: boolean }).standalone)
-  );
 }

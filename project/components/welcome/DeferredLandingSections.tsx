@@ -4,6 +4,7 @@ import { useState, useRef, useEffect as import_react_useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView as import_framer_useInView } from 'motion/react';
 import BrandLogo from '@/components/BrandLogo';
 import Footer from '@/components/Footer';
+import NextImage from 'next/image';
 import {
   TreePine,
   Users,
@@ -14,7 +15,6 @@ import {
   Heart,
   Globe,
   MessageCircle,
-  CalendarDays,
   Sparkles,
   Download,
 } from 'lucide-react';
@@ -215,7 +215,6 @@ function ProblemSnapshot({ activeProblem }: { activeProblem: any }) {
 
 function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
   return (
-
     <div className="rounded-[1.35rem] bg-[linear-gradient(145deg,rgba(22,49,77,0.98),rgba(8,21,34,0.98))] border border-white/10 overflow-hidden">
       <div className="flex items-center justify-between p-5 border-b border-white/8">
         <div>
@@ -225,84 +224,14 @@ function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
           <activeFeature.icon size={22} className="text-white" />
         </div>
       </div>
-
-      <div className="p-5">
-        <div className="relative h-72 rounded-3xl bg-white/[0.055] border border-white/10 overflow-hidden">
-          <svg viewBox="0 0 390 290" className="absolute inset-0 h-full w-full">
-            {activeFeature.snapshot === 'tree' && (
-              <g>
-                <path d="M195 138 L112 78 L62 48" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" />
-                <path d="M195 138 L278 78 L328 48" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" />
-                <path d="M195 138 L144 220" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" />
-                <path d="M195 138 L246 220" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" />
-                {[[195, 138, 'ME'], [112, 78, 'Maa'], [278, 78, 'Papa'], [62, 48, 'Nani'], [328, 48, 'Dada'], [144, 220, 'Bhai'], [246, 220, 'Bua']].map(([cx, cy, label]) => (
-                  <g key={label as string}>
-                    <circle cx={cx as number} cy={cy as number} r="24" fill="#fff7df" />
-                    <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">{label}</text>
-                  </g>
-                ))}
-              </g>
-            )}
-            {activeFeature.snapshot === 'privacy' && (
-              <g>
-                <rect x="58" y="54" width="274" height="44" rx="16" fill="#ffffff" fillOpacity="0.92" />
-                <text x="82" y="81" fontSize="12" fontWeight="900" fill="#17324f">Share with: Family up to 2nd degree</text>
-                {[76, 138, 200, 262, 324].map((cx, index) => (
-                  <g key={cx}>
-                    <circle cx={cx} cy="172" r={index < 3 ? 28 : 20} fill={index < 3 ? '#bff3d5' : '#ffffff'} fillOpacity={index < 3 ? 1 : 0.28} />
-                    <text x={cx} y="177" textAnchor="middle" fontSize="10" fontWeight="900" fill={index < 3 ? '#17324f' : '#ffffff'}>{index + 1}</text>
-                  </g>
-                ))}
-                <path d="M76 172 L324 172" stroke="#ffd98f" strokeWidth="2" strokeDasharray="5 6" />
-              </g>
-            )}
-            {activeFeature.snapshot === 'nearby' && (
-              <g>
-                <path d="M60 225 C120 130 180 240 238 132 C280 58 330 104 342 62" stroke="#70e4c1" strokeWidth="3" fill="none" />
-                {[[108, 155, 'Maasi'], [206, 204, 'Mama'], [282, 94, 'Bua']].map(([cx, cy, label]) => (
-                  <g key={label as string}>
-                    <circle cx={cx as number} cy={cy as number} r="25" fill="#b7e5ff" />
-                    <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">{label}</text>
-                  </g>
-                ))}
-                <circle cx="195" cy="145" r="44" fill="#ffba78" fillOpacity="0.18" stroke="#ffba78" strokeWidth="2" />
-                <text x="195" y="148" textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff">You</text>
-              </g>
-            )}
-            {activeFeature.snapshot === 'invite' && (
-              <g>
-                <rect x="52" y="48" width="286" height="168" rx="24" fill="#fff7df" />
-                <text x="88" y="88" fontSize="18" fontWeight="900" fill="#17324f">Wedding Invite</text>
-                <text x="88" y="114" fontSize="11" fontWeight="700" fill="#49627d">Send to paternal + maternal family</text>
-                <rect x="88" y="145" width="88" height="26" rx="13" fill="#17324f" />
-                <text x="132" y="162" textAnchor="middle" fontSize="10" fontWeight="900" fill="#fff">42 sent</text>
-                <path d="M236 112 L300 78 L288 152 Z" fill="#ff7f63" />
-              </g>
-            )}
-            {activeFeature.snapshot === 'media' && (
-              <g>
-                {[52, 134, 216].map((x, index) => (
-                  <g key={x}>
-                    <rect x={x} y={64 + index * 22} width="116" height="88" rx="18" fill={['#ffd98f', '#b7e5ff', '#bff3d5'][index]} />
-                    <circle cx={x + 30} cy={94 + index * 22} r="13" fill="#17324f" fillOpacity="0.28" />
-                    <path d={`M${x + 16} ${130 + index * 22}L${x + 55} ${104 + index * 22}L${x + 100} ${135 + index * 22}`} stroke="#17324f" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.38" />
-                  </g>
-                ))}
-              </g>
-            )}
-            {activeFeature.snapshot === 'ancestor' && (
-              <g>
-                {[44, 94, 144, 194, 244].map((y, index) => (
-                  <g key={y}>
-                    <line x1="195" y1={y + 30} x2="195" y2={y + 50} stroke="#ffd98f" strokeWidth="2.4" />
-                    <rect x={100 + index * 12} y={y} width={190 - index * 24} height="34" rx="17" fill="#ffffff" fillOpacity={0.95 - index * 0.1} />
-                    <text x="195" y={y + 22} textAnchor="middle" fontSize="10" fontWeight="900" fill="#17324f">{index === 0 ? 'You' : `${index + 1} generations back`}</text>
-                  </g>
-                ))}
-              </g>
-            )}
-          </svg>
-        </div>
+      <div className="p-5 flex justify-center">
+        <NextImage
+          src={`/screenshots/${activeFeature.shot}.webp`}
+          alt={activeFeature.title}
+          width={720}
+          height={1564}
+          className="w-full max-w-[280px] h-auto rounded-[22px] border border-white/10 shadow-2xl shadow-black/40"
+        />
       </div>
     </div>
   );
@@ -384,48 +313,49 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
     },
   ];
 
+  // `shot` names a file in public/screenshots — the real screen for each feature.
   const featureItems = [
     {
       icon: TreePine,
-      title: 'Family Graph',
-      desc: 'Add relatives and Aangan maps relationships and degrees of connection automatically.',
+      title: 'Family World',
+      desc: 'Everyone you are related to on one map, with you at the centre. Zoom out to the whole family, in to one branch.',
       gradient: 'from-[#ff7f63] to-[#2d81ff]',
-      snapshot: 'tree',
+      shot: 'main',
     },
     {
       icon: Users,
-      title: 'Relative Discovery',
-      desc: 'Find family connections you didn\'t know existed. The graph reveals relationships as it grows.',
+      title: 'Exactly how you are related',
+      desc: 'Tap anyone and Aangan names the relationship — Bhatiji, Chachera bhai, Nani — with the chain of people between you.',
       gradient: 'from-[#2d81ff] to-[#1eb18a]',
-      snapshot: 'nearby',
+      shot: 'related',
     },
     {
       icon: MessageCircle,
-      title: 'Family Feed',
-      desc: 'A private space for family-only interactions, updates, and conversations.',
+      title: 'Posts',
+      desc: 'No algorithm, no strangers. What your family posted, in the order they posted it, to the people you chose.',
       gradient: 'from-[#1eb18a] to-[#ffc457]',
-      snapshot: 'privacy',
+      shot: 'posts',
     },
     {
       icon: Send,
-      title: 'Family Events',
-      desc: 'Coordinate weddings, functions, and gatherings — invite entire family branches at once.',
+      title: 'Discuss',
+      desc: 'One thread to settle where Diwali is this year — instead of four phone calls and forty unread replies.',
       gradient: 'from-[#ffc457] to-[#ff7f63]',
-      snapshot: 'invite',
-    },
-    {
-      icon: Image,
-      title: 'Family Memories',
-      desc: 'Shared family archives where everyone contributes photos, videos, and stories.',
-      gradient: 'from-[#ff7f63] to-[#1eb18a]',
-      snapshot: 'media',
+      shot: 'discuss',
     },
     {
       icon: Sparkles,
-      title: 'Ancestor Mapping',
-      desc: 'Trace generations of lineage and preserve family history over time.',
+      title: 'Events',
+      desc: 'Invite the right branch of the family in one tap, see who is coming, and collect every photo after.',
+      gradient: 'from-[#ff7f63] to-[#1eb18a]',
+      shot: 'events',
+    },
+    {
+      icon: Image,
+      title: 'Kept',
+      desc: 'Every wedding, festival and birthday kept together, in albums the whole family adds to.',
       gradient: 'from-[#2d81ff] to-[#ff7f63]',
-      snapshot: 'ancestor',
+      shot: 'kept',
     },
   ];
 
@@ -506,10 +436,10 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               >
-                <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">One Graph, Every Answer</p>
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">The Family Graph Powers Everything</h2>
+                <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">Inside the app</p>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">Built for the way families actually work</h2>
                 <p className="text-gray-600 max-w-lg leading-relaxed">
-                  Hover a feature to see how the Family Graph enables each experience.
+                  Every screen starts from who you are related to. Hover a feature to see the real screen.
                 </p>
               </motion.div>
             </div>
@@ -524,95 +454,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className="hidden lg:block rounded-[2rem] border border-gray-200 bg-[#07121e] p-4 shadow-2xl shadow-gray-900/16 max-w-3xl ml-auto"
                 >
-                <div className="rounded-[1.35rem] bg-[linear-gradient(145deg,rgba(22,49,77,0.98),rgba(8,21,34,0.98))] border border-white/10 overflow-hidden">
-                  <div className="flex items-center justify-between p-5 border-b border-white/8">
-                    <div>
-                      <h3 className="text-white text-xl font-bold mt-1">{activeFeature.title}</h3>
-                    </div>
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${activeFeature.gradient} flex items-center justify-center`}>
-                      <activeFeature.icon size={22} className="text-white" />
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="relative h-72 rounded-3xl bg-white/[0.055] border border-white/10 overflow-hidden">
-                      <svg viewBox="0 0 390 290" className="absolute inset-0 h-full w-full">
-                        {activeFeature.snapshot === 'tree' && (
-                          <g>
-                            <path d="M195 138 L112 78 L62 48" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" />
-                            <path d="M195 138 L278 78 L328 48" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" />
-                            <path d="M195 138 L144 220" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" />
-                            <path d="M195 138 L246 220" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" />
-                            {[[195, 138, 'ME'], [112, 78, 'Maa'], [278, 78, 'Papa'], [62, 48, 'Nani'], [328, 48, 'Dada'], [144, 220, 'Bhai'], [246, 220, 'Bua']].map(([cx, cy, label]) => (
-                              <g key={label as string}>
-                                <circle cx={cx as number} cy={cy as number} r="24" fill="#fff7df" />
-                                <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">{label}</text>
-                              </g>
-                            ))}
-                          </g>
-                        )}
-                        {activeFeature.snapshot === 'privacy' && (
-                          <g>
-                            <rect x="58" y="54" width="274" height="44" rx="16" fill="#ffffff" fillOpacity="0.92" />
-                            <text x="82" y="81" fontSize="12" fontWeight="900" fill="#17324f">Share with: Family up to 2nd degree</text>
-                            {[76, 138, 200, 262, 324].map((cx, index) => (
-                              <g key={cx}>
-                                <circle cx={cx} cy="172" r={index < 3 ? 28 : 20} fill={index < 3 ? '#bff3d5' : '#ffffff'} fillOpacity={index < 3 ? 1 : 0.28} />
-                                <text x={cx} y="177" textAnchor="middle" fontSize="10" fontWeight="900" fill={index < 3 ? '#17324f' : '#ffffff'}>{index + 1}</text>
-                              </g>
-                            ))}
-                            <path d="M76 172 L324 172" stroke="#ffd98f" strokeWidth="2" strokeDasharray="5 6" />
-                          </g>
-                        )}
-                        {activeFeature.snapshot === 'nearby' && (
-                          <g>
-                            <path d="M60 225 C120 130 180 240 238 132 C280 58 330 104 342 62" stroke="#70e4c1" strokeWidth="3" fill="none" />
-                            {[[108, 155, 'Maasi'], [206, 204, 'Mama'], [282, 94, 'Bua']].map(([cx, cy, label]) => (
-                              <g key={label as string}>
-                                <circle cx={cx as number} cy={cy as number} r="25" fill="#b7e5ff" />
-                                <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">{label}</text>
-                              </g>
-                            ))}
-                            <circle cx="195" cy="145" r="44" fill="#ffba78" fillOpacity="0.18" stroke="#ffba78" strokeWidth="2" />
-                            <text x="195" y="148" textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff">You</text>
-                          </g>
-                        )}
-                        {activeFeature.snapshot === 'invite' && (
-                          <g>
-                            <rect x="52" y="48" width="286" height="168" rx="24" fill="#fff7df" />
-                            <text x="88" y="88" fontSize="18" fontWeight="900" fill="#17324f">Wedding Invite</text>
-                            <text x="88" y="114" fontSize="11" fontWeight="700" fill="#49627d">Send to paternal + maternal family</text>
-                            <rect x="88" y="145" width="88" height="26" rx="13" fill="#17324f" />
-                            <text x="132" y="162" textAnchor="middle" fontSize="10" fontWeight="900" fill="#fff">42 sent</text>
-                            <path d="M236 112 L300 78 L288 152 Z" fill="#ff7f63" />
-                          </g>
-                        )}
-                        {activeFeature.snapshot === 'media' && (
-                          <g>
-                            {[52, 134, 216].map((x, index) => (
-                              <g key={x}>
-                                <rect x={x} y={64 + index * 22} width="116" height="88" rx="18" fill={['#ffd98f', '#b7e5ff', '#bff3d5'][index]} />
-                                <circle cx={x + 30} cy={94 + index * 22} r="13" fill="#17324f" fillOpacity="0.28" />
-                                <path d={`M${x + 16} ${130 + index * 22}L${x + 55} ${104 + index * 22}L${x + 100} ${135 + index * 22}`} stroke="#17324f" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.38" />
-                              </g>
-                            ))}
-                          </g>
-                        )}
-                        {activeFeature.snapshot === 'ancestor' && (
-                          <g>
-                            {[44, 94, 144, 194, 244].map((y, index) => (
-                              <g key={y}>
-                                <line x1="195" y1={y + 30} x2="195" y2={y + 50} stroke="#ffd98f" strokeWidth="2.4" />
-                                <rect x={100 + index * 12} y={y} width={190 - index * 24} height="34" rx="17" fill="#ffffff" fillOpacity={0.95 - index * 0.1} />
-                                <text x="195" y={y + 22} textAnchor="middle" fontSize="10" fontWeight="900" fill="#17324f">{index === 0 ? 'You' : `${index + 1} generations back`}</text>
-                              </g>
-                            ))}
-                          </g>
-                        )}
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                  <FeatureSnapshot activeFeature={activeFeature} />
                 </motion.div>
               </AnimatePresence>
             </div>

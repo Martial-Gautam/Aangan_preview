@@ -11,7 +11,7 @@ import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Eye, EyeOff, Mail, Lock, ArrowRight, TreePine,
-  ChevronDown, MessageCircle, CalendarDays, Network, Download, ShieldCheck, Check
+  ChevronDown, ChevronLeft, ChevronRight, MessageCircle, CalendarDays, Network, Download, ShieldCheck, Check
 } from 'lucide-react';
 import InstallAppSheet from '@/components/InstallAppSheet';
 import { useAppInstall } from '@/hooks/useAppInstall';
@@ -53,6 +53,7 @@ export default function WelcomePage() {
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const heroMeasureFrameRef = useRef<number | null>(null);
+  const railRef = useRef<HTMLDivElement>(null);
 
   // App download — Android gets the APK, iOS and desktop get the PWA install steps
   const appInstall = useAppInstall();
@@ -594,9 +595,24 @@ export default function WelcomePage() {
             initial={enableMotion ? { opacity: 0, y: 24 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
-            className="mt-12 -mx-5 sm:-mx-6"
+            className="relative mt-12 -mx-5 sm:-mx-6"
           >
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto px-5 sm:px-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Desktop scroll buttons — touch users swipe, so these stay hidden below sm */}
+            {[
+              { dir: -1, side: 'left-2', label: 'Previous screenshots', Icon: ChevronLeft },
+              { dir: 1, side: 'right-2', label: 'Next screenshots', Icon: ChevronRight },
+            ].map(({ dir, side, label, Icon }) => (
+              <button
+                key={label}
+                type="button"
+                aria-label={label}
+                onClick={() => railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.8, behavior: 'smooth' })}
+                className={`hidden sm:flex absolute ${side} top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-[#07121e]/80 border border-white/20 backdrop-blur-md text-white items-center justify-center shadow-xl shadow-black/40 hover:bg-white hover:text-[#07121e] transition-colors`}
+              >
+                <Icon size={20} />
+              </button>
+            ))}
+            <div ref={railRef} className="flex gap-3 sm:gap-4 overflow-x-auto px-5 sm:px-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {SCREENSHOTS.map((shot, index) => (
                 <NextImage
                   key={shot.file}

@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { StreamChat } from 'stream-chat';
 import { streamText, tool as createTool } from 'ai';
 
-const systemPrompt = `You are Bhuchki, the AI assistant inside Aangan (formerly Familiar).
+const systemPrompt = `You are Bhuchki, the AI assistant inside Aangan (formerly Aangan).
 Identity:
 * Your name is Bhuchki.
 * You are warm, natural, intelligent, and helpful.

@@ -157,7 +157,7 @@ const DEMO_COMMENTS: DemoComment[] = [
 ];
 
 const DEMO_MESSAGES = [
-  'Hey! Welcome to Familiar 👋 This is your family messaging space.',
+  'Hey! Welcome to Aangan 👋 This is your family messaging space.',
   'Once your relatives join and link their accounts, you\'ll see real conversations here.',
   'Tip: You can message any family member directly from their profile node in the Family Cosmos!',
   'Install the app on your home screen for the best experience — tap the download icon in the top bar.',

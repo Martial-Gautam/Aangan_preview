@@ -4,18 +4,32 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
+import NextImage from 'next/image';
 import BrandLogo from '@/components/BrandLogo';
 import Footer from '@/components/Footer';
 import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
-  Eye, EyeOff, Mail, Lock, ArrowRight, TreePine, Shield, Users,
-  Image, ChevronDown, Sparkles, MessageCircle, CalendarDays, Network, Download
+  Eye, EyeOff, Mail, Lock, ArrowRight, TreePine,
+  ChevronDown, MessageCircle, CalendarDays, Network, Download, ShieldCheck, Check
 } from 'lucide-react';
 import InstallAppSheet from '@/components/InstallAppSheet';
 import { useAppInstall } from '@/hooks/useAppInstall';
 
 type Mode = 'landing' | 'signin' | 'signup';
+
+/** Store frames from Aangan_management/for_store_screenshots, resized to 720px WebP. */
+const SCREENSHOTS = [
+  { file: 'main', alt: 'Family World — everyone you are related to, on one map' },
+  { file: 'related', alt: 'Exactly how you are related, with the chain of people between you' },
+  { file: 'digest', alt: 'Your people sorted into three generations' },
+  { file: 'posts', alt: 'Posts — no algorithm, no strangers, just your family' },
+  { file: 'discuss', alt: 'Discuss — one thread, not forty unread replies' },
+  { file: 'chats', alt: 'Chats — the family group chat, finally organised' },
+  { file: 'events', alt: 'Events — nobody misses the next one' },
+  { file: 'event-detail', alt: 'Event detail — who is coming, and every photo after' },
+  { file: 'kept', alt: 'Kept — every wedding and festival, kept together' },
+];
 
 const DeferredLandingSections = dynamic(
   () => import('@/components/welcome/DeferredLandingSections'),
@@ -52,8 +66,6 @@ export default function WelcomePage() {
 
   const { scrollY } = useScroll();
   const heroBackgroundY = useTransform(scrollY, [0, 1000], [0, 350]);
-  const heroTextY = useTransform(scrollY, [0, 500], [0, 120]);
-  const heroTextOpacity = useTransform(scrollY, [0, 350], [1, 0]);
   const floatingCuesY = useTransform(scrollY, [0, 800], [0, -200]);
 
   useEffect(() => {
@@ -287,11 +299,8 @@ export default function WelcomePage() {
               <div className="w-12 h-12 rounded-2xl bg-[#2A4365]/10 border border-[#2A4365]/15 flex items-center justify-center mb-4 shadow-sm">
                 <BrandLogo size={26} />
               </div>
-              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.16em] mb-1">
-                Formerly &quot;Aangan&quot;
-              </p>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {mode === 'signup' ? 'Join Familiar' : 'Welcome back'}
+                {mode === 'signup' ? 'Join Aangan' : 'Welcome back'}
               </h2>
               <p className="text-gray-500 dark:text-gray-300 mt-1 text-sm">
                 {mode === 'signup' ? 'Start building your Family Graph' : 'Sign in to your Family Graph'}
@@ -385,10 +394,7 @@ export default function WelcomePage() {
             <BrandLogo size={20} />
             <div className="leading-tight">
               <span className={`brand-wordmark block text-lg transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
-                Familiar
-              </span>
-              <span className={`block text-[9px] font-semibold uppercase tracking-[0.15em] transition-colors ${scrolled ? 'text-gray-500' : 'text-white/65'}`}>
-                Formerly &quot;Aangan&quot;
+                Aangan
               </span>
             </div>
           </div>
@@ -530,115 +536,129 @@ export default function WelcomePage() {
           </motion.div>
         </motion.div>
 
-        <motion.div
-          className="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_410px] gap-8 lg:gap-12 items-center pt-24 pb-28"
-          style={{ y: heroTextY, opacity: heroTextOpacity }}
-        >
-          <div className="text-center lg:text-left">
-            <h1 className="brand-wordmark text-6xl sm:text-7xl lg:text-8xl text-white leading-[0.9] mb-2 tracking-normal">
-              Familiar
-            </h1>
-            <h2 className="text-xl sm:text-2xl text-[#ffd98f] font-medium tracking-wide mb-6">
-              Building the Family Graph
-            </h2>
-
-            <p className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-4 max-w-xl mx-auto lg:mx-0">
-              The internet digitized friends, followers, and colleagues. But not families.
-            </p>
-
-            <p className="text-white/90 text-base sm:text-lg leading-relaxed mb-7 max-w-xl mx-auto lg:mx-0">
-              Discover relatives, understand relationships, preserve memories, and stay connected — all through a living family network that grows with every member.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-7">
-              <button
-                onClick={handleDownload}
-                className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
-              >
-                <Download size={18} /> Download the App
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
-              {[
-                { icon: Network, label: 'Family Graph' },
-                { icon: Users, label: 'Relative Discovery' },
-                { icon: CalendarDays, label: 'Family Events' },
-                { icon: Image, label: 'Family Memories' },
-              ].map((item) => (
-                <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-[#07121e]/45 px-3 py-1.5 text-xs font-semibold text-white/85 backdrop-blur-md">
-                  <item.icon size={13} />
-                  {item.label}
-                </span>
-              ))}
-            </div>
-          </div>
-
+        <div className="relative z-10 w-full max-w-5xl mx-auto pt-28 pb-16 sm:pb-20">
+          {/* Listing header: icon · name · developer · stats · install */}
           <motion.div
-            initial={enableMotion ? { opacity: 0, y: 24, rotate: 1.5 } : false}
-            animate={enableMotion ? { opacity: 1, y: [0, -10, 0], rotate: [1.5, -0.8, 1.5] } : { opacity: 1, y: 0, rotate: 1.5 }}
-            transition={enableMotion ? {
-              opacity: { duration: 0.65, ease: 'easeOut', delay: 0.35 },
-              y: { duration: 7.8, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
-              rotate: { duration: 9.4, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
-            } : { duration: 0 }}
-            className="hidden sm:block justify-self-center w-full max-w-[390px]"
+            initial={enableMotion ? { opacity: 0, y: 18 } : false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            className="flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8"
           >
-            <div className="rounded-[2rem] border border-white/24 bg-white/[0.14] p-3 shadow-2xl shadow-black/28 backdrop-blur-2xl">
-              <div className="rounded-[1.45rem] bg-[#081522]/92 border border-white/10 overflow-hidden">
-                <div className="flex items-center justify-between px-5 pt-5 pb-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Live Family Graph</p>
-                    <p className="text-white font-bold text-lg">Ranveer&apos;s Family</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-white/[0.12] border border-white/12 flex items-center justify-center">
-                    <BrandLogo size={23} />
-                  </div>
-                </div>
+            <div className="relative flex-shrink-0 self-center sm:self-start">
+              <div
+                className="absolute -inset-4 rounded-[36px] blur-2xl opacity-60"
+                style={{ background: 'radial-gradient(circle, rgba(255,127,99,0.45), transparent 70%)' }}
+              />
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white/[0.08] border border-white/15 backdrop-blur-md shadow-2xl shadow-black/40 flex items-center justify-center">
+                <BrandLogo size={72} priority />
+              </div>
+            </div>
 
-                <div className="relative h-56 mx-4 rounded-2xl bg-[linear-gradient(145deg,rgba(28,63,97,0.9),rgba(17,35,55,0.78))] border border-white/10 overflow-hidden">
-                  <svg viewBox="0 0 340 220" className="absolute inset-0 w-full h-full">
-                    <path d="M170 108 L92 58 L42 38" stroke="#ffba78" strokeWidth="2.6" strokeLinecap="round" />
-                    <path d="M170 108 L248 58 L298 38" stroke="#ffba78" strokeWidth="2.6" strokeLinecap="round" />
-                    <path d="M170 108 L118 174" stroke="#70e4c1" strokeWidth="2.2" strokeLinecap="round" />
-                    <path d="M170 108 L222 174" stroke="#70e4c1" strokeWidth="2.2" strokeLinecap="round" />
-                    {[
-                      [170, 108, 'ME', '#ffffff'], [92, 58, 'Maa', '#ffe2b0'], [248, 58, 'Papa', '#b7e5ff'],
-                      [42, 38, 'Nani', '#ffd0d9'], [298, 38, 'Dada', '#d8ffc9'], [118, 174, 'Bhai', '#c3f5ff'], [222, 174, 'Bua', '#ffd5a6'],
-                    ].map(([cx, cy, label, fill]) => (
-                      <g key={`${cx}-${cy}`}>
-                        <circle cx={cx as number} cy={cy as number} r="19" fill={fill as string} fillOpacity="0.95" />
-                        <text x={cx as number} y={(cy as number) + 4} textAnchor="middle" fontSize="9" fontWeight="700" fill="#10243a">{label}</text>
-                      </g>
-                    ))}
-                  </svg>
-                  <div className="absolute left-4 bottom-4 right-4 flex items-center justify-between rounded-2xl bg-[#07121e]/70 border border-white/10 px-3 py-2 backdrop-blur-md">
-                    <span className="text-xs text-white/85 font-semibold">Discovered: Sheela is your Maasi</span>
-                    <span className="text-[10px] text-[#ffd98f] font-bold">2 hops</span>
-                  </div>
-                </div>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <h1 className="brand-wordmark text-5xl sm:text-6xl text-white leading-none mb-2 tracking-normal">
+                Aangan
+              </h1>
+              <p className="text-[#ffd98f] font-semibold text-[15px]">Ranveer Gautam</p>
+              <p className="text-white/65 text-sm mt-1">Everyone you are related to, on one map. Private by design.</p>
 
-                <div className="p-4 space-y-2">
-                  {[
-                    { icon: Users, title: 'Relative Discovery', text: '3 new connections found', tone: 'text-[#8edbff]' },
-                    { icon: CalendarDays, title: 'Family Events', text: 'Wedding invite sent to 42', tone: 'text-[#ffd98f]' },
-                    { icon: Image, title: 'Family Memories', text: '18 new photos shared', tone: 'text-[#8ff0c7]' },
-                  ].map((item) => (
-                    <div key={item.title} className="flex items-center gap-3 rounded-2xl border border-white/9 bg-white/[0.055] px-3 py-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-                        <item.icon size={16} className={item.tone} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{item.title}</p>
-                        <p className="text-xs text-white/65 truncate">{item.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-6 grid grid-cols-4 divide-x divide-white/12 rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md">
+                {[
+                  { value: 'Free', label: 'No ads, ever' },
+                  { value: '103 MB', label: 'Android APK' },
+                  { value: 'v1.0.0', label: 'Early access' },
+                  { value: 'E2E', label: 'Encrypted chats' },
+                ].map((s) => (
+                  <div key={s.label} className="py-3 px-1 text-center">
+                    <p className="text-white font-bold text-[15px] sm:text-base leading-tight">{s.value}</p>
+                    <p className="text-white/45 text-[10px] sm:text-[11px] mt-0.5 leading-tight">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+                <button
+                  onClick={handleDownload}
+                  className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-12 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
+                >
+                  <Download size={18} /> Install
+                </button>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Android 8.0 and up · Not on the Play Store yet — installs directly from the APK.
+                </p>
               </div>
             </div>
           </motion.div>
-        </motion.div>
+
+          {/* Screenshot rail */}
+          <motion.div
+            initial={enableMotion ? { opacity: 0, y: 24 } : false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
+            className="mt-12 -mx-5 sm:-mx-6"
+          >
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto px-5 sm:px-6 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {SCREENSHOTS.map((shot, index) => (
+                <NextImage
+                  key={shot.file}
+                  src={`/screenshots/${shot.file}.webp`}
+                  alt={shot.alt}
+                  width={720}
+                  height={1564}
+                  priority={index < 2}
+                  className="snap-start flex-shrink-0 w-[212px] sm:w-[248px] h-auto rounded-[22px] border border-white/10 shadow-2xl shadow-black/40"
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* About + Data safety */}
+          <div className="mt-10 grid lg:grid-cols-[1.35fr_1fr] gap-5">
+            <div className="rounded-3xl bg-white/[0.05] border border-white/10 backdrop-blur-md p-6 sm:p-7">
+              <h2 className="text-white font-bold text-lg mb-3">About this app</h2>
+              <p className="text-white/70 leading-relaxed text-[15px] mb-3">
+                Aangan puts your whole family on one map — parents&apos; side, your side, the children —
+                and tells you exactly how anyone is related to you. Not &ldquo;Relative&rdquo;: Bhatiji,
+                Chachera bhai, Nani, with the chain of people in between.
+              </p>
+              <p className="text-white/70 leading-relaxed text-[15px]">
+                Posts with no algorithm and no strangers. One thread to settle where Diwali is this year.
+                Events the right branch of the family gets invited to. And every wedding, festival and
+                birthday kept together, in albums the whole family adds to.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {['Family World', 'Exact kinship names', 'Posts', 'Discuss', 'Chats', 'Events', 'Kept'].map((chip) => (
+                  <span key={chip} className="inline-flex items-center rounded-full border border-white/20 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-white/80">
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-white/[0.05] border border-white/10 backdrop-blur-md p-6 sm:p-7">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck size={18} className="text-[#8ff0c7]" />
+                <h2 className="text-white font-bold text-lg">Data safety</h2>
+              </div>
+              <ul className="space-y-2.5">
+                {[
+                  'No ads, no analytics, no tracking',
+                  'Never asks for location or contacts',
+                  'Messages are end-to-end encrypted',
+                  'Nothing is public — family only',
+                  'Delete everything in one tap',
+                ].map((line) => (
+                  <li key={line} className="flex items-start gap-2.5 text-[14px] text-white/80">
+                    <Check size={15} className="text-[#8ff0c7] mt-0.5 flex-shrink-0" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+              <a href="/privacy" className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#ffd98f] hover:text-white transition-colors">
+                Read the privacy policy <ArrowRight size={12} />
+              </a>
+            </div>
+          </div>
+        </div>
 
         {/* Scroll indicator */}
         <button onClick={scrollToFeatures} className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 text-[#17324f]/60 hover:text-[#17324f] transition-colors animate-bounce">

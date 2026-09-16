@@ -74,7 +74,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
 
           <DialogHeader className="space-y-0 text-center">
             <DialogTitle className="brand-wordmark text-[26px] leading-tight text-white font-normal tracking-normal">
-              Get Familiar
+              Get Aangan
             </DialogTitle>
             <DialogDescription className="text-[13.5px] leading-relaxed text-white/60 mt-2 px-1">
               Your family graph, memories and messages — faster and smoother in the app.

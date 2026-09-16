@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import LegalLayout from '@/components/legal/LegalLayout';
 
 export const metadata: Metadata = {
-  title: 'Terms of Use — Familiar',
+  title: 'Terms of Use — Aangan',
   description:
-    'The terms you agree to by using Familiar: who may use it, what you put in it, and zero tolerance for objectionable content and abusive behaviour.',
+    'The terms you agree to by using Aangan: who may use it, what you put in it, and zero tolerance for objectionable content and abusive behaviour.',
 };
 
 const MAIL = 'mailto:ranveer.aangan@gmail.com';
@@ -17,7 +17,7 @@ export default function TermsPage() {
       intro={
         <>
           <p>
-            These are the terms you agree to by using Familiar. They are short on purpose. If you
+            These are the terms you agree to by using Aangan. They are short on purpose. If you
             disagree with them, do not use the app.
           </p>
           <p>
@@ -26,7 +26,7 @@ export default function TermsPage() {
         </>
       }
     >
-      <h2>1. Who may use Familiar</h2>
+      <h2>1. Who may use Aangan</h2>
       <p>
         You must be <strong>13 or older</strong>. If you are under 18, you should have a parent or
         guardian&apos;s permission.
@@ -44,7 +44,7 @@ export default function TermsPage() {
         is using it.
       </p>
 
-      <h2>3. What you put in Familiar</h2>
+      <h2>3. What you put in Aangan</h2>
       <p>
         You keep ownership of everything you post. You give us only the permission we need to run the
         app: to store what you post, and to show it to the people you chose to show it to. Nothing
@@ -60,7 +60,7 @@ export default function TermsPage() {
       <h2>4. Zero tolerance for objectionable content and abusive behaviour</h2>
       <p>
         <strong>
-          There is no tolerance for objectionable content or abusive users on Familiar.
+          There is no tolerance for objectionable content or abusive users on Aangan.
         </strong>
       </p>
       <p>You must not post, send, or upload:</p>
@@ -79,7 +79,7 @@ export default function TermsPage() {
       </ul>
       <p>
         <strong>How this is enforced.</strong> Every post, photograph, Raw, event and person in
-        Familiar can be reported from the app, and any user can be blocked. Reports are reviewed and
+        Aangan can be reported from the app, and any user can be blocked. Reports are reviewed and
         acted on <strong>within 24 hours</strong>. Content reported by three people is hidden
         immediately, before anybody has read the report. An account that five people report as fake,
         impersonating somebody, or not part of their family is cut off at once, and has 48 hours to
@@ -126,7 +126,7 @@ export default function TermsPage() {
 
       <h2>9. No warranty, and what we are responsible for</h2>
       <p>
-        Familiar is provided as it is. We do not promise it will be uninterrupted or free of faults,
+        Aangan is provided as it is. We do not promise it will be uninterrupted or free of faults,
         and we are not liable for indirect or consequential loss.
       </p>
       <p>

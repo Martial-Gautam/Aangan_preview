@@ -259,7 +259,7 @@ export default function MemberDetailSheet({
             </span>
             {isLinked && (
               <span className="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
-                <LinkIcon size={10} /> Familiar member
+                <LinkIcon size={10} /> Aangan member
               </span>
             )}
           </div>
@@ -426,10 +426,10 @@ export default function MemberDetailSheet({
                         <div className="w-8 h-8 rounded-full bg-[#2A4365] flex items-center justify-center flex-shrink-0">
                           <Share2 size={14} className="text-white" />
                         </div>
-                        Invite to Familiar
+                        Invite to Aangan
                       </button>
                       <p className="text-[10px] text-gray-400 text-center px-4 pb-2 -mt-1">
-                        Not on Familiar yet — invite them to join!
+                        Not on Aangan yet — invite them to join!
                       </p>
                     </>
                   )}

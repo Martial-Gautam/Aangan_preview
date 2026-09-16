@@ -196,7 +196,7 @@ function ProblemSnapshot({ activeProblem }: { activeProblem: any }) {
                       );
                     })}
                     <circle cx="180" cy="138" r="31" fill="#ffd98f" fillOpacity="0.96" />
-                    <text x="180" y="135" textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">Familiar</text>
+                    <text x="180" y="135" textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">Aangan</text>
                     <text x="180" y="147" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Core</text>
                     <circle cx="110" cy="184" r="20" fill="#b7e5ff" />
                     <circle cx="250" cy="184" r="20" fill="#bff3d5" />
@@ -350,7 +350,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       icon: TreePine,
       title: 'No Family Graph Exists',
       desc: 'Facebook built the Social Graph. LinkedIn built the Professional Graph. No one has built the Family Graph.',
-      solution: 'Familiar is building the world\'s first Family Graph — a living map of every relationship.',
+      solution: 'Aangan is building the world\'s first Family Graph — a living map of every relationship.',
       previewTitle: 'The missing graph',
       from: ['Social', 'Professional', 'Family?'],
       to: 'Family Graph',
@@ -377,7 +377,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       icon: Send,
       title: 'No Dedicated Infrastructure',
       desc: 'Families use tools built for strangers — messaging apps, social feeds, cloud storage — none designed for family relationships.',
-      solution: 'Familiar provides digital infrastructure designed specifically for family connections.',
+      solution: 'Aangan provides digital infrastructure designed specifically for family connections.',
       previewTitle: 'Built for families',
       from: ['Chat apps', 'Social media', 'Cloud'],
       to: 'Family Network',
@@ -388,7 +388,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
     {
       icon: TreePine,
       title: 'Family Graph',
-      desc: 'Add relatives and Familiar maps relationships and degrees of connection automatically.',
+      desc: 'Add relatives and Aangan maps relationships and degrees of connection automatically.',
       gradient: 'from-[#ff7f63] to-[#2d81ff]',
       snapshot: 'tree',
     },
@@ -440,7 +440,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
         style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', y: watermarkY }}
       >
         <span className="text-[16vh] font-black uppercase tracking-[0.25em] brand-wordmark whitespace-nowrap text-[#2A4365]/[0.15] dark:text-white/[0.12]" style={{ mixBlendMode: 'multiply' }}>
-          Familiar
+          Aangan
         </span>
       </motion.div>
       <motion.div 
@@ -450,7 +450,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
           style={{ x: watermarkX }} 
           className="text-[15vw] font-black uppercase tracking-widest brand-wordmark pl-4"
         >
-          Familiar • Familiar • Familiar • Familiar • Familiar
+          Aangan • Aangan • Aangan • Aangan • Aangan
         </motion.span>
       </motion.div>
 
@@ -469,7 +469,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
                 The internet digitized everything. Except families.
               </h2>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Hover a challenge to see how Familiar turns invisible family connections into a living, connected graph.
+                Hover a challenge to see how Aangan turns invisible family connections into a living, connected graph.
               </p>
             </motion.div>
 
@@ -650,7 +650,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
               style={{ x: visionX, opacity: visionOpacity }}
               className="text-2xl sm:text-3xl font-bold text-white leading-snug mb-6"
             >
-              Facebook mapped friendships. LinkedIn mapped professional relationships. Familiar is building the Family Graph.
+              Facebook mapped friendships. LinkedIn mapped professional relationships. Aangan is building the Family Graph.
             </motion.h2>
           </motion.div>
           <motion.p 
@@ -727,10 +727,10 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
             <BrandLogo size={38} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            It feels Familiar.
+            Aangan means courtyard.
           </h2>
           <p className="text-gray-500 mb-8 leading-relaxed">
-            A place where every relation matters. Start building your family&apos;s living tree today.
+            The place where the whole family gathers. Bring yours in today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button

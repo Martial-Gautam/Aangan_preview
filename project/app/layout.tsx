@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans, Bricolage_Grotesque } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
@@ -18,6 +18,15 @@ const plusJakarta = Plus_Jakarta_Sans({
   weight: ['700', '800'],
   display: 'swap',
   variable: '--font-brand',
+});
+
+// The headline face the app's store frames are set in, so the landing page
+// and its screenshots read as one product.
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  display: 'swap',
+  variable: '--font-display',
 });
 
 export const viewport: Viewport = {
@@ -73,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/familiar-icon-192.webp" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.variable} ${plusJakarta.variable}`}>
+      <body className={`${inter.variable} ${plusJakarta.variable} ${bricolage.variable}`}>
         <ErrorBoundary>
           <OfflineBanner />
           <QueryProvider>

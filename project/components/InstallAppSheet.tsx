@@ -54,7 +54,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
           className="pointer-events-none absolute inset-x-0 top-0 h-40 opacity-70"
           style={{
             background:
-              'radial-gradient(60% 100% at 50% 0%, rgba(255,217,143,0.18) 0%, rgba(255,217,143,0) 70%)',
+              'radial-gradient(60% 100% at 50% 0%, rgba(255,77,109,0.16) 0%, rgba(255,77,109,0) 70%)',
           }}
         />
 
@@ -64,7 +64,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
             <div className="relative">
               <div
                 className="absolute -inset-3 rounded-[26px] blur-xl opacity-50"
-                style={{ background: 'radial-gradient(circle, rgba(255,217,143,0.45), transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle, rgba(255,77,109,0.4), transparent 70%)' }}
               />
               <div className="relative w-[68px] h-[68px] rounded-[20px] bg-white/[0.07] border border-white/15 backdrop-blur-md flex items-center justify-center shadow-lg shadow-black/40">
                 <BrandLogo size={40} />
@@ -88,7 +88,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
                 key={item.label}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-white/75"
               >
-                <item.icon size={12} className="text-[#ffd98f]" />
+                <item.icon size={12} className="text-[#FF4D6D]" />
                 {item.label}
               </span>
             ))}

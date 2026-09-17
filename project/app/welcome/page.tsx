@@ -402,7 +402,7 @@ export default function WelcomePage() {
           <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <button
               onClick={handleDownload}
-              className="text-sm font-semibold bg-[#2A4365] text-white px-4 py-2 rounded-xl hover:bg-[#2A4365]/90 transition-all shadow-sm flex items-center gap-1.5"
+              className="text-sm font-semibold bg-[#FF4D6D] text-white px-4 py-2 rounded-xl hover:bg-[#ff3d60] transition-all shadow-sm flex items-center gap-1.5"
             >
               <Download size={15} />
               Download the App
@@ -548,7 +548,7 @@ export default function WelcomePage() {
             <div className="relative flex-shrink-0 self-center sm:self-start">
               <div
                 className="absolute -inset-4 rounded-[36px] blur-2xl opacity-60"
-                style={{ background: 'radial-gradient(circle, rgba(255,127,99,0.45), transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle, rgba(255,77,109,0.45), transparent 70%)' }}
               />
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-white/[0.08] border border-white/15 backdrop-blur-md shadow-2xl shadow-black/40 flex items-center justify-center">
                 <BrandLogo size={72} priority />
@@ -559,7 +559,7 @@ export default function WelcomePage() {
               <h1 className="brand-wordmark text-5xl sm:text-6xl text-white leading-none mb-2 tracking-normal">
                 Aangan
               </h1>
-              <p className="text-[#ffd98f] font-semibold text-[15px]">Ranveer Gautam</p>
+              <p className="text-[#FF4D6D] font-semibold text-[15px]">Ranveer Gautam</p>
               <p className="text-white/65 text-sm mt-1">Everyone you are related to, on one map. Private by design.</p>
 
               <div className="mt-6 grid grid-cols-4 divide-x divide-white/12 rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md">
@@ -669,7 +669,7 @@ export default function WelcomePage() {
                   </li>
                 ))}
               </ul>
-              <a href="/privacy" className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#ffd98f] hover:text-white transition-colors">
+              <a href="/privacy" className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#FF4D6D] hover:text-white transition-colors">
                 Read the privacy policy <ArrowRight size={12} />
               </a>
             </div>

@@ -51,6 +51,16 @@
     --accent-veranda: #2A9D8F;
     --accent-lineage: #00B4D8;
     --gradient-brand: linear-gradient(135deg, #2A4365, #FF9F1C);
+
+    /* ─── Landing palette ───
+       Ink and Coral come from the app itself (its text and hot-action colour);
+       Chuna (lime-wash) is the courtyard floor the light sections sit on;
+       Marigold and Teal are lifted from the avatar discs and used only in art. */
+    --ink: #0E1B2B;
+    --chuna: #F1EFEB;
+    --coral: #FF4D6D;
+    --marigold: #E8A33D;
+    --teal: #1FA79A;
     --font-brand: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
@@ -573,8 +583,8 @@
 .welcome-page h2,
 .welcome-page h3,
 .welcome-page .welcome-heading {
-  font-family: var(--font-brand);
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), var(--font-brand);
+  letter-spacing: -0.015em;
 }
 
 .welcome-page .brand-wordmark {
@@ -590,13 +600,26 @@
   background-color: #fff6df !important;
 }
 
+/* Reduced motion: the landing runs scroll-linked springs and a few idle drifts.
+   Collapse them to instant for people who asked for that. */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-page *,
+  .welcome-page *::before,
+  .welcome-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .welcome-page {
     color: #edf3ff;
   }
 
   .welcome-page .bg-white,
-  .welcome-page .bg-\[\#f7f9fb\] {
+  .welcome-page .bg-\[\#f7f9fb\],
+  .welcome-page .bg-\[\#F1EFEB\] {
     background-color: #0f1726 !important;
   }
 

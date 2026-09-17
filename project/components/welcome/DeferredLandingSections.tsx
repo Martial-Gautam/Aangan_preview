@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect as import_react_useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView as import_framer_useInView } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView as import_framer_useInView, useReducedMotion as import_framer_useReducedMotion } from 'motion/react';
 import BrandLogo from '@/components/BrandLogo';
 import Footer from '@/components/Footer';
 import NextImage from 'next/image';
@@ -24,69 +24,241 @@ interface DeferredLandingSectionsProps {
   onDownload: () => void;
 }
 
-// ---------- Problem Card with scroll-linked hanging physics ----------
+// ---------- Postcard illustrations ----------
+// One vocabulary for all six: people are discs, relations are lines, the family
+// is a courtyard square. Each scene composes those differently. Palette is the
+// app's own: ink ground, coral for "you", marigold and teal from the avatar discs.
+const ART = { ink: '#0E1B2B', coral: '#FF4D6D', marigold: '#E8A33D', teal: '#1FA79A', mist: '#8FA3B8' };
+
+function Disc({ x, y, r = 13, fill = ART.mist, ghost = false, op = 1 }: { x: number; y: number; r?: number; fill?: string; ghost?: boolean; op?: number }) {
+  return ghost
+    ? <circle cx={x} cy={y} r={r} fill="none" stroke={fill} strokeWidth="1.6" strokeDasharray="3 4" opacity={op} />
+    : <circle cx={x} cy={y} r={r} fill={fill} opacity={op} />;
+}
+
+function Link({ a, b, color = ART.mist, ghost = false, op = 1, w = 2 }: { a: [number, number]; b: [number, number]; color?: string; ghost?: boolean; op?: number; w?: number }) {
+  return <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={color} strokeWidth={w} strokeLinecap="round" strokeDasharray={ghost ? '3 5' : undefined} opacity={op} />;
+}
+
+function ProblemArt({ scene }: { scene: string }) {
+  return (
+    <svg viewBox="0 0 320 200" className="absolute inset-0 w-full h-full" aria-hidden="true">
+      <defs>
+        <radialGradient id={`art-glow-${scene}`} cx="50%" cy="45%" r="60%">
+          <stop offset="0%" stopColor="#1c3350" />
+          <stop offset="100%" stopColor={ART.ink} />
+        </radialGradient>
+      </defs>
+      <rect width="320" height="200" fill={`url(#art-glow-${scene})`} />
+
+      {scene === 'invisible' && (
+        <g>
+          {/* The graphs the internet already has, lit and connected */}
+          <Link a={[62, 70]} b={[110, 100]} color={ART.teal} />
+          <Link a={[62, 130]} b={[110, 100]} color={ART.teal} />
+          <Link a={[110, 100]} b={[160, 100]} color={ART.teal} />
+          <Disc x={62} y={70} fill={ART.teal} />
+          <Disc x={62} y={130} fill={ART.teal} />
+          <Disc x={110} y={100} fill={ART.teal} />
+          <Disc x={160} y={100} r={17} fill={ART.coral} />
+          {/* The family, nobody has drawn it */}
+          <Link a={[160, 100]} b={[212, 62]} ghost />
+          <Link a={[160, 100]} b={[224, 110]} ghost />
+          <Link a={[160, 100]} b={[206, 148]} ghost />
+          <Link a={[212, 62]} b={[262, 48]} ghost op={0.6} />
+          <Link a={[224, 110]} b={[272, 118]} ghost op={0.6} />
+          <Disc x={212} y={62} ghost />
+          <Disc x={224} y={110} ghost />
+          <Disc x={206} y={148} ghost />
+          <Disc x={262} y={48} ghost op={0.6} />
+          <Disc x={272} y={118} ghost op={0.6} />
+        </g>
+      )}
+
+      {scene === 'fragmented' && (
+        <g>
+          {/* Scraps drifting away from where the family should be */}
+          <Disc x={160} y={100} r={13} fill={ART.coral} />
+          {[
+            [70, 52, -14, ART.teal], [236, 46, 11, ART.marigold], [58, 146, 9, ART.mist],
+            [250, 150, -8, ART.teal], [160, 30, 5, ART.mist], [160, 172, -4, ART.marigold],
+          ].map(([x, y, rot, c], i) => (
+            <g key={i} transform={`rotate(${rot} ${x} ${y})`}>
+              <rect x={(x as number) - 26} y={(y as number) - 17} width="52" height="34" rx="6" fill="#ffffff" opacity="0.92" />
+              <rect x={(x as number) - 18} y={(y as number) - 8} width="22" height="4" rx="2" fill={c as string} />
+              <rect x={(x as number) - 18} y={(y as number) + 1} width="32" height="3" rx="1.5" fill={ART.mist} opacity="0.5" />
+              <Link a={[x as number, y as number]} b={[160, 100]} ghost op={0.35} w={1.5} />
+            </g>
+          ))}
+        </g>
+      )}
+
+      {scene === 'nograph' && (
+        <g>
+          {/* Social and professional graphs exist; the third square is still empty */}
+          {[[56, ART.teal], [160, ART.marigold]].map(([cx, c], i) => (
+            <g key={i}>
+              <rect x={(cx as number) - 38} y={58} width="76" height="84" rx="12" fill="#ffffff" opacity="0.08" stroke="#ffffff" strokeOpacity="0.18" />
+              <Link a={[(cx as number) - 16, 84]} b={[(cx as number) + 12, 100]} color={c as string} />
+              <Link a={[(cx as number) + 12, 100]} b={[(cx as number) - 8, 122]} color={c as string} />
+              <Link a={[(cx as number) + 12, 100]} b={[(cx as number) + 22, 78]} color={c as string} />
+              <Disc x={(cx as number) - 16} y={84} r={7} fill={c as string} />
+              <Disc x={(cx as number) + 12} y={100} r={9} fill={c as string} />
+              <Disc x={(cx as number) - 8} y={122} r={7} fill={c as string} />
+              <Disc x={(cx as number) + 22} y={78} r={6} fill={c as string} />
+            </g>
+          ))}
+          <rect x={226} y={58} width="76" height="84" rx="12" fill="none" stroke={ART.coral} strokeWidth="1.8" strokeDasharray="5 5" />
+          <Disc x={264} y={100} r={6} fill={ART.coral} />
+        </g>
+      )}
+
+      {scene === 'generations' && (
+        <g>
+          {/* A line of people, fading the further back you go */}
+          {[292, 246, 200, 154, 108, 62].map((x, i) => {
+            const op = [1, 0.85, 0.6, 0.4, 0.25, 0.15][i];
+            const ghost = i >= 4;
+            const fill = i === 0 ? ART.coral : i < 3 ? ART.marigold : ART.mist;
+            return (
+              <g key={x}>
+                {i < 5 && <Link a={[x - 13, 100]} b={[x - 33, 100]} color={ART.mist} ghost={i >= 3} op={op} />}
+                <Disc x={x} y={100} r={i === 0 ? 16 : 13} fill={fill} ghost={ghost} op={op} />
+              </g>
+            );
+          })}
+        </g>
+      )}
+
+      {scene === 'nearby' && (
+        <g>
+          {/* A new city: streets you know nothing about, relatives you don't know are there */}
+          <g stroke="#ffffff" strokeOpacity="0.08" strokeWidth="1">
+            {[40, 100, 160, 220, 280].map((x) => <line key={`v${x}`} x1={x} y1="0" x2={x} y2="200" />)}
+            {[40, 100, 160].map((y) => <line key={`h${y}`} x1="0" y1={y} x2="320" y2={y} />)}
+          </g>
+          <circle cx="160" cy="100" r="30" fill={ART.coral} opacity="0.12" />
+          <circle cx="160" cy="100" r="18" fill={ART.coral} opacity="0.25" />
+          <Disc x={160} y={100} r={9} fill={ART.coral} />
+          {[[72, 58, ART.teal], [244, 66, ART.marigold], [86, 150, ART.marigold], [252, 144, ART.teal]].map(([x, y, c], i) => (
+            <g key={i}>
+              <circle cx={x as number} cy={y as number} r="16" fill="none" stroke={c as string} strokeWidth="1.5" strokeDasharray="3 4" opacity="0.7" />
+              <Disc x={x as number} y={y as number} r={7} fill={c as string} op={0.55} />
+            </g>
+          ))}
+        </g>
+      )}
+
+      {scene === 'infrastructure' && (
+        <g>
+          {/* A home, and tools built for strangers that don't quite fit it */}
+          <rect x="110" y="62" width="100" height="90" rx="10" fill="none" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="2" />
+          <path d="M104 72 L160 34 L216 72" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <Disc x={160} y={112} r={12} fill={ART.coral} />
+          {/* chat bubble */}
+          <path d="M40 80 h46 a8 8 0 0 1 8 8 v22 a8 8 0 0 1 -8 8 h-26 l-10 9 v-9 h-10 a8 8 0 0 1 -8 -8 v-22 a8 8 0 0 1 8 -8z" fill={ART.mist} opacity="0.55" />
+          {/* cloud */}
+          <path d="M232 96 a14 14 0 0 1 26 -6 a11 11 0 0 1 20 8 a10 10 0 0 1 -4 19 h-46 a12 12 0 0 1 4 -21z" fill={ART.mist} opacity="0.55" />
+          {/* feed lines */}
+          <g fill={ART.mist} opacity="0.55">
+            <rect x="130" y="166" width="60" height="5" rx="2.5" />
+            <rect x="130" y="176" width="42" height="5" rx="2.5" />
+          </g>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ---------- Postcard ----------
+const TILTS = [-1.6, 1.3, -0.9, 1.7, -1.3, 1.0];
+
 function ProblemScrollCard({ item, index, hoveredIndex, setHovered, containerRef }: any) {
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  });
+  const reduceMotion = import_framer_useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start end', 'end start'] });
 
-  // Each card enters at a staggered point within the scroll progress
-  const entryStart = 0.0 + index * 0.02;
-  const entryEnd = entryStart + 0.1;
-  const yRaw = useTransform(scrollYProgress, [entryStart, entryEnd, 1], [-80, 0, 30 + index * 8]);
-  const opacityRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.08], [0, 1]);
-  const ySpring = useSpring(yRaw, { stiffness: 80, damping: 18, mass: 1 + index * 0.12 });
-  // Zig-zag: odd-column cards (index 1,3,5) get a top offset
-  const isOddColumn = index % 2 === 1;
-
-  
+  // Each card settles in slightly after the previous one, like being laid on a table.
+  const entryStart = index * 0.03;
+  const yRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.14, 1], [56, 0, 18 + index * 5]);
+  const opacityRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.1], [0, 1]);
+  const ySpring = useSpring(yRaw, { stiffness: 60, damping: 20, mass: 0.9 });
 
   const isHovered = hoveredIndex === index;
+  const tilt = reduceMotion ? 0 : TILTS[index % TILTS.length];
 
   return (
-    <motion.div style={{ y: ySpring, opacity: opacityRaw }} className={`relative ${isOddColumn ? 'mt-10' : ''}`} onViewportLeave={() => { if (hoveredIndex === index) setHovered(-1); }}>
+    <motion.div
+      style={reduceMotion ? undefined : { y: ySpring, opacity: opacityRaw }}
+      className={`relative ${index % 2 === 1 ? 'sm:mt-10' : ''}`}
+      onViewportLeave={() => { if (hoveredIndex === index) setHovered(-1); }}
+    >
       <motion.button
-        animate={{ 
-          y: isHovered ? -12 : [0, -4 - (index % 3), 0],
-          scale: isHovered ? 1.05 : 1
-        }}
-        transition={
-          isHovered 
-            ? { duration: 0.25, ease: 'easeOut' }
-            : { duration: 5 + index * 0.4, repeat: Infinity, ease: 'easeInOut' }
-        }
+        type="button"
+        animate={{ rotate: isHovered ? 0 : tilt, y: isHovered ? -8 : 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         onMouseEnter={() => setHovered(index)}
         onFocus={() => setHovered(index)}
         onClick={() => setHovered(isHovered ? -1 : index)}
-        className={`w-full text-left rounded-2xl border p-5 transition-colors duration-200 ${
+        aria-expanded={isHovered}
+        className={`w-full text-left rounded-[14px] bg-white p-3 pb-4 border border-black/[0.06] transition-shadow duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF4D6D] ${
           isHovered
-            ? 'bg-white border-[#2A4365]/25 shadow-2xl shadow-gray-900/12 z-10'
-            : 'bg-white/74 border-gray-200 hover:bg-white z-0'
+            ? 'shadow-[0_24px_48px_-16px_rgba(14,27,43,0.35)]'
+            : 'shadow-[0_10px_24px_-14px_rgba(14,27,43,0.25)]'
         }`}
       >
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-          isHovered ? 'bg-[#2A4365] text-white' : 'bg-[#2A4365]/8 text-[#2A4365]'
-        }`}>
-          <item.icon size={18} />
+        <div className="relative aspect-[16/10] rounded-[10px] overflow-hidden bg-[#0E1B2B]">
+          <ProblemArt scene={item.scene} />
         </div>
-        <h3 className="font-bold text-gray-950 text-sm mb-1">{item.title}</h3>
-        <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
+
+        {/* Stamp */}
+        <div className="absolute top-5 right-5 p-[3px] rounded-[3px] bg-white border border-dashed border-[#0E1B2B]/30 shadow-md">
+          <div className="w-8 h-9 rounded-[2px] bg-[#FF4D6D]/10 flex items-center justify-center">
+            <item.icon size={15} className="text-[#FF4D6D]" />
+          </div>
+        </div>
+
+        <h3 className="mt-3.5 font-bold text-[#0E1B2B] text-[15px] leading-snug">{item.title}</h3>
+        <p className="text-gray-600 text-[12.5px] leading-relaxed mt-1">{item.desc}</p>
       </motion.button>
 
-      <AnimatePresence>
+      {/* On small screens the answer unfolds beneath the card; on large it shows in the sticky preview */}
+      <AnimatePresence initial={false}>
         {isHovered && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="lg:hidden w-full mt-4 rounded-[1.35rem] overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:hidden overflow-hidden"
           >
-            <ProblemSnapshot activeProblem={item} />
+            <p className="mt-3 mx-1 pl-3 border-l-2 border-[#FF4D6D] text-[13px] text-[#0E1B2B]/80 leading-relaxed">
+              {item.solution}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// Desktop sticky preview: the same picture, larger, with the answer written on the back.
+function ProblemSnapshot({ activeProblem }: { activeProblem: any }) {
+  return (
+    <motion.div
+      key={activeProblem.title}
+      initial={{ opacity: 0, y: 10, rotate: -0.6 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-[18px] bg-white p-4 border border-black/[0.06] shadow-[0_28px_60px_-24px_rgba(14,27,43,0.35)]"
+    >
+      <div className="relative aspect-[16/10] rounded-[12px] overflow-hidden bg-[#0E1B2B]">
+        <ProblemArt scene={activeProblem.scene} />
+      </div>
+      <div className="px-1 pt-4 pb-1">
+        <p className="text-[#FF4D6D] text-[13px] font-bold mb-1.5">{activeProblem.previewTitle}</p>
+        <p className="text-[14px] text-[#0E1B2B]/80 leading-relaxed">{activeProblem.solution}</p>
+      </div>
     </motion.div>
   );
 }
@@ -98,39 +270,32 @@ function FeatureScrollCard({ item, index, hoveredIndex, setHovered, containerRef
     offset: ['start end', 'end start'],
   });
 
-  const entryStart = 0.0 + index * 0.02;
-  const entryEnd = entryStart + 0.1;
-  const yRaw = useTransform(scrollYProgress, [entryStart, entryEnd, 1], [-80, 0, 30 + index * 8]);
-  const opacityRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.08], [0, 1]);
-  const ySpring = useSpring(yRaw, { stiffness: 80, damping: 18, mass: 1 + index * 0.12 });
-  
+  const reduceMotion = import_framer_useReducedMotion();
+  const entryStart = index * 0.03;
+  const yRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.14, 1], [40, 0, 12 + index * 3]);
+  const opacityRaw = useTransform(scrollYProgress, [entryStart, entryStart + 0.1], [0, 1]);
+  const ySpring = useSpring(yRaw, { stiffness: 60, damping: 20, mass: 0.9 });
 
   const isHovered = hoveredIndex === index;
 
   return (
-    <motion.div 
-      style={{ y: ySpring, opacity: opacityRaw }} 
+    <motion.div
+      style={reduceMotion ? undefined : { y: ySpring, opacity: opacityRaw }}
       className="relative"
       onViewportLeave={() => {
         if (hoveredIndex === index) setHovered(-1);
       }}
     >
       <motion.button
-        animate={{ 
-          y: isHovered ? -12 : [0, -4 - (index % 3), 0],
-          scale: isHovered ? 1.05 : 1
-        }}
-        transition={
-          isHovered 
-            ? { duration: 0.25, ease: 'easeOut' }
-            : { duration: 5 + index * 0.4, repeat: Infinity, ease: 'easeInOut' }
-        }
+        type="button"
+        animate={{ y: isHovered ? -6 : 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         onMouseEnter={() => setHovered(index)}
         onFocus={() => setHovered(index)}
         className={`group w-full text-left rounded-2xl border p-4 sm:p-5 transition-colors duration-200 ${
           isHovered
-            ? 'bg-[#07121e] border-[#07121e] shadow-2xl shadow-[#07121e]/30 z-10'
-            : 'bg-[#f7f9fb] border-gray-200 hover:bg-white z-0'
+            ? 'bg-[#0E1B2B] border-[#0E1B2B] shadow-2xl shadow-[#0E1B2B]/30 z-10'
+            : 'bg-[#F1EFEB] border-black/[0.06] hover:bg-white z-0'
         }`}
       >
         <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-gray-900/10`}>
@@ -159,59 +324,6 @@ function FeatureScrollCard({ item, index, hoveredIndex, setHovered, containerRef
   );
 }
 
-
-function ProblemSnapshot({ activeProblem }: { activeProblem: any }) {
-  return (
-
-              <motion.div
-                key={activeProblem.title}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="rounded-3xl border border-gray-200 bg-white shadow-xl shadow-gray-900/6 overflow-hidden"
-              >
-                <div className="bg-[#07121e] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[#ffd98f] font-bold">Problem to product</p>
-                    <h3 className="text-white font-bold text-lg mt-1">{activeProblem.previewTitle}</h3>
-                  </div>
-                  <activeProblem.icon size={22} className="text-white/70" />
-                </div>
-
-                <div className="relative h-56 rounded-2xl bg-[linear-gradient(145deg,rgba(31,64,96,0.88),rgba(8,21,34,0.96))] border border-white/10 overflow-hidden">
-                  <svg viewBox="0 0 360 230" className="absolute inset-0 h-full w-full">
-                    <path d="M70 68 C128 94 156 116 180 138" stroke="#ffba78" strokeWidth="3" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 C218 105 254 84 304 62" stroke="#70e4c1" strokeWidth="3" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 L110 184" stroke="#8edbff" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-                    <path d="M180 138 L250 184" stroke="#ffd98f" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-                    {activeProblem.from.map((label: string, index: number) => {
-                      const points = [[70, 68], [180, 40], [304, 62]][index] || [70 + index * 100, 70];
-                      return (
-                        <g key={label}>
-                          <circle cx={points[0]} cy={points[1]} r="24" fill="#ffffff" fillOpacity="0.92" />
-                          <text x={points[0]} y={points[1] + 4} textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#17324f">{label}</text>
-                        </g>
-                      );
-                    })}
-                    <circle cx="180" cy="138" r="31" fill="#ffd98f" fillOpacity="0.96" />
-                    <text x="180" y="135" textAnchor="middle" fontSize="9" fontWeight="900" fill="#17324f">Aangan</text>
-                    <text x="180" y="147" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Core</text>
-                    <circle cx="110" cy="184" r="20" fill="#b7e5ff" />
-                    <circle cx="250" cy="184" r="20" fill="#bff3d5" />
-                    <text x="110" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">Tree</text>
-                    <text x="250" y="188" textAnchor="middle" fontSize="8" fontWeight="800" fill="#17324f">{activeProblem.to}</text>
-                  </svg>
-                </div>
-              </div>
-              <div className="p-5">
-                  <p className="text-sm font-semibold text-gray-950 mb-1">{activeProblem.title}</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{activeProblem.solution}</p>
-                </div>
-              </motion.div>
-  );
-}
 
 function FeatureSnapshot({ activeFeature }: { activeFeature: any }) {
   return (
@@ -260,56 +372,50 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
     {
       icon: Users,
       title: 'Invisible Relationships',
+      scene: 'invisible',
       desc: 'The internet knows your friends, followers, and colleagues. But no platform knows your family.',
       solution: 'A living Family Graph brings every relative into one visible, connected network.',
       previewTitle: 'From invisible to visible',
-      from: ['Friends', 'Followers', 'Colleagues'],
-      to: 'Family Graph',
     },
     {
       icon: Shield,
       title: 'Fragmented Information',
+      scene: 'fragmented',
       desc: 'Family data is scattered across WhatsApp groups, wedding albums, memories, and government records.',
       solution: 'One unified graph connects all family information in a single living network.',
       previewTitle: 'Scattered data becomes one graph',
-      from: ['WhatsApp', 'Albums', 'Records'],
-      to: 'Family Graph',
     },
     {
       icon: TreePine,
       title: 'No Family Graph Exists',
+      scene: 'nograph',
       desc: 'Facebook built the Social Graph. LinkedIn built the Professional Graph. No one has built the Family Graph.',
       solution: 'Aangan is building the world\'s first Family Graph — a living map of every relationship.',
       previewTitle: 'The missing graph',
-      from: ['Social', 'Professional', 'Family?'],
-      to: 'Family Graph',
     },
     {
       icon: Heart,
       title: 'Lost Across Generations',
+      scene: 'generations',
       desc: 'With every generation, family connections become harder to trace and easier to lose.',
       solution: 'The Family Graph preserves relationships across generations, ensuring no connection is forgotten.',
       previewTitle: 'Generations stay connected',
-      from: ['Gen 1', 'Gen 2', 'Gen 3'],
-      to: 'Preserved',
     },
     {
       icon: MapPin,
       title: 'Unknown Relatives Nearby',
+      scene: 'nearby',
       desc: 'People move to new cities without knowing which relatives live nearby.',
       solution: 'Discover trusted relatives around any place through the Family Graph.',
       previewTitle: 'New city, known people',
-      from: ['Delhi', 'Pune', 'Jaipur'],
-      to: 'Nearby Relatives',
     },
     {
       icon: Send,
       title: 'No Dedicated Infrastructure',
+      scene: 'infrastructure',
       desc: 'Families use tools built for strangers — messaging apps, social feeds, cloud storage — none designed for family relationships.',
       solution: 'Aangan provides digital infrastructure designed specifically for family connections.',
       previewTitle: 'Built for families',
-      from: ['Chat apps', 'Social media', 'Cloud'],
-      to: 'Family Network',
     },
   ];
 
@@ -319,42 +425,42 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       icon: TreePine,
       title: 'Family World',
       desc: 'Everyone you are related to on one map, with you at the centre. Zoom out to the whole family, in to one branch.',
-      gradient: 'from-[#ff7f63] to-[#2d81ff]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'main',
     },
     {
       icon: Users,
       title: 'Exactly how you are related',
       desc: 'Tap anyone and Aangan names the relationship — Bhatiji, Chachera bhai, Nani — with the chain of people between you.',
-      gradient: 'from-[#2d81ff] to-[#1eb18a]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'related',
     },
     {
       icon: MessageCircle,
       title: 'Posts',
       desc: 'No algorithm, no strangers. What your family posted, in the order they posted it, to the people you chose.',
-      gradient: 'from-[#1eb18a] to-[#ffc457]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'posts',
     },
     {
       icon: Send,
       title: 'Discuss',
       desc: 'One thread to settle where Diwali is this year — instead of four phone calls and forty unread replies.',
-      gradient: 'from-[#ffc457] to-[#ff7f63]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'discuss',
     },
     {
       icon: Sparkles,
       title: 'Events',
       desc: 'Invite the right branch of the family in one tap, see who is coming, and collect every photo after.',
-      gradient: 'from-[#ff7f63] to-[#1eb18a]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'events',
     },
     {
       icon: Image,
       title: 'Kept',
       desc: 'Every wedding, festival and birthday kept together, in albums the whole family adds to.',
-      gradient: 'from-[#2d81ff] to-[#ff7f63]',
+      gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'kept',
     },
   ];
@@ -385,7 +491,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       </motion.div>
 
       {/* The Challenge */}
-      <section className="py-24 px-6 bg-[#f7f9fb] relative">
+      <section className="py-24 px-6 bg-[#F1EFEB] relative">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-14 items-stretch">
           <div className="lg:sticky lg:top-24">
             <motion.div
@@ -394,12 +500,11 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">The Problem</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">
+              <h2 className="text-3xl sm:text-[40px] font-bold text-[#0E1B2B] mb-4 leading-[1.08]">
                 The internet digitized everything. Except families.
               </h2>
-              <p className="text-gray-600 leading-relaxed mb-6">
-                Hover a challenge to see how Aangan turns invisible family connections into a living, connected graph.
+              <p className="text-[#0E1B2B]/65 leading-relaxed mb-8 max-w-md">
+                Six things that go wrong when a family has no place of its own online. Pick one to see how Aangan answers it.
               </p>
             </motion.div>
 
@@ -410,7 +515,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
             </div>
           </div>
 
-          <div ref={problemGridRef} className="grid sm:grid-cols-2 gap-x-4 gap-y-2 relative -mt-5">
+          <div ref={problemGridRef} className="grid sm:grid-cols-2 gap-x-5 gap-y-6 relative">
             {problemItems.map((item, index) => (
               <ProblemScrollCard
                 key={item.title}
@@ -436,7 +541,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               >
-                <p className="text-[#2A4365] text-xs font-semibold uppercase tracking-[0.15em] mb-2">Inside the app</p>
+                <p className="text-[#FF4D6D] text-xs font-semibold tracking-wide mb-2">Inside the app</p>
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-950 mb-4 leading-tight">Built for the way families actually work</h2>
                 <p className="text-gray-600 max-w-lg leading-relaxed">
                   Every screen starts from who you are related to. Hover a feature to see the real screen.
@@ -565,7 +670,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="max-w-lg mx-auto text-center"
         >
-          <div className="w-16 h-16 rounded-3xl bg-[#2A4365]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
+          <div className="w-16 h-16 rounded-3xl bg-[#FF4D6D]/10 flex items-center justify-center mx-auto mb-6 shadow-sm">
             <BrandLogo size={38} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
@@ -577,7 +682,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={onDownload}
-              className="w-full sm:w-auto bg-[#2A4365] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#2A4365]/90 active:scale-[0.97] transition-all shadow-xl shadow-[#2A4365]/20 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#FF4D6D] text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-[#ff3d60] active:scale-[0.97] transition-all shadow-xl shadow-[#FF4D6D]/25 flex items-center justify-center gap-2"
             >
               <Download size={18} /> Download the App
             </button>

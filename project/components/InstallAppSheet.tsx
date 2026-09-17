@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Download, Network, Images, MessageCircle, ShieldCheck } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import InstallSteps from '@/components/InstallSteps';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { useAppInstall } from '@/hooks/useAppInstall';
 
@@ -13,6 +15,8 @@ interface InstallAppSheetProps {
    * instance instead of detecting the platform twice.
    */
   appInstall: ReturnType<typeof useAppInstall>;
+  /** Open straight onto the "what happens next" steps — for CTAs outside the dialog that already started the download. */
+  showSteps?: boolean;
 }
 
 const HIGHLIGHTS = [
@@ -21,12 +25,18 @@ const HIGHLIGHTS = [
   { icon: MessageCircle, label: 'Messages' },
 ];
 
-export default function InstallAppSheet({ open, onOpenChange, appInstall }: InstallAppSheetProps) {
+export default function InstallAppSheet({ open, onOpenChange, appInstall, showSteps = false }: InstallAppSheetProps) {
   const { isAndroid, isIOS, download, rememberDismissal } = appInstall;
+  const [steps, setSteps] = useState(showSteps);
 
+  // Follow the prop when it changes, and start fresh each time the dialog reopens.
+  useEffect(() => { setSteps(showSteps); }, [showSteps, open]);
+
+  // The download runs in the background, so instead of closing we show what
+  // Android is about to ask — the "unknown apps" gate is where people give up.
   const handleDownload = () => {
     download();
-    onOpenChange(false);
+    setSteps(true);
   };
 
   const handleDismiss = () => {
@@ -43,7 +53,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[calc(100%-2rem)] max-w-[380px] p-0 gap-0 border border-white/10 rounded-[28px] overflow-hidden shadow-[0_32px_80px_-12px_rgba(0,0,0,0.6)] [&>button]:text-white/50 [&>button]:hover:text-white [&>button]:top-5 [&>button]:right-5 [&>button]:opacity-100"
+        className="w-[calc(100%-2rem)] max-w-[380px] max-h-[90vh] overflow-y-auto p-0 gap-0 border border-white/10 rounded-[28px] overflow-hidden shadow-[0_32px_80px_-12px_rgba(0,0,0,0.6)] [&>button]:text-white/50 [&>button]:hover:text-white [&>button]:top-5 [&>button]:right-5 [&>button]:opacity-100"
         style={{
           background:
             'radial-gradient(120% 100% at 50% 0%, #16324f 0%, #0c1e33 42%, #07121e 100%)',
@@ -59,6 +69,18 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
         />
 
         <div className="relative px-7 pt-9 pb-7">
+          {steps ? (
+            <>
+              <DialogHeader className="space-y-0">
+                <DialogTitle className="brand-wordmark text-[24px] leading-tight text-white font-normal tracking-normal">
+                  Installing Apney
+                </DialogTitle>
+                <DialogDescription className="sr-only">Steps to install the downloaded Android app.</DialogDescription>
+              </DialogHeader>
+              <InstallSteps onDone={() => onOpenChange(false)} onDownloadAgain={download} />
+            </>
+          ) : (
+            <>
           {/* App icon */}
           <div className="flex justify-center mb-5">
             <div className="relative">
@@ -120,6 +142,8 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall }: Inst
             <ShieldCheck size={13} className="text-white/30 mt-0.5 flex-shrink-0" />
             <p className="text-[11px] leading-relaxed text-white/40">{footnote}</p>
           </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

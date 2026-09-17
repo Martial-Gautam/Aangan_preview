@@ -58,11 +58,15 @@ export default function WelcomePage() {
   // App download — Android gets the APK, iOS and desktop get the PWA install steps
   const appInstall = useAppInstall();
   const [showInstallSheet, setShowInstallSheet] = useState(false);
+  const [showInstallSteps, setShowInstallSteps] = useState(false);
   const installOfferedRef = useRef(false);
 
-  // Every CTA downloads the APK directly, on every platform.
+  // Every CTA starts the APK download, then opens the dialog on the
+  // "what happens next" steps, since the download itself runs in the background.
   const handleDownload = useCallback(() => {
     appInstall.download();
+    setShowInstallSteps(true);
+    setShowInstallSheet(true);
   }, [appInstall]);
 
   const { scrollY } = useScroll();
@@ -689,8 +693,9 @@ export default function WelcomePage() {
       {/* Install / Download Popup */}
       <InstallAppSheet
         open={showInstallSheet}
-        onOpenChange={setShowInstallSheet}
+        onOpenChange={(next) => { setShowInstallSheet(next); if (!next) setShowInstallSteps(false); }}
         appInstall={appInstall}
+        showSteps={showInstallSteps}
       />
     </div>
   );

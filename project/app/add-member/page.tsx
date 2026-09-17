@@ -276,7 +276,7 @@ export default function AddMemberPage() {
           <div className="glass-card rounded-3xl p-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Contact Info (optional)</h3>
             <p className="text-xs text-gray-400 mb-3">
-              If they join Aangan, they can claim this profile automatically
+              If they join Apney, they can claim this profile automatically
             </p>
             <div className="space-y-3">
               <div className="relative">
@@ -332,7 +332,7 @@ export default function AddMemberPage() {
                   <Share2 size={18} className="text-[#2A4365]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">Invite {addedPersonName.split(' ')[0]} to Aangan</h3>
+                  <h3 className="text-sm font-bold text-gray-900">Invite {addedPersonName.split(' ')[0]} to Apney</h3>
                   <p className="text-xs text-gray-500">They can join and connect with your family tree</p>
                 </div>
               </div>

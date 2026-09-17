@@ -24,7 +24,7 @@ export default function LegalLayout({ title, lastUpdated, intro, children }: Leg
         <div className="max-w-3xl mx-auto px-5 py-3.5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <BrandLogo size={22} />
-            <span className="brand-wordmark text-lg text-gray-900">Aangan</span>
+            <span className="brand-wordmark text-lg text-gray-900">Apney</span>
           </Link>
           <Link
             href="/"

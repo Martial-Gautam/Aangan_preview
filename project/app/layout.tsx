@@ -44,24 +44,24 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || 
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   ),
-  title: 'Aangan — Your Family Tree',
+  title: 'Apney — Your Family Tree',
   description: 'Connect with your family. Build your tree. Cherish your roots.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Aangan',
+    title: 'Apney',
   },
   openGraph: {
-    title: 'Aangan — Your Family Tree',
+    title: 'Apney — Your Family Tree',
     description: 'Connect with your family. Build your tree. Cherish your roots.',
-    siteName: 'Aangan',
+    siteName: 'Apney',
     images: [
       {
         url: '/brand/familiar-logo.png',
         width: 1200,
         height: 630,
-        alt: 'Aangan Logo',
+        alt: 'Apney Logo',
       },
     ],
     locale: 'en_US',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Aangan — Your Family Tree',
+    title: 'Apney — Your Family Tree',
     description: 'Connect with your family. Build your tree. Cherish your roots.',
     images: ['/brand/familiar-logo.png'],
   },

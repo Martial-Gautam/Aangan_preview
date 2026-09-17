@@ -301,7 +301,7 @@ export default function WelcomePage() {
                 <BrandLogo size={26} />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {mode === 'signup' ? 'Join Aangan' : 'Welcome back'}
+                {mode === 'signup' ? 'Join Apney' : 'Welcome back'}
               </h2>
               <p className="text-gray-500 dark:text-gray-300 mt-1 text-sm">
                 {mode === 'signup' ? 'Start building your Family Graph' : 'Sign in to your Family Graph'}
@@ -395,7 +395,7 @@ export default function WelcomePage() {
             <BrandLogo size={20} />
             <div className="leading-tight">
               <span className={`brand-wordmark block text-lg transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
-                Aangan
+                Apney
               </span>
             </div>
           </div>
@@ -557,7 +557,7 @@ export default function WelcomePage() {
 
             <div className="flex-1 min-w-0 text-center sm:text-left">
               <h1 className="brand-wordmark text-5xl sm:text-6xl text-white leading-none mb-2 tracking-normal">
-                Aangan
+                Apney
               </h1>
               <p className="text-[#FF4D6D] font-semibold text-[15px]">Ranveer Gautam</p>
               <p className="text-white/65 text-sm mt-1">Everyone you are related to, on one map. Private by design.</p>
@@ -632,7 +632,7 @@ export default function WelcomePage() {
             <div className="rounded-3xl bg-white/[0.05] border border-white/10 backdrop-blur-md p-6 sm:p-7">
               <h2 className="text-white font-bold text-lg mb-3">About this app</h2>
               <p className="text-white/70 leading-relaxed text-[15px] mb-3">
-                Aangan puts your whole family on one map — parents&apos; side, your side, the children —
+                Apney puts your whole family on one map — parents&apos; side, your side, the children —
                 and tells you exactly how anyone is related to you. Not &ldquo;Relative&rdquo;: Bhatiji,
                 Chachera bhai, Nani, with the chain of people in between.
               </p>

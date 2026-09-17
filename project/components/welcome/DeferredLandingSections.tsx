@@ -390,7 +390,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       title: 'No Family Graph Exists',
       scene: 'nograph',
       desc: 'Facebook built the Social Graph. LinkedIn built the Professional Graph. No one has built the Family Graph.',
-      solution: 'Aangan is building the world\'s first Family Graph — a living map of every relationship.',
+      solution: 'Apney is building the world\'s first Family Graph — a living map of every relationship.',
       previewTitle: 'The missing graph',
     },
     {
@@ -414,7 +414,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
       title: 'No Dedicated Infrastructure',
       scene: 'infrastructure',
       desc: 'Families use tools built for strangers — messaging apps, social feeds, cloud storage — none designed for family relationships.',
-      solution: 'Aangan provides digital infrastructure designed specifically for family connections.',
+      solution: 'Apney provides digital infrastructure designed specifically for family connections.',
       previewTitle: 'Built for families',
     },
   ];
@@ -431,7 +431,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
     {
       icon: Users,
       title: 'Exactly how you are related',
-      desc: 'Tap anyone and Aangan names the relationship — Bhatiji, Chachera bhai, Nani — with the chain of people between you.',
+      desc: 'Tap anyone and Apney names the relationship — Bhatiji, Chachera bhai, Nani — with the chain of people between you.',
       gradient: 'from-[#0E1B2B] to-[#1c3350]',
       shot: 'related',
     },
@@ -476,7 +476,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
         style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', y: watermarkY }}
       >
         <span className="text-[16vh] font-black uppercase tracking-[0.25em] brand-wordmark whitespace-nowrap text-[#2A4365]/[0.15] dark:text-white/[0.12]" style={{ mixBlendMode: 'multiply' }}>
-          Aangan
+          Apney
         </span>
       </motion.div>
       <motion.div 
@@ -486,7 +486,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
           style={{ x: watermarkX }} 
           className="text-[15vw] font-black uppercase tracking-widest brand-wordmark pl-4"
         >
-          Aangan • Aangan • Aangan • Aangan • Aangan
+          Apney • Apney • Apney • Apney • Apney
         </motion.span>
       </motion.div>
 
@@ -504,7 +504,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
                 The internet digitized everything. Except families.
               </h2>
               <p className="text-[#0E1B2B]/65 leading-relaxed mb-8 max-w-md">
-                Six things that go wrong when a family has no place of its own online. Pick one to see how Aangan answers it.
+                Six things that go wrong when a family has no place of its own online. Pick one to see how Apney answers it.
               </p>
             </motion.div>
 
@@ -597,7 +597,7 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
               style={{ x: visionX, opacity: visionOpacity }}
               className="text-2xl sm:text-3xl font-bold text-white leading-snug mb-6"
             >
-              Facebook mapped friendships. LinkedIn mapped professional relationships. Aangan is building the Family Graph.
+              Facebook mapped friendships. LinkedIn mapped professional relationships. Apney is building the Family Graph.
             </motion.h2>
           </motion.div>
           <motion.p 
@@ -674,10 +674,10 @@ export default function DeferredLandingSections({ onDownload }: DeferredLandingS
             <BrandLogo size={38} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Aangan means courtyard.
+            Apney means your own people.
           </h2>
           <p className="text-gray-500 mb-8 leading-relaxed">
-            The place where the whole family gathers. Bring yours in today.
+            Everyone you are related to, in one place that is only theirs. Bring them in today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button

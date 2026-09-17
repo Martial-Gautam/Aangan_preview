@@ -10,7 +10,7 @@ interface BrandLogoProps {
 export default function BrandLogo({
   size = 24,
   className = '',
-  alt = 'Aangan logo',
+  alt = 'Apney logo',
   priority = false,
 }: BrandLogoProps) {
   const src = size <= 72 ? '/icons/familiar-icon-192.webp' : '/brand/familiar-logo.webp';

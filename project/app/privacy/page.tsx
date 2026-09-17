@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import LegalLayout from '@/components/legal/LegalLayout';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Aangan',
+  title: 'Privacy Policy — Apney',
   description:
-    'What Aangan stores, why, who can see it, and how to get rid of it. No advertising identifiers, no analytics, no location, no contacts.',
+    'What Apney stores, why, who can see it, and how to get rid of it. No advertising identifiers, no analytics, no location, no contacts.',
 };
 
 const MAIL = 'mailto:ranveer.aangan@gmail.com';
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       intro={
         <>
           <p>
-            Aangan is a private app for one family. This policy says what it stores, why, who can
+            Apney is a private app for one family. This policy says what it stores, why, who can
             see it, and how to get rid of it. It was written from the database schema rather than
             from a template, so it describes what the app actually does.
           </p>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
     >
       <h2>Who we are</h2>
       <p>
-        Aangan is operated by the person you can reach at{' '}
+        Apney is operated by the person you can reach at{' '}
         <a href={MAIL}>ranveer.aangan@gmail.com</a>, who is the data controller for the purposes of
         the UK GDPR and the EU GDPR, and the business responsible under India&apos;s Digital
         Personal Data Protection Act.
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
         <li>
           <strong>Your family</strong> — the people you add, how they are related, and anything you
           record about them: names, dates, photographs, notes.{' '}
-          <strong>Much of this is about people who are not Aangan users.</strong> See{' '}
+          <strong>Much of this is about people who are not Apney users.</strong> See{' '}
           <em>People who never joined</em>, below.
         </li>
         <li>
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
             No advertising identifiers, no ad networks, no third-party analytics, and no tracking
             across other apps or websites.
           </strong>{' '}
-          Aangan does not have a behavioural profile of you and is not built to.
+          Apney does not have a behavioural profile of you and is not built to.
         </li>
         <li>
           <strong>No location.</strong> The app never asks for it.
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
 
       <h2>Who can see what</h2>
       <p>
-        Aangan has no public content. Nothing you put in it is visible on the open internet, and
+        Apney has no public content. Nothing you put in it is visible on the open internet, and
         there is no browsing by strangers.
       </p>
       <ul>
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
           radius you chose for each thing.
         </li>
         <li>
-          <strong>Nobody else</strong>, including other Aangan users who are not connected to you.
+          <strong>Nobody else</strong>, including other Apney users who are not connected to you.
         </li>
         <li>
           <strong>You alone</strong> can see who you have blocked, and who reported whom is visible
@@ -156,7 +156,7 @@ export default function PrivacyPage() {
 
       <h2>Children</h2>
       <p>
-        Aangan is a family app and family trees include children.{' '}
+        Apney is a family app and family trees include children.{' '}
         <strong>A child&apos;s record is usually created by an adult relative, not by the child.</strong>
       </p>
       <p>
@@ -234,7 +234,7 @@ export default function PrivacyPage() {
           </tbody>
         </table>
       </div>
-      <p>That is the whole list. Aangan uses no advertising or analytics service.</p>
+      <p>That is the whole list. Apney uses no advertising or analytics service.</p>
       <p>
         Your data may be processed outside your country by the providers above. Where the law
         requires a transfer safeguard, the providers&apos; standard contractual clauses are the

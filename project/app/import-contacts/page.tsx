@@ -63,7 +63,7 @@ export default function ImportContactsPage() {
         isExistingAanganUser: false,
       })).filter(c => c.name !== 'Unknown Contact' && (c.phone || c.email));
 
-      // Check against Aangan DB
+      // Check against Apney DB
       const res = await fetch('/api/claim/check', {
         method: 'POST',
         headers: {
@@ -208,7 +208,7 @@ export default function ImportContactsPage() {
             {existingUsers.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
-                  Already on Aangan ({existingUsers.length})
+                  Already on Apney ({existingUsers.length})
                 </h3>
                 <div className="space-y-3">
                   {existingUsers.map(c => (
@@ -226,7 +226,7 @@ export default function ImportContactsPage() {
             {newUsers.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
-                  Not on Aangan Yet ({newUsers.length})
+                  Not on Apney Yet ({newUsers.length})
                 </h3>
                 <div className="space-y-3">
                   {newUsers.map(c => (

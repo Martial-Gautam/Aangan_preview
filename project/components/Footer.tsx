@@ -63,7 +63,7 @@ export default function Footer({ variant = 'app' }: FooterProps) {
             <div className="flex items-center gap-2 mb-3">
               <BrandLogo size={20} />
               <span className={`brand-wordmark text-lg ${isLanding ? 'text-white' : 'text-gray-900'}`}>
-                Aangan
+                Apney
               </span>
             </div>
             <p className={`text-xs leading-relaxed mb-4 ${subtitleClass}`}>
@@ -123,7 +123,7 @@ export default function Footer({ variant = 'app' }: FooterProps) {
           <div>
             <h4 className={headingClass}>About</h4>
             <p className={`text-xs leading-relaxed mb-3 ${subtitleClass}`}>
-              Aangan (formerly Aangan) is building the world&apos;s first Family Graph — connecting every person to their roots.
+              Apney (formerly Aangan) is building the world&apos;s first Family Graph — connecting every person to their roots.
             </p>
             <a
               href="mailto:ranveer.aangan@gmail.com"
@@ -142,7 +142,7 @@ export default function Footer({ variant = 'app' }: FooterProps) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span className={`text-[11px] ${mutedClass}`}>
-              © {new Date().getFullYear()} Aangan · Built with
+              © {new Date().getFullYear()} Apney · Built with
             </span>
             <Heart size={11} className="text-red-400 fill-red-400" />
             <span className={`text-[11px] ${mutedClass}`}>

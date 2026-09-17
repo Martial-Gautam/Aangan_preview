@@ -36,7 +36,7 @@ export default function BhuchkiChat({ open, onOpenChange }: { open: boolean; onO
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 space-y-2 opacity-60">
               <Bot size={48} className="text-[#2A4365]" />
               <p>Hi, I am Bhuchki!</p>
-              <p className="text-sm">I can help you navigate Aangan, manage memories, send messages, or find family connections.</p>
+              <p className="text-sm">I can help you navigate Apney, manage memories, send messages, or find family connections.</p>
             </div>
           )}
           {messages.map((m) => (

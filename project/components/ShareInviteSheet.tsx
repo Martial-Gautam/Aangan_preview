@@ -20,9 +20,9 @@ const APP_URL = 'https://aangan-preview.vercel.app/';
 
 function getShareText(personName?: string): string {
   if (personName) {
-    return `Hey! I've added you as family on Aangan. Join the app to connect with our family tree! 🌳\n\n${APP_URL}`;
+    return `Hey! I've added you as family on Apney. Join the app to connect with our family tree! 🌳\n\n${APP_URL}`;
   }
-  return `Join me on Aangan — the app that connects families! 🌳\n\n${APP_URL}`;
+  return `Join me on Apney — the app that connects families! 🌳\n\n${APP_URL}`;
 }
 
 // ─── Inline SVG Icons ────────────────────────────────────────
@@ -69,7 +69,7 @@ export function ShareInviteSheet({
     return getShareText(personName);
   }, [personName, shareMessage]);
 
-  const title = personName ? `Invite ${personName}` : 'Invite to Aangan';
+  const title = personName ? `Invite ${personName}` : 'Invite to Apney';
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -110,7 +110,7 @@ export function ShareInviteSheet({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Aangan',
+          title: 'Join Apney',
           text: shareText,
           url: APP_URL,
         });
@@ -157,7 +157,7 @@ export function ShareInviteSheet({
         icon: <Mail size={20} className="text-white" />,
         action: () =>
           window.open(
-            `mailto:?subject=${encodeURIComponent('Join Aangan')}&body=${encoded}`,
+            `mailto:?subject=${encodeURIComponent('Join Apney')}&body=${encoded}`,
             '_self'
           ),
       },

@@ -579,7 +579,7 @@ export default function HomePage() {
       <div className="glass-header px-5 pt-12 pb-3.5 z-10 flex-shrink-0">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="brand-wordmark text-[10px] text-gray-500/85 uppercase">Aangan</p>
+            <p className="brand-wordmark text-[10px] text-gray-500/85 uppercase">Apney</p>
             <h1 className="screen-title text-[17px] text-gray-900 mt-0.5">
               {profile?.full_name?.split(' ')[0]}&apos;s Family
             </h1>
@@ -591,7 +591,7 @@ export default function HomePage() {
             <button
               onClick={() => setShowShareSheet(true)}
               className="w-8 h-8 rounded-full bg-[#2A4365]/8 flex items-center justify-center hover:bg-[#2A4365]/12 transition-all active:scale-95 text-[#2A4365]"
-              aria-label="Share Aangan"
+              aria-label="Share Apney"
             >
               <Share2 size={14} />
             </button>

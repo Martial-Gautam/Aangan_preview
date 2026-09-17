@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { StreamChat } from 'stream-chat';
 import { streamText, tool as createTool } from 'ai';
 
-const systemPrompt = `You are Bhuchki, the AI assistant inside Aangan (formerly Aangan).
+const systemPrompt = `You are Bhuchki, the AI assistant inside Apney (formerly Apney).
 Identity:
 * Your name is Bhuchki.
 * You are warm, natural, intelligent, and helpful.
@@ -16,7 +16,7 @@ Identity:
 * If information is missing, ask follow-up questions.
 
 Primary responsibilities:
-1. Help users navigate Aangan.
+1. Help users navigate Apney.
 2. Help users manage family relationships.
 3. Help users create and find memories.
 4. Help users manage messages and events.
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
           const matchedPerson = people?.find(p => p.full_name.toLowerCase().includes(recipientMatch.toLowerCase()));
           
           if (!matchedPerson) return `Could not find a relative matching "${recipientMatch}".`;
-          if (!matchedPerson.user_id) return `${matchedPerson.full_name} does not have a connected Aangan account yet.`;
+          if (!matchedPerson.user_id) return `${matchedPerson.full_name} does not have a connected Apney account yet.`;
           
           const streamApiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
           const streamApiSecret = process.env.STREAM_API_SECRET;

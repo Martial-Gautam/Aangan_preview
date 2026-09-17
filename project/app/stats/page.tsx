@@ -128,7 +128,7 @@ export default function StatsPage() {
             </button>
             <div>
               <p className="brand-wordmark text-[10px] text-gray-400 uppercase">
-                Aangan
+                Apney
               </p>
               <h1 className="screen-title text-lg text-gray-900">Tree Statistics</h1>
             </div>

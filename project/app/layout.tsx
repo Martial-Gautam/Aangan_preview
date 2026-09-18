@@ -55,6 +55,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Apney' },
   robots: { index: true, follow: true },
+  verification: { google: '1TyXN2wMdBSOt7HzzaCUoF5kXDmQj0bMMwui8fH_3Lk' },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

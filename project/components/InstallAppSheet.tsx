@@ -127,7 +127,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall, showSt
 
           {/* File meta */}
           <p className="mt-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
-            Android · APK · 103 MB
+            Android · APK · 112 MB
           </p>
 
           <button

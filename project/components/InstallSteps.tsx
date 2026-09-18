@@ -88,7 +88,7 @@ const STEPS = [
   {
     art: 'open',
     title: 'Open the downloaded file',
-    body: 'Pull down your notifications and tap app-release.apk. If it is not there, open the Files app and look in Downloads.',
+    body: 'Pull down your notifications and tap the Apney file (it ends in .apk). If it is not there, open the Files app and look in Downloads.',
   },
   {
     art: 'allow',

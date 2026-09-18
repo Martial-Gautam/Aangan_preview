@@ -569,8 +569,8 @@ export default function WelcomePage() {
               <div className="mt-6 grid grid-cols-4 divide-x divide-white/12 rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-md">
                 {[
                   { value: 'Free', label: 'No ads, ever' },
-                  { value: '103 MB', label: 'Android APK' },
-                  { value: 'v1.0.0', label: 'Early access' },
+                  { value: '112 MB', label: 'Android APK' },
+                  { value: 'v2.0.0', label: 'Early access' },
                   { value: 'E2E', label: 'Encrypted chats' },
                 ].map((s) => (
                   <div key={s.label} className="py-3 px-1 text-center">

@@ -39,39 +39,36 @@ export const viewport: Viewport = {
   ],
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://aangan-preview.vercel.app';
+const TITLE = 'Apney — Your family tree, on one map';
+const DESCRIPTION =
+  'A private family app for Indian families. See everyone you are related to on one map, know exactly how — Bhatiji, Chachera bhai, Nani — and share posts, events and photos only your family can see. Free Android app, no ads.';
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  ),
-  title: 'Apney — Your Family Tree',
-  description: 'Connect with your family. Build your tree. Cherish your roots.',
+  // A fixed base, not VERCEL_URL: that is the per-deployment hostname, which
+  // would make every canonical and social-preview URL point at a throwaway domain.
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITLE, template: '%s — Apney' },
+  description: DESCRIPTION,
+  keywords: ['family tree app', 'Indian family app', 'family graph', 'kinship', 'private family network', 'family photos app', 'Apney', 'Aangan'],
+  alternates: { canonical: '/' },
   manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Apney',
-  },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Apney' },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: 'Apney — Your Family Tree',
-    description: 'Connect with your family. Build your tree. Cherish your roots.',
+    title: TITLE,
+    description: DESCRIPTION,
     siteName: 'Apney',
-    images: [
-      {
-        url: '/brand/familiar-logo.png',
-        width: 1200,
-        height: 630,
-        alt: 'Apney Logo',
-      },
-    ],
-    locale: 'en_US',
+    url: '/',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Apney — everyone you are related to, on one map' }],
+    locale: 'en_IN',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Apney — Your Family Tree',
-    description: 'Connect with your family. Build your tree. Cherish your roots.',
-    images: ['/brand/familiar-logo.png'],
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og.png'],
   },
 };
 

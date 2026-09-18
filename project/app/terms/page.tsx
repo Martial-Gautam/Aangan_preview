@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import LegalLayout from '@/components/legal/LegalLayout';
 
 export const metadata: Metadata = {
-  title: 'Terms of Use — Apney',
+  title: 'Terms of Use',
+  alternates: { canonical: '/terms' },
   description:
     'The terms you agree to by using Apney: who may use it, what you put in it, and zero tolerance for objectionable content and abusive behaviour.',
 };

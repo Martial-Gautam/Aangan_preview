@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import LegalLayout from '@/components/legal/LegalLayout';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Apney',
+  title: 'Privacy Policy',
+  alternates: { canonical: '/privacy' },
   description:
     'What Apney stores, why, who can see it, and how to get rid of it. No advertising identifiers, no analytics, no location, no contacts.',
 };

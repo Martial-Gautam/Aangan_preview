@@ -17,6 +17,8 @@ interface InstallAppSheetProps {
   appInstall: ReturnType<typeof useAppInstall>;
   /** Open straight onto the "what happens next" steps — for CTAs outside the dialog that already started the download. */
   showSteps?: boolean;
+  /** From the latest release; omitted where the page has no server data (e.g. /home). */
+  sizeMB?: number;
 }
 
 const HIGHLIGHTS = [
@@ -25,7 +27,7 @@ const HIGHLIGHTS = [
   { icon: MessageCircle, label: 'Messages' },
 ];
 
-export default function InstallAppSheet({ open, onOpenChange, appInstall, showSteps = false }: InstallAppSheetProps) {
+export default function InstallAppSheet({ open, onOpenChange, appInstall, showSteps = false, sizeMB }: InstallAppSheetProps) {
   const { isAndroid, isIOS, download, rememberDismissal } = appInstall;
   const [steps, setSteps] = useState(showSteps);
 
@@ -127,7 +129,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall, showSt
 
           {/* File meta */}
           <p className="mt-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
-            Android · APK · 112 MB
+            Android · APK{sizeMB ? ` · ${sizeMB} MB` : ''}
           </p>
 
           <button

@@ -45,11 +45,11 @@ const appJsonLd = (release: ReleaseInfo) => ({
   description:
     'A private family app: everyone you are related to on one map, exact kinship names, and posts, events and photos only your family can see.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
-  downloadUrl: 'https://aangan-preview.vercel.app/download',
+  downloadUrl: 'https://apney.vercel.app/download',
   fileSize: `${release.sizeMB}MB`,
   softwareVersion: release.version,
   author: { '@type': 'Person', name: 'Ranveer Gautam' },
-  screenshot: ['main', 'related', 'posts', 'chats', 'events', 'kept'].map((f) => `https://aangan-preview.vercel.app/screenshots/${f}.webp`),
+  screenshot: ['main', 'related', 'posts', 'chats', 'events', 'kept'].map((f) => `https://apney.vercel.app/screenshots/${f}.webp`),
 });
 
 const DeferredLandingSections = dynamic(

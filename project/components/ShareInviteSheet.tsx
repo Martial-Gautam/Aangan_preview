@@ -16,7 +16,7 @@ interface ShareInviteSheetProps {
 
 // ─── Constants ───────────────────────────────────────────────
 
-const APP_URL = 'https://aangan-preview.vercel.app/';
+const APP_URL = 'https://apney.vercel.app/';
 
 function getShareText(personName?: string): string {
   if (personName) {

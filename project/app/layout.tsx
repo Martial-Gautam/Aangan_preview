@@ -39,10 +39,10 @@ export const viewport: Viewport = {
   ],
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://aangan-preview.vercel.app';
-const TITLE = 'Apney — Your family tree, on one map';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://apney.vercel.app';
+const TITLE = 'Apney (formerly Aangan) — Your family tree, on one map';
 const DESCRIPTION =
-  'A private family app for Indian families. See everyone you are related to on one map, know exactly how — Bhatiji, Chachera bhai, Nani — and share posts, events and photos only your family can see. Free Android app, no ads.';
+  'Apney, formerly Aangan, is a private family app for Indian families. See everyone you are related to on one map, know exactly how — Bhatiji, Chachera bhai, Nani — and share posts, events and photos only your family can see. Free Android app, no ads.';
 
 export const metadata: Metadata = {
   // A fixed base, not VERCEL_URL: that is the per-deployment hostname, which
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     siteName: 'Apney',
     url: '/',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Apney — everyone you are related to, on one map' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Apney (formerly Aangan) — everyone you are related to, on one map' }],
     locale: 'en_IN',
     type: 'website',
   },
@@ -77,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
-        <link rel="apple-touch-icon" href="/icons/familiar-icon-192.webp" />
+        <link rel="apple-touch-icon" href="/icons/apney-icon-192.webp" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} ${plusJakarta.variable} ${bricolage.variable}`}>

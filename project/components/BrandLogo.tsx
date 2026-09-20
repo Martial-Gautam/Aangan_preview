@@ -13,7 +13,7 @@ export default function BrandLogo({
   alt = 'Apney logo',
   priority = false,
 }: BrandLogoProps) {
-  const src = size <= 72 ? '/icons/familiar-icon-192.webp' : '/brand/familiar-logo.webp';
+  const src = size <= 72 ? '/icons/apney-icon-192.webp' : '/brand/apney-logo.webp';
 
   return (
     <div

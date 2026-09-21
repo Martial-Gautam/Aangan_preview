@@ -150,7 +150,7 @@ export default function InstallSteps({ onDone, onDownloadAgain }: InstallStepsPr
 
       <button
         onClick={onDone}
-        className="w-full mt-6 py-3.5 rounded-2xl bg-white text-[#0c1e33] text-[15px] font-bold flex items-center justify-center gap-2 shadow-xl shadow-black/25 hover:bg-[#fff6df] active:scale-[0.98] transition-all"
+        className="w-full mt-6 py-3.5 rounded-2xl bg-[#fff] text-[#0c1e33] text-[15px] font-bold flex items-center justify-center gap-2 shadow-xl shadow-black/25 hover:bg-[#fff6df] active:scale-[0.98] transition-all"
       >
         <Check size={17} /> Got it
       </button>

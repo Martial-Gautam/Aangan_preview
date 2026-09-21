@@ -121,7 +121,7 @@ export default function InstallAppSheet({ open, onOpenChange, appInstall, showSt
           {/* Primary CTA */}
           <button
             onClick={handleDownload}
-            className="group w-full mt-6 py-4 rounded-2xl bg-white text-[#0c1e33] text-[15px] font-bold flex items-center justify-center gap-2 shadow-xl shadow-black/25 hover:bg-[#fff6df] active:scale-[0.98] transition-all"
+            className="group w-full mt-6 py-4 rounded-2xl bg-[#fff] text-[#0c1e33] text-[15px] font-bold flex items-center justify-center gap-2 shadow-xl shadow-black/25 hover:bg-[#fff6df] active:scale-[0.98] transition-all"
           >
             <Download size={17} className="transition-transform group-hover:translate-y-0.5" />
             Download the App

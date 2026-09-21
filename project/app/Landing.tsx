@@ -613,7 +613,7 @@ export default function Landing({ release }: { release: ReleaseInfo }) {
               <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
                 <button
                   onClick={handleDownload}
-                  className="welcome-primary-cta w-full sm:w-auto bg-white text-[#16314d] px-12 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
+                  className="welcome-primary-cta w-full sm:w-auto bg-[#fff] text-[#16314d] px-12 py-4 rounded-2xl font-bold text-base hover:bg-[#fff6df] active:scale-[0.97] transition-all shadow-xl shadow-black/18 flex items-center justify-center gap-2"
                 >
                   <Download size={18} /> Install
                 </button>

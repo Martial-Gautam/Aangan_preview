@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: ['/', '/privacy', '/terms', '/screenshots/', '/og.png'],
+      allow: ['/', '/privacy', '/terms', '/delete-account', '/screenshots/', '/og.png'],
       disallow: ['/api/', '/home', '/feed', '/messages', '/memories', '/profile', '/stats', '/onboarding', '/notifications', '/add-member', '/edit-member/', '/import-contacts', '/download'],
     },
     sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://apney.vercel.app'}/sitemap.xml`,

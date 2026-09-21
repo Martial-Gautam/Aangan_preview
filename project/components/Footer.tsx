@@ -22,6 +22,7 @@ const SITEMAP_LINKS = [
 const LEGAL_LINKS = [
   { label: 'Privacy Policy', href: '/privacy' },
   { label: 'Terms of Use', href: '/terms' },
+  { label: 'Delete Account', href: '/delete-account' },
 ];
 
 const SOCIAL_LINKS = [
@@ -153,6 +154,8 @@ export default function Footer({ variant = 'app' }: FooterProps) {
             <a href="/privacy" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Privacy</a>
             <span>·</span>
             <a href="/terms" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Terms</a>
+            <span>·</span>
+            <a href="/delete-account" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Delete Account</a>
             <span>·</span>
             <a href="mailto:ranveer.aangan@gmail.com" className={`hover:${isLanding ? 'text-white/60' : 'text-gray-500'} transition-colors`}>Contact</a>
           </div>

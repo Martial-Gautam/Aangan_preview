@@ -1,0 +1,176 @@
+/* Scoped to .invite so none of globals.css's dark-mode remaps (which target
+   .bg-white, .text-gray-*, etc.) can reach this page. Greyscale throughout;
+   the download button is the only coloured element. */
+
+.invite {
+  --bg: #ffffff;
+  --card: #f6f6f8;
+  --inset: #efeff2;
+  --text: #0b0b0f;
+  --soft: #3f3f46;
+  --muted: #707078;
+  --hairline: #e4e4ea;
+  --chip: #f1f1f4;
+  --chip-text: #52525b;
+  /* Not the brand coral: white on #FF3B5C is 3.48:1 and fails WCAG AA. */
+  --action: #db334f;
+  --action-text: #ffffff;
+
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-brand), system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .invite {
+    --bg: #000000;
+    --card: #131316;
+    --inset: #0c0c0f;
+    --text: #fafafa;
+    --soft: #d4d4d8;
+    --muted: #7d7d87;
+    --hairline: #26262b;
+    --chip: #1b1b20;
+    --chip-text: #a1a1aa;
+  }
+}
+
+.invite__col {
+  width: 100%;
+  max-width: 420px;
+}
+
+.invite__card {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 22px;
+  padding: 32px 24px;
+}
+
+.invite__mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--inset);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.invite h1 {
+  font-family: var(--font-display), var(--font-brand), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+
+.invite__body {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--soft);
+  margin: 0;
+  max-width: 34em; /* ~65 characters */
+}
+
+.invite__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin-top: 28px;
+  padding: 14px 24px;
+  border-radius: 18px;
+  background: var(--action);
+  color: var(--action-text);
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.invite__action:hover {
+  filter: brightness(0.94);
+}
+
+.invite__note {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+}
+
+.invite__steps {
+  margin: 28px 0 0;
+  padding: 16px 18px;
+  background: var(--inset);
+  border-radius: 18px;
+  list-style: none;
+  counter-reset: step;
+}
+
+.invite__steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 26px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--soft);
+}
+
+.invite__steps li + li {
+  margin-top: 10px;
+}
+
+.invite__steps li::before {
+  content: counter(step) ".";
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.invite__chip {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.invite :focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* Loading */
+.invite__skeleton {
+  border-radius: 8px;
+  background: var(--inset);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .invite__skeleton {
+    animation: invitePulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes invitePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}

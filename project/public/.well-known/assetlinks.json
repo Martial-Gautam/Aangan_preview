@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.familiar.aangan_app",
+    "sha256_cert_fingerprints": [
+      "6D:D0:99:40:09:70:7A:6F:D1:95:EF:86:B5:D2:61:11:4D:55:CC:28:DB:B0:90:8A:FB:DF:44:8F:77:63:6F:2A"
+    ]
+  }
+}]
